@@ -996,6 +996,52 @@ class TestTheProductOnThePage:
         assert load_project(root).product is not None
         assert load_project(root).product is not None
 
+    def test_a_project_holding_its_own_environment_keeps_the_library_imported(
+        self, tmp_path: Path
+    ) -> None:
+        """`uv` writes the environment to `<project>/.venv`, which puts every installed
+        package under the project root. Forgetting those unimports the library itself: the
+        registry the project just registered into is replaced, so a second load declares
+        nothing, and every exception class gains a second identity, so `except` stops
+        matching. Measured against dogfood #6 on 2026-09-01: three pipelines on the first
+        load and none on any after it."""
+        import sys
+
+        from simple_agents.view.discovery import load_project
+
+        project = tmp_path / "project"
+        installed = project / ".venv" / "lib" / "python3.13" / "site-packages" / "stand_in"
+        installed.mkdir(parents=True)
+        (installed / "__init__.py").write_text("VALUE = 1\n", encoding="utf-8")
+        (project / "beside.py").write_text(
+            "from simple_agents import Budget, Deterministic, Pipeline, pipeline_factory\n"
+            "def step(inputs, ctx):\n"
+            "    return inputs\n"
+            "@pipeline_factory('only')\n"
+            "def build():\n"
+            "    return Pipeline(\n"
+            "        [Deterministic(step, node_id='step')],\n"
+            "        budget=Budget(1, None, None, None),\n"
+            "    )\n",
+            encoding="utf-8",
+        )
+        (project / "agent.py").write_text("import beside  # noqa: F401\n", encoding="utf-8")
+
+        sys.path.insert(0, str(installed.parent))
+        try:
+            import stand_in  # type: ignore[import-not-found]
+
+            first = load_project(project)
+            assert list(first.pipelines) == ["only"], first.problems
+            assert sys.modules.get("stand_in") is stand_in
+            assert "simple_agents.errors" in sys.modules
+            assert "beside" not in sys.modules
+            second = load_project(project)
+            assert list(second.pipelines) == ["only"], second.problems
+        finally:
+            sys.path.remove(str(installed.parent))
+            sys.modules.pop("stand_in", None)
+
 
 class TestWhatARunDidWrong:
     def test_how_each_step_ended_reaches_its_card(self) -> None:

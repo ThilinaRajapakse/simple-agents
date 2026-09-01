@@ -56,7 +56,7 @@ def read_checks(root: str | Path) -> dict[str, Any] | None:
                 "name": check.name,
                 "outcome": outcome,
                 "tier": check.tier,
-                "detail": (check.detail or "")[:400],
+                "detail": check.detail or "",
                 # The finding carries the whole instruction; the page shows the first sentence and
                 # keeps the rest for the reader who opens it.
                 "says": [f.message for f in check.findings][:2],

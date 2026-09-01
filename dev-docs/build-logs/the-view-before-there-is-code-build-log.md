@@ -59,7 +59,7 @@ Confirmed; columns per part.**
 
 What shipped:
 
-- [`elicitation.py`](../../src/simple_agents/view/elicitation.py#L34), new: `read_stages`, every
+- [`elicitation.py`](../../src/simple_agents/view/elicitation.py#L36), new: `read_stages`, every
   stage's questions in the four states with answered-of-asked, and `read_idea`, `idea.md`'s
   sections with the stage it was confirmed at.
 - [`research.py`](../../src/simple_agents/view/research.py#L77), new: `read_research`, the

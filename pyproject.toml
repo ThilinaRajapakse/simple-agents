@@ -1,6 +1,6 @@
 [project]
 name = "simple-llm-agents"
-version = "0.1.1"
+version = "0.1.2"
 description = "Build agents with explicit steps, check them against your project, and follow a staged procedure that keeps things from drifting."
 readme = "README.md"
 requires-python = ">=3.11"

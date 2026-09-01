@@ -124,7 +124,7 @@ def read_research(root: str | Path, brief: Any) -> dict[str, Any] | None:
                     "decisions": [
                         {
                             "name": d.name,
-                            "chose": str(getattr(d, "chose", "") or "")[:300],
+                            "chose": str(getattr(d, "chose", "") or ""),
                             "status": getattr(d, "status", None),
                         }
                         for d in decisions
@@ -134,15 +134,15 @@ def read_research(root: str | Path, brief: Any) -> dict[str, Any] | None:
             )
     quoted = _section_of(text, RESEARCH_SECTIONS[3]) or ""
     return {
-        "turns_on": (_section_of(text, RESEARCH_SECTIONS[2]) or "").strip()[:600],
-        "parts_said": (_section_of(text, RESEARCH_SECTIONS[0]) or "").strip()[:800],
+        "turns_on": (_section_of(text, RESEARCH_SECTIONS[2]) or "").strip(),
+        "parts_said": (_section_of(text, RESEARCH_SECTIONS[0]) or "").strip(),
         "parts": list(parts.values()),
-        "said": quoted.strip()[:800],
+        "said": quoted.strip(),
         "resting_on": [
             {
                 "name": d.name,
-                "chose": str(getattr(d, "chose", "") or "")[:300],
-                "because": str(getattr(d, "because", "") or "")[:300],
+                "chose": str(getattr(d, "chose", "") or ""),
+                "because": str(getattr(d, "because", "") or ""),
                 "status": getattr(d, "status", None),
                 "cites": [
                     candidate["candidate"]

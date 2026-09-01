@@ -31,6 +31,7 @@ from ..records.comments import (
 from ..errors import ConfigurationError
 from .assemble import assemble
 from .render import render
+from .words import _clip
 
 __all__ = ["serve_view", "build_server", "project_state"]
 
@@ -97,20 +98,20 @@ def _snapshot(data: dict[str, Any], address: str) -> dict[str, str | None]:
     about: str | None = None
     shape: str | None = None
     if address == "project":
-        about = f"the whole project, {data.get('standing', '')}"[:200]
+        about = _clip(f"the whole project, {data.get('standing', '')}", 200)
     elif address.startswith("question:"):
         name = address.removeprefix("question:")
         held = next((q for q in data.get("questions_due", []) if q["name"] == name), None)
         entry = next(
             (e for e in data.get("brief", {}).get("entries", []) if e["name"] == name), None
         )
-        about = (held or {}).get("asks") or (entry or {}).get("answer", "")[:120] or name
+        about = (held or {}).get("asks") or _clip((entry or {}).get("answer", ""), 120) or name
     elif address.startswith("decision:"):
         name = address.removeprefix("decision:")
         held = next(
             (d for d in data.get("brief", {}).get("decisions", []) if d["name"] == name), None
         )
-        about = f"the {name} decision" + (f": {held['chose'][:120]}" if held else "")
+        about = f"the {name} decision" + (f": {_clip(held['chose'], 120)}" if held else "")
     elif address.startswith("resource:"):
         about = f"the {address.removeprefix('resource:')} resource"
     else:

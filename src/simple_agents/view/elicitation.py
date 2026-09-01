@@ -19,6 +19,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .words import _clip
+
 __all__ = ["read_stages", "read_idea"]
 
 
@@ -56,11 +58,11 @@ def read_stages(brief: Any) -> dict[str, Any] | None:
                 {
                     "name": question.name,
                     "title": question.title,
-                    "asks": question.ask.split("\n")[0][:200],
+                    "asks": _clip(question.ask.split("\n")[0], 200),
                     "required": question.required,
                     "again": question.re_asked_each_stage,
                     "state": _state(entry, index <= reached if reached >= 0 else False),
-                    "answer": str(getattr(entry, "answer", "") or "")[:600],
+                    "answer": str(getattr(entry, "answer", "") or ""),
                     "deferred_to": getattr(entry, "deferred_to", None),
                 }
             )
@@ -104,7 +106,7 @@ def read_idea(root: str | Path, brief: Any) -> dict[str, Any] | None:
     )
     return {
         "sections": [
-            {"title": name, "body": (_section_of(text, name) or "").strip()[:1200]}
+            {"title": name, "body": (_section_of(text, name) or "").strip()}
             for name in IDEA_SECTIONS
         ],
         "confirmed_at": confirmed,

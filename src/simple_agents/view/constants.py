@@ -60,8 +60,8 @@ def _decision_card(decision: Any) -> dict[str, Any]:
         "name": decision.name,
         "title": title_of(decision.name),
         "status": getattr(decision, "status", None),
-        "chose": str(getattr(decision, "chose", "") or "")[:400],
-        "because": str(getattr(decision, "because", "") or "")[:300],
+        "chose": str(getattr(decision, "chose", "") or ""),
+        "because": str(getattr(decision, "because", "") or ""),
     }
 
 

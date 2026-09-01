@@ -10,28 +10,8 @@ from __future__ import annotations
 from typing import Any
 
 from .cards import _KIND_WORDS
-
-
-def _clip(text: str, limit: int = 90) -> str:
-    """A quote cut at a word, with the cut shown, so nothing ends mid-sentence unmarked."""
-    text = str(text)
-    if len(text) <= limit:
-        return text
-    held = text[:limit].rsplit(" ", 1)[0].rstrip(",;:")
-    return held + "…"
-
-
-def _rate(value: Any, unit: str | None) -> str:
-    """A figure as the page prints it: a percentage for a rate, the number otherwise."""
-    if value is None:
-        return "no figure"
-    if unit == "rate":
-        return f"{value * 100:.1f}%"
-    return f"{value:,.6g}" + (f" {unit}" if unit else "")
-
-
-def fmt_runs(count: int) -> str:
-    return f"{count:,} run" + ("" if count == 1 else "s")
+from .measured import _measure_findings
+from .words import _clip, _rate, fmt_runs
 
 
 def _ledger(pipeline: dict[str, Any]) -> list[str]:
@@ -57,301 +37,6 @@ def _ledger(pipeline: dict[str, Any]) -> list[str]:
                 f"to {isnow['kind_word']}."
             )
     return lines
-
-
-def _measure_one(node: dict[str, Any], held: dict[str, Any], coverage: dict[str, Any]) -> None:
-    """Give one step its figures, and record what its coverage says."""
-    figures = held.get(node["id"])
-    node["measured"] = figures
-    if figures is None:
-        return
-    if figures["reached"]:
-        coverage["measured"].append(node["id"])
-    else:
-        coverage["never_reached"].append(node["id"])
-    if figures["accuracy"] or figures["metrics"]:
-        coverage["scored"].append(node["id"])
-
-
-def _attach_measurements(
-    pipelines: list[dict[str, Any]], measured: dict[str, Any] | None
-) -> dict[str, Any]:
-    """Give each step the figures the evaluation holds for it, and say what it never reached.
-
-    The evaluation names steps by the same ids the manifest does, so the join is exact where
-    the shape it measured is the shape in the code. Where the shape moved, a step the
-    evaluation knows and the code does not is named rather than dropped.
-    """
-    coverage: dict[str, Any] = {
-        "measured": [],
-        "never_reached": [],
-        "unknown_here": [],
-        "scored": [],
-        "built_here": 0,
-        "unmeasured_pipelines": [],
-    }
-    for pipeline in pipelines:
-        pipeline["measured_here"] = bool(
-            measured and measured.get("fingerprint") == pipeline["fingerprint"]
-        )
-    if not measured or not measured.get("nodes"):
-        for pipeline in pipelines:
-            for node in pipeline["nodes"]:
-                node["measured"] = None
-        return coverage
-    held = measured["nodes"]
-    for pipeline in pipelines:
-        if not pipeline["measured_here"]:
-            coverage["unmeasured_pipelines"].append(pipeline["name"])
-        else:
-            coverage["built_here"] += sum(1 for n in pipeline["nodes"] if not n["planned"])
-        for node in pipeline["nodes"]:
-            _measure_one(node, held, coverage)
-    coverage["unknown_here"] = sorted(
-        set(held) - set(coverage["measured"]) - set(coverage["never_reached"])
-    )
-    return coverage
-
-
-def _measured(data: dict[str, Any]) -> dict[str, Any] | None:
-    """The evaluation the project reports, where it has one worth saying anything about."""
-    measured = data.get("measured")
-    return measured if measured and measured.get("path") else None
-
-
-def _about_the_results_file(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """What could not be read, or was read at a format this library no longer writes."""
-    measured = data.get("measured")
-    if not measured:
-        return []
-    return [
-        {
-            "severity": "info",
-            "head": "About the results file.",
-            "body": problem,
-            "target": {"section": "measure"},
-        }
-        for problem in measured.get("problems", [])
-    ]
-
-
-def _measured_another_shape(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """The evaluation scored a graph the code no longer has."""
-    measured = _measured(data)
-    if measured is None:
-        return []
-    found: list[dict[str, Any]] = []
-    declared = [p for p in data["pipelines"] if p["origin"] == "declared"]
-    shapes = {p["fingerprint"] for p in declared}
-    if measured.get("fingerprint") and declared and measured["fingerprint"] not in shapes:
-        found.append(
-            {
-                "severity": "attention",
-                "head": "The evaluation measured a shape the code no longer has.",
-                "body": f"{measured['path']} was scored over a different graph. Its figures "
-                f"describe a system that has since changed. Re-run it to measure what "
-                f"is here now.",
-                "target": {"section": "measure"},
-            }
-        )
-    return found
-
-
-def _reports_an_older_file(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """The brief names one results file and a newer one sits beside it."""
-    measured = _measured(data)
-    if measured is None:
-        return []
-    found: list[dict[str, Any]] = []
-    newest = next((row for row in measured.get("history", [])), None)
-    if newest is not None and not newest["reported"]:
-        found.append(
-            {
-                "severity": "attention",
-                "head": "The evaluation this project reports is not the most recent one.",
-                "body": f"The brief names {measured['path']}, and every check reads it. "
-                f"{newest['file']} is newer. Either the newer one is the real result and "
-                f"the brief should name it, or it was a side experiment.",
-                "target": {"section": "measure"},
-            }
-        )
-    return found
-
-
-def _steps_the_evaluation_never_reached(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Steps every rollout skipped, so nothing measured describes them."""
-    if _measured(data) is None:
-        return []
-    found: list[dict[str, Any]] = []
-    coverage = data.get("coverage") or {}
-    unreached = coverage.get("never_reached") or []
-    if unreached:
-        found.append(
-            {
-                "severity": "note",
-                "head": (
-                    f"{unreached[0]}: unreached by the evaluation."
-                    if len(unreached) == 1
-                    else f"{len(unreached)} steps unreached by the evaluation."
-                ),
-                "body": "Unmeasured."
-                if len(unreached) == 1
-                else ", ".join(unreached[:4])
-                + (f", and {len(unreached) - 4} more" if len(unreached) > 4 else "")
-                + ". Unmeasured.",
-                "target": {"section": "measure"},
-            }
-        )
-    return found
-
-
-def _steps_the_evaluation_does_not_hold(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Steps in the pipeline it measured that carry no figure of their own."""
-    measured = _measured(data)
-    if measured is None:
-        return []
-    found: list[dict[str, Any]] = []
-    declared = [p for p in data["pipelines"] if p["origin"] == "declared"]
-    missing = [
-        n["id"]
-        for p in declared
-        if p["measured_here"]
-        for n in p["nodes"]
-        if n.get("measured") is None and not n["planned"]
-    ]
-    if missing and measured.get("nodes"):
-        found.append(
-            {
-                "severity": "note",
-                "head": (
-                    "One step is in the code and not in the evaluation."
-                    if len(missing) == 1
-                    else f"{len(missing)} steps are in the code and not in the evaluation."
-                ),
-                "body": ", ".join(missing[:4])
-                + (f", and {len(missing) - 4} more" if len(missing) > 4 else "")
-                + f". {measured['path']} carries no figure for them.",
-                "target": {"section": "measure"},
-            }
-        )
-    return found
-
-
-def _pipelines_never_measured(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Pipelines the reported evaluation did not measure at all."""
-    measured = _measured(data)
-    if measured is None:
-        return []
-    found: list[dict[str, Any]] = []
-    coverage = data.get("coverage") or {}
-    never = coverage.get("unmeasured_pipelines") or []
-    if never and measured.get("nodes"):
-        found.append(
-            {
-                "severity": "note",
-                "head": (
-                    f"{never[0]}: unmeasured."
-                    if len(never) == 1
-                    else f"{len(never)} pipelines unmeasured."
-                ),
-                "body": (
-                    f"{measured['path']} measured a different pipeline."
-                    if len(never) == 1
-                    else ", ".join(never) + f". {measured['path']} measured a different pipeline."
-                ),
-                "target": {"pipeline": never[0]},
-            }
-        )
-    return found
-
-
-def _figures_over_less_than_the_split(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """A figure whose denominator shrank, and one that has no denominator at all."""
-    measured = _measured(data)
-    if measured is None:
-        return []
-    found: list[dict[str, Any]] = []
-    leaking = [m for m in measured["metrics"] if m["left_out"]]
-    if leaking:
-        one = leaking[0]
-        causes = ", ".join(
-            f"{count} {cause.replace('_', ' ')}" for cause, count in one["left_out"].items()
-        )
-        found.append(
-            {
-                "severity": "note",
-                "head": f"{one['name']} is over fewer rollouts than the split has.",
-                "body": f"{causes} left out. The figure is {_rate(one['point'], one['unit'])} over "
-                f"{one['rollouts']}"
-                + (
-                    f", and {_rate(one['including_left_out'], one['unit'])} counting them as they "
-                    f"scored."
-                    if one["including_left_out"] is not None
-                    else "."
-                ),
-                "target": {"section": "measure"},
-            }
-        )
-    undefined = [m for m in measured["metrics"] + measured["criteria"] if m["reason"]]
-    if undefined:
-        found.append(
-            {
-                "severity": "info",
-                "head": (
-                    "One figure has no denominator."
-                    if len(undefined) == 1
-                    else f"{len(undefined)} figures have no denominator."
-                ),
-                "body": "; ".join(f"{m['name']}: {m['reason']}" for m in undefined[:2]),
-                "target": {"section": "measure"},
-            }
-        )
-    return found
-
-
-def _answers_the_route_never_read(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """A step whose questions were all answered and whose branches were never taken."""
-    measured = _measured(data)
-    if measured is None:
-        return []
-    found: list[dict[str, Any]] = []
-    declared = [p for p in data["pipelines"] if p["origin"] == "declared"]
-    misread = [
-        (p["name"], n)
-        for p in declared
-        for n in p["nodes"]
-        if n.get("measured")
-        and n["measured"]["consultations"]
-        and n["measured"]["consultation_misreadings"] >= n["measured"]["consultations"]
-    ]
-    if misread:
-        names = ", ".join(n["id"] for _, n in misread)
-        found.append(
-            {
-                "severity": "attention",
-                "head": "A question was asked and the answer was never read.",
-                "body": f"{names}: every answer came back, and the rule that reads which option "
-                f"was chosen matched none of them. The branches behind that question "
-                f"were never taken.",
-                "target": {"pipeline": misread[0][0], "node": misread[0][1]["id"]},
-            }
-        )
-    return found
-
-
-def _measure_findings(data: dict[str, Any], found: list[dict[str, Any]]) -> None:
-    """What an evaluation says that a builder has to see, in the builder's words."""
-    for family in (
-        _about_the_results_file,
-        _measured_another_shape,
-        _reports_an_older_file,
-        _steps_the_evaluation_never_reached,
-        _steps_the_evaluation_does_not_hold,
-        _pipelines_never_measured,
-        _figures_over_less_than_the_split,
-        _answers_the_route_never_read,
-    ):
-        found.extend(family(data))
 
 
 def _changed_since_it_ran(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -467,6 +152,28 @@ def _already_sent_words(sent: int) -> str:
     if sent == 1:
         return " One more already has an answer with the coding agent."
     return f" {sent} more already have answers with the coding agent." if sent else ""
+
+
+def _the_code_would_not_import(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """`agent.py` raised on import, so every step, seam and figure on the page is missing.
+
+    Nothing else the page says about the code can be trusted while this stands, so it goes
+    first among the findings.
+    """
+    error = data.get("code_error")
+    if not error:
+        return []
+    return [
+        {
+            "severity": "attention",
+            "waits": "See what it says",
+            "head": "agent.py could not be imported.",
+            "body": f"{error}. The page is drawing the run record alone: the steps, the "
+            f"seams and every figure over them are missing until it imports. Importing it "
+            f"must be free of effects, so build clients and pipelines inside functions.",
+            "target": {"section": "problems", "page": "ship"},
+        }
+    ]
 
 
 def _questions_this_stage_needs(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1134,6 +841,7 @@ def _findings(data: dict[str, Any]) -> list[dict[str, Any]]:
     """
     found: list[dict[str, Any]] = []
     for family in (
+        _the_code_would_not_import,
         _changed_since_it_ran,
         _open_threads,
         _questions_this_stage_needs,

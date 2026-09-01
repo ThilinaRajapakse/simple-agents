@@ -29,11 +29,13 @@ from .elicitation import read_idea, read_stages
 from .examples import read_examples
 from .operating import read_operating
 from .research import read_research
-from .findings import _attach_measurements, _findings, _ledger, _standing
+from .findings import _findings, _ledger, _standing
+from .measured import _attach_measurements
 from .record import read_record
 from .runs_overlay import live_run, read_runs, rollout_runs
 from ..envelope import runs
 from .walk import walkable_runs
+from .words import _clip
 
 
 def _brief_data(root: Path, problems: list[str]) -> Any:
@@ -86,7 +88,7 @@ def _join_decisions(pipelines: list[dict[str, Any]], brief: Any) -> dict[str, An
                         "name": decision.name,
                         "kind": getattr(decision, "kind", None),
                         "status": getattr(decision, "status", None),
-                        "chose": str(getattr(decision, "chose", "") or "")[:400],
+                        "chose": str(getattr(decision, "chose", "") or ""),
                         "exact": exact,
                     }
                 )
@@ -284,7 +286,7 @@ def _asks(name: str) -> str | None:
     from .claims import ask_of
 
     ask = ask_of(name)
-    return ask[:180] if ask else None
+    return _clip(ask, 180) if ask else None
 
 
 def _questions_due(brief: Any, stage: str | None, comments: list[dict]) -> list[dict[str, Any]]:
@@ -306,7 +308,7 @@ def _questions_due(brief: Any, stage: str | None, comments: list[dict]) -> list[
                 {
                     "name": question.name,
                     "title": question.title,
-                    "asks": question.ask.split("\n")[0][:180],
+                    "asks": _clip(question.ask.split("\n")[0], 180),
                     "stage": question.stage,
                     "pending": question.name in pending,
                 }
@@ -340,7 +342,7 @@ def _brief_panels(brief: Any) -> dict[str, list[dict[str, Any]]]:
             "title": _title(e.name),
             "asks": _asks(e.name),
             "status": e.status,
-            "answer": (str(getattr(e, "answer", "") or ""))[:600],
+            "answer": str(getattr(e, "answer", "") or ""),
             "deferred_to": getattr(e, "deferred_to", None),
             "stage": _stage_of_entry(e),
         }
@@ -352,8 +354,8 @@ def _brief_panels(brief: Any) -> dict[str, list[dict[str, Any]]]:
             "title": _title(d.name),
             "kind": getattr(d, "kind", None),
             "status": getattr(d, "status", None),
-            "chose": str(getattr(d, "chose", "") or "")[:600],
-            "because": str(getattr(d, "because", "") or "")[:400],
+            "chose": str(getattr(d, "chose", "") or ""),
+            "because": str(getattr(d, "because", "") or ""),
         }
         for d in getattr(brief, "decisions", ()) or ()
     ]
@@ -409,7 +411,7 @@ def _project_intent(brief: Any) -> dict[str, str | None]:
         if entry is None or getattr(entry, "status", None) != "answered":
             return None
         value = str(getattr(entry, "answer", "") or "").strip()
-        return value[:600] or None
+        return value or None
 
     return {
         "purpose": answer("purpose") or answer("what_it_does") or answer("smallest_worthwhile"),
@@ -712,6 +714,7 @@ def _first_pass(
         "tier": str(brief.tier) if brief is not None else None,
         "stages": list(_stages_for_tier(brief)),
         "code_imported": loaded.imported,
+        "code_error": loaded.could_not_import,
         "problems": problems,
         "pipelines": pipelines,
         "resources": _resources(declared),

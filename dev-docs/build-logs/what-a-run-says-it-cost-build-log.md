@@ -13,7 +13,7 @@ it stood, before anything was decided.
   that directory, printed `3.9744 USD, 11 run(s) whose cost could not be measured`.
   [`view/runs_overlay.py` `_cost_of`](../../src/simple_agents/view/runs_overlay.py#L384) returned
   `0.0, "", False` for an unpriced run, and
-  [`findings.py` `_one_step_costs_most`](../../src/simple_agents/view/findings.py#L992) reads
+  [`findings.py` `_one_step_costs_most`](../../src/simple_agents/view/findings.py#L699) reads
   those zeros. Pricing all 994 calls individually with `cost_of` came to **$5.5024** over 940 of
   them, which is the same figure the 24 rollout manifests' `charged_cost` sum to.
 - **Two adders, opposite policies, both correct for their own purpose.**

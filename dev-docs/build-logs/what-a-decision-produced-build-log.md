@@ -27,7 +27,7 @@ because it had been corrected the same morning and still guessed at a split.
 
 **And the join surface was measured**, which the record had as the newest run's manifest. Dogfood
 #5's newest agent run is one pipeline of seven: 5 node ids of the 34 its 2,669 runs recorded.
-[`load_project`](../../src/simple_agents/view/discovery.py#L44) does not rescue it, finding zero
+[`load_project`](../../src/simple_agents/view/discovery.py#L49) does not rescue it, finding zero
 pipelines there, since the project declares `build_*()` functions rather than
 `@pipeline_factory` or a module-level `Pipeline`.
 

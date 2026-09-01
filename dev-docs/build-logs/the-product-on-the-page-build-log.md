@@ -11,7 +11,7 @@ into §2 here.
   asked, the run history, the walk, the workspace, the notes and the problems, for a reader
   deciding whether to let other people in.
 - **`used_through` is the only thing about the product on the page**, as one line of the
-  header's purpose card ([`assemble.py` `_project_intent`](../../src/simple_agents/view/assemble.py#L398)).
+  header's purpose card ([`assemble.py` `_project_intent`](../../src/simple_agents/view/assemble.py#L400)).
 - **`design.md` already requires a product section.**
   [`artifacts.py` `DESIGN_SECTIONS`](../../src/simple_agents/conformance/artifacts.py#L60) has
   carried `"The product"` as one of the four FT-34 requires; what FT-34 read of it was whether

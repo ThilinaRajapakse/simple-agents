@@ -473,6 +473,104 @@ Thilina's to settle.
     `node` is pinned in CI and the tests skip without it, which is how the cassette tests
     already handle a missing prerequisite.
 
+**Found by dogfood #6 and fixed the same day, 2026-09-01.** Two reports from the builder
+mid-run: the answers on the research page were cut, and *"the pipeline disappeared once build
+started"*.
+
+30. **A project's virtual environment is inside the project, so "under the project root" does
+    not mean "the project's own".** `simple-agents view --serve` lost the drawing after its
+    first render, and a malformed `brief.toml` killed a request with a traceback instead of
+    landing in `problems`. One cause.
+
+    [`discovery.py`](../../src/simple_agents/view/discovery.py#L217)
+    `_drop_the_projects_modules` forgets the project's modules after loading it, so that a
+    registration in a module beside `agent.py` runs again on the next load. It decided a
+    module was the project's when its file resolved inside the project directory. `uv` writes
+    the environment to `<project>/.venv`, which put every installed package inside the project
+    directory: **183 modules on that project, `simple_agents` among them.** The library
+    unimported itself on every load.
+
+    Both symptoms follow. The registry `agent.py` registers into is a module-level dict, and a
+    re-imported module has a new one, so the second load read an empty registry and reported
+    no problem: `imported: True`, `problems: []`, three pipelines and then none. And
+    `ConfigurationError` re-imported as a second class object, so `except ConfigurationError`
+    in [`assemble.py`](../../src/simple_agents/view/assemble.py#L41) `_brief_data` stopped
+    matching the error `brief.py` raised.
+
+    A module is the project's own when it is under the project root, outside `site-packages`
+    and `dist-packages`, and outside the library's own directory:
+    [`discovery.py`](../../src/simple_agents/view/discovery.py#L181) `_the_projects_own`.
+    **The docstring already said this** — "the library's own, and every installed package,
+    stay imported" — and the path test did not implement it, which is why nothing read as
+    wrong. `tests/test_view.py`'s
+    `test_a_project_holding_its_own_environment_keeps_the_library_imported` builds that layout
+    and fails without the fix.
+
+    The general form, and the reason this is worth a decision rather than a line in a build
+    log: **a check written against a directory boundary is not a check against ownership.** A
+    project directory holds what the project installed as well as what it wrote.
+
+    A failed import is now said where it is seen. The empty frame names the error rather than
+    reading "Registered pipelines: none", which blamed the project for declaring nothing, and
+    [`findings.py` `_the_code_would_not_import`](../../src/simple_agents/view/findings.py#L157)
+    puts it first among the findings.
+    [`discovery.py`](../../src/simple_agents/view/discovery.py#L123) `_would_not_import`
+    records the two forms: the error alone for the frame and the card, and the sentence saying
+    what the page did about it for `problems`.
+
+31. **Text is carried whole and cut where it is drawn.** The page cut every piece of builder
+    prose in Python at a fixed character count: brief answers and decisions at 600,
+    `research.md` sections at 600 and 800, `idea.md` at 1200, decision reasoning at 300.
+    Dogfood #6's five research answers were 1,013 to 3,687 characters, so **7,805 of 10,405
+    characters never reached the page**, and one `because` lost 89% of itself. Nothing marked
+    a cut. The questions cell also had no `white-space`, so nine labelled parts written over
+    twelve lines drew as one run-on line.
+
+    A cut in the data layer is permanent: the page never receives what was removed. **The data carries the whole of the text
+    and the page decides how much of it to show**, which it can do because it knows the width
+    it has and the reader can act on it.
+
+    Two forms, and which one applies follows from what the text is drawn as.
+
+    - **A paragraph** — a question's answer, a decision, a `research.md` or `idea.md` section
+      — is [`template.html`](../../src/simple_agents/view/template.html#L4444) `longText`. It
+      renders whole with `white-space: pre-wrap`, clamped to 10.5em with a fade, and a **Show
+      all of it** under it. Expanded rows are held in a set across re-renders.
+    - **A summary** — the masthead, a step's rail, a table cell, a tooltip — is
+      [`template.html`](../../src/simple_agents/view/template.html#L4435) `short`. It cuts at
+      a word, ends in an ellipsis, and hands the whole to the `title` beside it. The page the
+      text files under holds all of it.
+
+    **The clamp is measured, never counted.**
+    [`template.html`](../../src/simple_agents/view/template.html#L5824) `renderSections`
+    compares `scrollHeight` to `clientHeight` after the render and adds the control only where
+    the text is taller than the row shows. A line the builder wrote can wrap into several and
+    how many depends on the reader's width, so a line count would put a control on rows that
+    do not need one and miss rows that do. Under a stub DOM both are zero, which degrades to
+    showing everything, and that is what a non-visual reader wants.
+
+    **`renderSections` measures `#lead` and `#sections` and not `#map`.** A `longText` in the
+    step rail would stay clipped with no control, so the rail is `short` territory. This was
+    found by building it the other way first.
+
+    **Decision 24 is extended by this.** Its rule was right and was applied to the drawing
+    alone. It now holds everywhere: no cut in the view lands mid-word, and every cut says that
+    it cut. [`words.py`](../../src/simple_agents/view/words.py#L14) `_clip` is the Python half
+    and `short` the page half.
+
+**`findings.py` was split the same day**, on the shape ratchet rather than on a reading: a
+finding family is a function, so the module grew with the page's vocabulary and stood at 1,191
+lines. The seam was already in the file: the measurement families end at a separate entry
+point that the family loop does not carry.
+
+| Module | Holds | Entry point |
+|---|---|---|
+| [`words.py`](../../src/simple_agents/view/words.py#L14) | The formatters used by more than one family | `_clip` |
+| [`measured.py`](../../src/simple_agents/view/measured.py#L295) | Everything over an evaluation's results file | `_measure_findings` |
+| [`findings.py`](../../src/simple_agents/view/findings.py#L832) | Every other family, and the assembly | `_findings` |
+
+One direction throughout: `words` then `measured` then `findings`. The baseline did not move.
+
 ## Mechanics
 
 - **`NotBuilt`, not a flag.** `planned=True` was proposed and rejected: *"planned=True sounds
@@ -654,7 +752,7 @@ the organizing encoding, and 3D because 3D.
 `scripts/view.tmpl.html` held the two prototypes: the artifact reading with its streaming and
 cost-basis handling, and the second prototype's page. They were moved into the repository on
 2026-08-26 out of a session scratchpad, superseded the same day by
-[`src/simple_agents/view/`](../../src/simple_agents/view/assemble.py#L664) `assemble`, and
+[`src/simple_agents/view/`](../../src/simple_agents/view/assemble.py#L666) `assemble`, and
 imported by nothing. What survived them is described above; the files are in git history at
 `e686b21`.
 

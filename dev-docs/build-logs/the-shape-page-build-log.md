@@ -17,7 +17,7 @@ before building it:
 - **The data path was a table in a drawer**, filed on `shape` by
   [`template.html` `dataPathSection`](../../src/simple_agents/view/template.html#L3867), and
   its rows carry `took_in_volume` and `handed_on_volume`, which
-  [`assemble.py` `_give_the_history`](../../src/simple_agents/view/assemble.py#L123) fills
+  [`assemble.py` `_give_the_history`](../../src/simple_agents/view/assemble.py#L124) fills
   from a run. At `shape` there is no run, so both are `null` on every row.
 - **Three of the four seams were already computed** and one was not.
   [`claims.py` `_CHECKED`](../../src/simple_agents/view/claims.py#L70) compares
@@ -93,13 +93,13 @@ address instead of dropping them.
 
 What shipped:
 
-- [`cards.py`](../../src/simple_agents/view/cards.py#L293): `_step_intent` and `_seams_of`,
+- [`cards.py`](../../src/simple_agents/view/cards.py#L294): `_step_intent` and `_seams_of`,
   and the data path's rows gain `intent` and `seams`. The story is a rendering of the data
   path rather than a second ordering of the same steps.
 - [`claims.py`](../../src/simple_agents/view/claims.py#L323): `read_seams`, the four answers
   with their code side, what each step holds the seam through, and who answers where a step
   asks. `assemble` hangs it on `data["seams"]`.
-- [`findings.py` `_never_agreed_to`](../../src/simple_agents/view/findings.py#L1076): the
+- [`findings.py` `_never_agreed_to`](../../src/simple_agents/view/findings.py#L783): the
   finding carries `actions`, which is what puts Agree and Something is wrong in the band.
 - [`template.html`](../../src/simple_agents/view/template.html#L1): the story rail in the
   right-hand column (`renderStory`, `lightStep`, `seamMarks`), `seamsRegion`, `stateRegion`,

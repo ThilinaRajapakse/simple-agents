@@ -471,8 +471,18 @@ button.nm:hover{color:var(--accent)}
 .qstate.deferred .mark{color:var(--note)} .qstate.ahead .mark{color:var(--faint)}
 .qstate .qn{color:var(--ink)}
 .qstate.ahead .qn{color:var(--muted)}
-.qstate .qa{color:var(--ink);overflow-wrap:anywhere}
+.qstate .qa{color:var(--ink);overflow-wrap:anywhere;white-space:pre-wrap}
 .qstate .qgo{text-align:right}
+/* An answer is the builder's own words, and it arrives with the blank lines and indents
+   they wrote. The row holds all of it and shows the first nine lines of it. */
+.longtext{display:block;position:relative}
+.longtext.clipped{max-height:10.5em;overflow:hidden}
+.longtext.clipped::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3.2em;
+  background:linear-gradient(to bottom,transparent,var(--surface));pointer-events:none}
+.quote .longtext.clipped::after{background:linear-gradient(to bottom,transparent,var(--sunk))}
+.showall{display:block;margin-top:5px;color:var(--accent);font-size:var(--s-1);
+  font-family:"JetBrains Mono",monospace;text-align:left}
+.showall:hover{text-decoration:underline}
 .stagerow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .stagebox{display:grid;gap:2px;border:1px solid var(--line-strong);border-radius:8px;
   padding:7px 13px;background:var(--ground);text-align:left}
@@ -1221,14 +1231,20 @@ function renderHeader() {
   const intent = DATA.intent || {};
   const intentBox = document.getElementById("intent");
   if (intent.purpose || intent.for_whom || intent.outcome || intent.surface) {
-    const facts = [
-      intent.for_whom ? `<span><b>For</b> ${esc(intent.for_whom)}</span>` : "",
-      intent.outcome ? `<span><b>Working when</b> ${esc(intent.outcome)}</span>` : "",
-      intent.surface ? `<span><b>Used through</b> ${esc(intent.surface)}</span>` : "",
-    ].filter(Boolean).join("");
+    /* The masthead is a summary of four answers the `brainstorm` page holds whole. A cut here
+       lands on a word and the `title` carries the rest, so the reader can see where it went. */
+    const fact = (label, text) => {
+      if (!text) return "";
+      const held = short(text, 560);
+      return `<span title="${esc(held.whole)}"><b>${label}</b> ${esc(held.said)}</span>`;
+    };
+    const facts = [fact("For", intent.for_whom), fact("Working when", intent.outcome),
+                   fact("Used through", intent.surface)].filter(Boolean).join("");
+    const purpose = short(intent.purpose, 560);
     intentBox.hidden = false;
     intentBox.innerHTML = `<div class="eyebrow">What this project is for</div>${
-      intent.purpose ? `<div class="purpose">${esc(intent.purpose)}</div>` : ""
+      intent.purpose ? `<div class="purpose" title="${esc(purpose.whole)}">${
+        esc(purpose.said)}</div>` : ""
     }${facts ? `<div class="facts">${facts}</div>` : ""}`;
   } else {
     intentBox.hidden = true;
@@ -2207,13 +2223,29 @@ function drawGraph() {
   drawDials(p);
   if (!p) {
     document.getElementById("graphkey").innerHTML = "";
-    svg.setAttribute("viewBox", "0 0 640 90"); svg.setAttribute("height", 90);
-    const t = el("text", {x: 320, y: 50, "text-anchor": "middle", fill: css("--muted"),
-      "font-family": "Archivo, sans-serif", "font-size": 14});
-    t.textContent = HISTORY.length
+    const tall = DATA.code_error ? 116 : 90;
+    svg.setAttribute("viewBox", `0 0 640 ${tall}`); svg.setAttribute("height", tall);
+    const t = el("text", {x: 320, y: DATA.code_error ? 44 : 50, "text-anchor": "middle",
+      fill: css("--muted"), "font-family": "Archivo, sans-serif", "font-size": 14});
+    /* Three reasons the frame is empty, and they are not one fact. A project before its first
+       line of code has no picture yet. One whose `agent.py` will not import has a picture the
+       page could not read, and "registered: none" would blame it for declaring nothing. */
+    t.textContent = DATA.code_error
+      ? "agent.py could not be imported, so the picture is unread."
+      : HISTORY.length
       ? "Registered pipelines: none. What has run is in the record below."
       : "The project has no pipeline yet. The picture starts with the first one.";
     svg.appendChild(t);
+    if (DATA.code_error) {
+      const why = el("text", {x: 320, y: 74, "text-anchor": "middle", fill: css("--attention"),
+        "font-family": "'JetBrains Mono', monospace", "font-size": 12});
+      why.textContent = short(DATA.code_error, 88).said;
+      svg.appendChild(why);
+      const more = el("text", {x: 320, y: 96, "text-anchor": "middle", fill: css("--faint"),
+        "font-family": "Archivo, sans-serif", "font-size": 12});
+      more.textContent = "The whole of it is under What the page could not read.";
+      svg.appendChild(more);
+    }
     return;
   }
   const nodes = nodesInFocus(p);
@@ -3364,7 +3396,11 @@ function showStep(stepId, pulse) {
 
   let agreed = "";
   if (n.decisions && n.decisions.length) {
-    agreed = n.decisions.map(d => `<div class="quote">${esc(d.chose)}
+    /* The rail is a column beside the drawing and `renderSections` does not measure it, so
+       this is cut here with the whole of it on the tip. The decision reads in full on the
+       page its kind files under. */
+    agreed = n.decisions.map(d => `<div class="quote" data-tip="${esc(d.chose)}">${
+      esc(short(d.chose, 300).said)}
       <cite>${esc(d.name)}${d.status === "changed" ? " · changed since it was agreed" : ""}${
       d.exact === false ? " · matched on its wording" : ""}</cite></div>`).join("");
   } else if (((DATA.brief || {}).decisions || []).length) {
@@ -4390,6 +4426,25 @@ const QUESTION_STATE = {answered: "Answered", deferred: "Put off", open: "Open",
                         ahead: "Not asked yet"};
 const QUESTION_MARK = {answered: "●", deferred: "◐", open: "○", ahead: "·"};
 
+/* An answer runs to whatever length the builder wrote, and the row carries the whole of it.
+   `renderSections` measures each one once it is in the document and adds the control only
+   where the text is taller than the row shows, so a short answer gains nothing. */
+/* A summary cell holds as much as it has room for, cut at a word, and hands the whole of it
+   to the `title` beside it. Where the reader can have all of it in place, `longText` is the
+   one to reach for. */
+function short(text, room) {
+  const said = String(text || "").replace(/\s+/g, " ").trim();
+  if (said.length <= room) return {said, whole: ""};
+  const cut = said.slice(0, room);
+  const at = cut.lastIndexOf(" ");
+  return {said: (at > room * 0.6 ? cut.slice(0, at) : cut) + "\u2026", whole: said};
+}
+
+const shownWhole = new Set();
+function longText(id, text) {
+  return `<span class="longtext clipped" data-whole="${esc(id)}">${esc(text || "")}</span>`;
+}
+
 /* This stage's questions in the four states. The brief has three, and a question a later
    stage asks reads the same as an unanswered one; only one of them is anybody's
    business today. */
@@ -4417,7 +4472,7 @@ function questionsRegion(stage) {
     <span class="qn">${esc(r.title)}${
       r.required ? "" : ` <span class="asks">· optional</span>`}${
       r.again ? ` <span class="asks">· asked again each stage</span>` : ""}</span>
-    <span class="qa">${r.state === "answered" ? esc(r.answer)
+    <span class="qa">${r.state === "answered" ? longText(`question:${r.name}`, r.answer)
       : r.state === "deferred" ? `<span class="asks">Put off to ${esc(r.deferred_to || "later")}</span>`
       : r.state === "open" ? `<span class="asks">${esc(r.asks)}</span>`
       : `<span class="asks">Not asked yet.</span>`}</span>
@@ -4468,7 +4523,8 @@ function ideaFileRegion() {
   return `<div class="mregion" data-section="ideafile">${measureTitle("The idea file",
     held.confirmed_at ? `Confirmed at ${held.confirmed_at}` : "Not confirmed")}
     ${held.sections.map(s => `<div class="seamrow"><div class="sn">${esc(s.title)}</div>
-      <p class="said">${s.body ? esc(s.body) : `<span class="bad">Nothing here.</span>`}</p>
+      <p class="said">${s.body ? longText(`idea:${s.title}`, s.body)
+        : `<span class="bad">Nothing here.</span>`}</p>
       </div>`).join("")}
     ${held.stale ? `<p class="bad">It was confirmed at ${esc(held.confirmed_at)}. The project
       has moved past that stage, so it describes an earlier idea until it is confirmed
@@ -4487,7 +4543,7 @@ function decidingFactorRegion() {
   const said = held && held.turns_on;
   if (!said) return "";
   return `<div class="mregion" data-section="turnson">${measureTitle("The deciding factor")}
-    <p class="factor">${esc(said)}</p></div>`;
+    <p class="factor">${longText("research:turnson", said)}</p></div>`;
 }
 
 function candidatesRegion() {
@@ -4520,7 +4576,8 @@ function candidatesRegion() {
     <p>One column per part, with the candidates weighed for it underneath. A filled mark was
     adopted. An outline was rejected. A ring was not investigated.</p>
     <div class="partcols">${held.parts.map(column).join("")}</div>
-    ${held.parts_said ? `<p class="asks">${esc(held.parts_said)}</p>` : ""}</div>`;
+    ${held.parts_said ? `<p class="asks">${longText("research:parts", held.parts_said)}</p>`
+      : ""}</div>`;
 }
 
 function restingRegion() {
@@ -4532,11 +4589,12 @@ function restingRegion() {
       <div class="sn">${esc(titleOfEntry(d.name))}${
         d.status && d.status !== "agreed"
           ? ` <span class="badge warn">${esc(cap(d.status))}</span>` : ""}</div>
-      <p class="said">${esc(d.chose)}</p>
+      <p class="said">${longText(`decision:${d.name}`, d.chose)}</p>
       <p class="asks">${d.cites.length
         ? `Weighed as ${d.cites.map(c => `<span class="mono">${esc(c)}</span>`).join(" against ")}.`
-        : "The survey names no candidate this decision's words reach."}${
-        d.because ? ` Because ${esc(d.because)}.` : ""}</p>
+        : "The survey names no candidate this decision's words reach."}</p>
+      ${d.because
+        ? `<p class="asks">${longText(`decision:${d.name}:why`, `Because ${d.because}`)}</p>` : ""}
       <span class="acts"><button class="btn" data-amend="decision:${esc(d.name)}">Amend</button>
       </span></div>`).join("")}
     <p class="asks">A dependency decision is what the project rests on. Decisions are matched
@@ -4549,7 +4607,7 @@ function saidRegion() {
   if (!held || !held.said) return "";
   return `<div class="mregion" data-section="researchsaid">${measureTitle(
     "What the builder said about it")}
-    <div class="quote">${esc(held.said.replace(/^>\s?/gm, ""))}</div>
+    <div class="quote">${longText("research:said", held.said.replace(/^>\s?/gm, ""))}</div>
     <span class="acts"><button class="btn" data-comment="project">Amend</button></span></div>`;
 }
 
@@ -5035,7 +5093,7 @@ function constantsRegion() {
               `<span class="mono">${esc(t)}</span>`).join(", ")}</span>` : "")
       : `<span class="asks">Written in ${esc(r.module)}</span>`}</span>
     <span class="conf">${r.decision
-      ? `<span class="badge acc" data-tip="${esc(r.decision.chose)}">${
+      ? `<span class="badge acc" data-tip="${esc(short(r.decision.chose, 300).said)}">${
           esc(r.decision.title)}</span>`
       : sentOr(SAY.agreeNumber(r.name, r.value),
           `<button class="btn primary" data-agreenum="${esc(r.name)}">Agree</button>`)}</span>
@@ -5063,7 +5121,7 @@ function promptRulesRegion() {
       data-tip="Open ${esc(r.node_id)} for the code that builds its prompt">${
       esc(r.node_id)}</button>
     <span class="rule">${r.decision
-      ? esc(r.decision.chose)
+      ? `<span title="${esc(r.decision.chose)}">${esc(short(r.decision.chose, 240).said)}</span>`
       : `<span class="asks">No rule is recorded for this prompt.</span>`}</span>
     <span class="conf">${r.decision
       ? `<span class="badge acc">${esc(r.decision.title)}</span>`
@@ -5344,8 +5402,10 @@ function decisionsRegion(rows, title) {
         status !== "agreed"
           ? ` <span class="badge ${status === "changed" ? "warn" : "mut"}">${
               esc(DEC_WORDS[status] || status)}</span>` : ""}
-        <span class="chose">${esc(d.chose || "")}</span>${
-        d.because ? `<span class="why">Because ${esc(d.because)}</span>` : ""}</span>
+        <span class="chose">${longText(`decision:${d.name}`, d.chose || "")}</span>${
+        d.because
+          ? `<span class="why">${longText(`decision:${d.name}:why`, `Because ${d.because}`)}</span>`
+          : ""}</span>
       <span class="acts">${status === "proposed"
         ? sentOr(SAY.agreeDecision(d.name),
             `<button class="btn primary" data-agree="decision:${esc(d.name)}">Agree</button>`) : ""}
@@ -5593,7 +5653,7 @@ function renderSections() {
     const inner = rows.map(e => `<div class="qrow">
         <span class="qname">${esc(e.title || e.name)}</span>
         ${e.asks ? `<p class="asks">${esc(e.asks)}</p>` : ""}
-        <p class="answer">${esc(e.answer || "")}</p>
+        <p class="answer">${longText(`question:${e.name}`, e.answer)}</p>
         <div class="actions">
           <button class="btn" data-amend="question:${esc(e.name)}">Amend this answer</button>
           <button class="btn" data-comment="question:${esc(e.name)}">Comment</button>
@@ -5612,8 +5672,10 @@ function renderSections() {
     const inner = rows.map(d => `<div class="qrow">
         <span class="qname">${esc(d.title || d.name)}</span>
         ${d.status && d.status !== "agreed" ? ` <span class="badge warn">${esc(d.status)}</span>` : ""}
-        <p class="answer">${esc(d.chose || "")}</p>
-        ${d.because ? `<p class="asks">because ${esc(d.because)}</p>` : ""}
+        <p class="answer">${longText(`decision:${d.name}`, d.chose)}</p>
+        ${d.because
+          ? `<p class="asks">${longText(`decision:${d.name}:why`, `Because ${d.because}`)}</p>`
+          : ""}
         <div class="actions">
           <button class="btn" data-amend="decision:${esc(d.name)}">Amend this decision</button>
           <button class="btn" data-comment="decision:${esc(d.name)}">Comment</button>
@@ -5757,6 +5819,16 @@ function renderSections() {
   qsa("details.sub").forEach(d => {
     if (d.dataset.sub in openSubs) d.open = openSubs[d.dataset.sub];
   });
+  /* Measured rather than counted: a line the builder wrote can wrap into several, and how
+     many depends on the width the reader has. A cell that fits keeps no control. */
+  qsa(".longtext").forEach(el => {
+    const id = el.dataset.whole;
+    const over = el.scrollHeight - el.clientHeight > 4;
+    if (!shownWhole.has(id) && !over) { el.classList.remove("clipped"); return; }
+    if (shownWhole.has(id)) el.classList.remove("clipped");
+    el.insertAdjacentHTML("afterend", `<button class="showall" data-showall="${esc(id)}">${
+      shownWhole.has(id) ? "Show less" : "Show all of it"}</button>`);
+  });
   wireThreads(holder);
   wireWalk(holder); wireWalk(lead);
   const m = DATA.measured || {};
@@ -5814,6 +5886,11 @@ function renderSections() {
     const q = DATA.questions_due.find(x => x.name === name);
     select(`question:${name}`, q ? q.asks : name, "answer");
     focusComposer();
+  });
+  qsa("[data-showall]").forEach(b => b.onclick = () => {
+    const id = b.dataset.showall;
+    if (shownWhole.has(id)) shownWhole.delete(id); else shownWhole.add(id);
+    renderSections();
   });
   qsa("[data-amend]").forEach(b => b.onclick = () => {
     select(b.dataset.amend, `amending ${addressName(b.dataset.amend)}`, "amendment");

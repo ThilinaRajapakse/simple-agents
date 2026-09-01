@@ -11,6 +11,7 @@ from typing import Any
 
 from ..shapes import accepted_by, produced_by
 from .callables import read_callable
+from .words import _clip
 
 
 _KIND_WORDS = {
@@ -87,7 +88,7 @@ def _tool_card(tool: Any, scrub: Any = None) -> dict[str, Any]:
         "asks": getattr(tool, "answered_by", None),
         "cost_per_call": getattr(cost, "per_call", None),
         "currency": getattr(cost, "currency", None),
-        "description": (tool.description or "").strip().split("\n")[0][:160],
+        "description": _clip((tool.description or "").strip().split("\n")[0], 160),
     }
 
 

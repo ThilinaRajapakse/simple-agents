@@ -191,7 +191,7 @@ rollout manifests' `charged_cost` sum to **$5.5024** by the other route. The res
 `null` with `measured: null`, `simple-agents report` says `3.9744 USD`, and
 [`view/runs_overlay.py` `_cost_of`](../../../src/simple_agents/view/runs_overlay.py#L384) returns
 **`0.0`**, which is a wrong number rather than an absent one and which
-[`findings.py` `_one_step_costs_most`](../../../src/simple_agents/view/findings.py#L992) then reads.
+[`findings.py` `_one_step_costs_most`](../../../src/simple_agents/view/findings.py#L699) then reads.
 The view defect was found at the sitting while checking a scoping question and is `P3-50`'s.
 
 **`measured` was already built for this case and failed on granularity.**

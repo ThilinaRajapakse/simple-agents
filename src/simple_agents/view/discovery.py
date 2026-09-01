@@ -31,6 +31,11 @@ class LoadedProject:
     pipelines: dict[str, Any] = field(default_factory=dict)
     problems: list[str] = field(default_factory=list)
     imported: bool = False
+
+    could_not_import: str | None = None
+    """Why `agent.py` would not import, or ``None``. A project with no `agent.py` is
+    ``None`` too: nothing was attempted, so nothing failed."""
+
     product: Any = None
     """The declared ``Product``, or ``None`` where the project declares none."""
 
@@ -79,11 +84,7 @@ def load_project(root: str | Path) -> LoadedProject:
         spec.loader.exec_module(module)
         found.imported = True
     except BaseException as error:  # noqa: BLE001 - reported to the reader, never swallowed
-        found.problems.append(
-            f"{AGENT_MODULE} could not be imported ({type(error).__name__}: {error}), so "
-            f"the page shows the run record only. Importing it must be free of effects: "
-            f"build clients and pipelines inside functions."
-        )
+        _would_not_import(found, error)
         return found
     finally:
         if added_path and parent in sys.path:
@@ -117,6 +118,21 @@ def load_project(root: str | Path) -> LoadedProject:
     # Last, because everything above reads the modules this forgets.
     _drop_the_projects_modules(target.parent.resolve())
     return found
+
+
+def _would_not_import(found: LoadedProject, error: BaseException) -> None:
+    """Record why `agent.py` raised, for the frame that would otherwise be blank.
+
+    Two readers, so two forms of it. `could_not_import` is the error alone, which the empty
+    drawing and the attention card put in front of the builder. `problems` is the sentence
+    that says what the page did about it.
+    """
+    found.could_not_import = f"{type(error).__name__}: {error}"
+    found.problems.append(
+        f"{AGENT_MODULE} could not be imported ({found.could_not_import}), so the page shows "
+        f"the run record only. Importing it must be free of effects: build clients and "
+        f"pipelines inside functions."
+    )
 
 
 def _take_the_product(found: LoadedProject) -> None:
@@ -154,6 +170,25 @@ def _take_the_product(found: LoadedProject) -> None:
 
 _RESOLVED: dict[str, str] = {}
 
+# Where an installed package lives. A virtual environment usually sits inside the project
+# directory, so being under the project root does not make a module the project's own.
+_INSTALLED = ("site-packages", "dist-packages")
+
+# The library's own directory, kept whole whatever path it was installed to.
+_LIBRARY = os.path.realpath(str(Path(__file__).resolve().parent.parent)) + os.sep
+
+
+def _the_projects_own(resolved: str, inside: str) -> bool:
+    """Whether this file is the project's own source rather than something it installed.
+
+    Under the project directory and outside any virtual environment. `uv` writes the
+    environment to `<project>/.venv`, which puts every installed package under the project
+    root, and dropping those unimports the library itself.
+    """
+    if not resolved.startswith(inside) or resolved.startswith(_LIBRARY):
+        return False
+    return not any(one in resolved.split(os.sep) for one in _INSTALLED)
+
 
 def _drop_the_projects_modules(root: Path) -> None:
     """Forget every module the project imported, so loading it twice runs it twice.
@@ -163,8 +198,10 @@ def _drop_the_projects_modules(root: Path) -> None:
     the first load and on no later one. The page and the checks both load a project in one
     process, so the second reading saw a project declaring nothing.
 
-    Only the project's own modules go: a module is the project's when its file is inside the
-    project directory. The library's own, and every installed package, stay imported.
+    Only the project's own source goes. The library's own modules and every installed package
+    stay imported: dropping those re-imports the library on the next call, which gives every
+    exception class a second identity and empties the pipeline registry the project just
+    registered into.
     """
     inside = str(root.resolve()) + os.sep
     for name, module in list(sys.modules.items()):
@@ -177,5 +214,5 @@ def _drop_the_projects_modules(root: Path) -> None:
                 resolved = _RESOLVED[where] = os.path.realpath(where)
             except OSError:
                 continue
-        if resolved.startswith(inside):
+        if _the_projects_own(resolved, inside):
             sys.modules.pop(name, None)
