@@ -14,7 +14,7 @@ It is designed to be used by a builder and a coding agent working together. `sim
 ## Quick start
 
 ```
-uv init                       # start a project, if the directory has none
+uv init                       # set up a project with uv
 uv add simple-llm-agents      # or: pip install simple-llm-agents
 uv run simple-agents init     # add --claude for Claude Code
 ```

@@ -1,7 +1,7 @@
 {
   "format_version": "0.39",
   "trajectory_format_version": "0.29",
-  "library_version": "0.1.0.post1",
+  "library_version": "0.1.0.post2",
   "run_id": "e3-1",
   "role": "agent",
   "live": false,
@@ -13,8 +13,8 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-01T03:06:00.196Z",
-  "ended_at": "2026-09-01T03:06:00.205Z",
+  "started_at": "2026-09-01T03:27:40.152Z",
+  "ended_at": "2026-09-01T03:27:40.160Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1272963495,

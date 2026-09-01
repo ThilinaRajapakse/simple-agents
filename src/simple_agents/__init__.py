@@ -256,7 +256,7 @@ from .tools import (
 from .records.shelf import SHELF_FORMAT_VERSION, ShelvedQuestion
 from .records.trajectory import FORMAT_VERSION, Trajectory, TrajectoryWriter, read_trajectory
 
-__version__ = "0.1.0.post1"
+__version__ = "0.1.0.post2"
 
 
 def docs_path() -> Path:

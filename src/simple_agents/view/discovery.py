@@ -8,6 +8,7 @@ the name it is bound to, so a project that predates the convention still draws.
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -151,6 +152,9 @@ def _take_the_product(found: LoadedProject) -> None:
     found.product_parameters = module_constants([factory])
 
 
+_RESOLVED: dict[str, str] = {}
+
+
 def _drop_the_projects_modules(root: Path) -> None:
     """Forget every module the project imported, so loading it twice runs it twice.
 
@@ -162,12 +166,16 @@ def _drop_the_projects_modules(root: Path) -> None:
     Only the project's own modules go: a module is the project's when its file is inside the
     project directory. The library's own, and every installed package, stay imported.
     """
+    inside = str(root.resolve()) + os.sep
     for name, module in list(sys.modules.items()):
         where = getattr(module, "__file__", None)
         if not where:
             continue
-        try:
-            Path(where).resolve().relative_to(root)
-        except (ValueError, OSError):
-            continue
-        sys.modules.pop(name, None)
+        resolved = _RESOLVED.get(where)
+        if resolved is None:
+            try:
+                resolved = _RESOLVED[where] = os.path.realpath(where)
+            except OSError:
+                continue
+        if resolved.startswith(inside):
+            sys.modules.pop(name, None)
