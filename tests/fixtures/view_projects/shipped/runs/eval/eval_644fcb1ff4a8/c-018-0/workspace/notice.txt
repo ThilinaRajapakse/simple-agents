@@ -1,0 +1,1 @@
+reject: The claim exceeds the £500 limit for equipment, and while Northwind Stationery is an approved supplier, it does not override the expense policy limit.

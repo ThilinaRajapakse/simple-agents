@@ -1,0 +1,21 @@
+{
+  "status": 404,
+  "request": {
+    "model": "definitely-not-a-model-2020-01",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with the word OK."
+      }
+    ],
+    "max_tokens": 16
+  },
+  "response": {
+    "error": {
+      "message": "The model `definitely-not-a-model-2020-01` does not exist.",
+      "type": "NotFoundError",
+      "param": "model",
+      "code": 404
+    }
+  }
+}

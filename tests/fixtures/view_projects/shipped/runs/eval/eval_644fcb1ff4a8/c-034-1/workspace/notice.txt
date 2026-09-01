@@ -1,0 +1,1 @@
+reject: The claim is over the limit for the 'software' category (£310.0 > £200 limit) and cannot be approved despite the vendor being an approved supplier.

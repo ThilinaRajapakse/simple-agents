@@ -1,0 +1,810 @@
+{
+  "format_version": "0.39",
+  "trajectory_format_version": "0.29",
+  "library_version": "0.1.0",
+  "run_id": "c-015-1",
+  "role": "agent",
+  "live": false,
+  "end_user": {
+    "answered_by": "nobody"
+  },
+  "evaluation": {
+    "eval_id": "eval_644fcb1ff4a8",
+    "example": "c-015",
+    "rollout": 1,
+    "turn": 1
+  },
+  "conversation": null,
+  "started_at": "2026-08-29T10:33:53.645Z",
+  "ended_at": "2026-08-29T10:33:56.034Z",
+  "outcome": "completed",
+  "stopped_early": null,
+  "seed": 1706348190,
+  "concurrency": 1,
+  "budget": {
+    "max_steps": 12,
+    "max_tokens": 40000,
+    "max_cost": 0.05,
+    "max_wall_clock_ms": null
+  },
+  "cost_basis": {
+    "kind": "price",
+    "currency": "USD",
+    "input_uncached_per_mtok": 0.1,
+    "input_cache_read_per_mtok": 0.025,
+    "input_cache_write_per_mtok": 0.0,
+    "cache_write_per_mtok_by_ttl": {},
+    "output_per_mtok": 0.4
+  },
+  "models": {
+    "configured": {
+      "backend": "hosted_api",
+      "request_model": "gemini-3.1-flash-lite",
+      "model_revision": null
+    },
+    "observed": [
+      {
+        "backend": "hosted_api",
+        "request_model": "gemini-3.1-flash-lite",
+        "response_model": "gemini-3.1-flash-lite",
+        "model_revision": null,
+        "calls": 3
+      }
+    ]
+  },
+  "prompts": {
+    "extract": {
+      "version": "sha256:406ccf47b399",
+      "source": "derived"
+    },
+    "decide": {
+      "version": "sha256:80bf5d202bb9",
+      "source": "derived"
+    },
+    "audit": {
+      "version": "sha256:11a00dbebd00",
+      "source": "derived"
+    },
+    "finance": {
+      "version": "sha256:160a41e3812d",
+      "source": "derived"
+    }
+  },
+  "slice": null,
+  "nodes": [
+    {
+      "node_id": "intake",
+      "node_kind": "deterministic",
+      "successors": [
+        "extract"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:02605d4edde9a1da",
+      "tools": [],
+      "planned": false,
+      "touches": [
+        "claims_inbox"
+      ],
+      "fn": {
+        "version": "sha256:273f8fd17c19",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "extract",
+      "node_kind": "llm",
+      "successors": [
+        "policy_check"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:beb031022b918a84",
+      "accepts": "sha256:02605d4edde9a1da",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 600,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "policy_check",
+      "node_kind": "deterministic",
+      "successors": [
+        "decide",
+        "audit",
+        "dispatch"
+      ],
+      "route": {
+        "version": "sha256:e986de93078a",
+        "source": "derived"
+      },
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:600cf620d4fc8f67",
+      "tools": [
+        "policy_lookup"
+      ],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:ecb243c18a61",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "decide",
+      "node_kind": "llm",
+      "successors": [
+        "audit"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:ae902643b2d51c2d",
+      "accepts": "sha256:600cf620d4fc8f67",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 300,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "audit",
+      "node_kind": "llm",
+      "successors": [
+        "decide",
+        "dispatch"
+      ],
+      "route": {
+        "version": "sha256:85012c9a1126",
+        "source": "derived"
+      },
+      "consultation_route": null,
+      "loop": {
+        "max_iterations": 2,
+        "then": "dispatch"
+      },
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:7dd13131f06f5db7",
+      "accepts": "sha256:295ca9336dc1935b",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 300,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "dispatch",
+      "node_kind": "deterministic",
+      "successors": [
+        "book",
+        "finance",
+        "notify"
+      ],
+      "route": {
+        "version": "sha256:eefa73aa51ec",
+        "source": "derived"
+      },
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:295ca9336dc1935b",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:94c551ed4fd9",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "finance",
+      "node_kind": "agent",
+      "successors": [
+        "book",
+        "notify"
+      ],
+      "route": {
+        "version": "sha256:2adb2289d3b4",
+        "source": "derived"
+      },
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:64755b5d72e15ab5",
+      "accepts": "sha256:02605d4edde9a1da",
+      "tools": [
+        "consult",
+        "policy_lookup",
+        "vendor_registry"
+      ],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "allow_unfinished": false,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 400,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": {
+        "max_steps": 4,
+        "max_tokens": 8000,
+        "max_cost": 0.02,
+        "max_wall_clock_ms": null
+      },
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "book",
+      "node_kind": "deterministic",
+      "successors": [
+        "notify"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:600cf620d4fc8f67",
+      "tools": [
+        "post_ledger"
+      ],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:676d2ce9dfc5",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "notify",
+      "node_kind": "deterministic",
+      "successors": [],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:295ca9336dc1935b",
+      "tools": [],
+      "planned": false,
+      "touches": [
+        "outbox"
+      ],
+      "fn": {
+        "version": "sha256:74e9e7da7774",
+        "source": "derived"
+      }
+    }
+  ],
+  "containers": [],
+  "tools": [
+    {
+      "name": "policy_lookup",
+      "version": "sha256:f582845489a4",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [
+        "policy"
+      ],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null
+    },
+    {
+      "name": "vendor_registry",
+      "version": "sha256:ce1cc621bb75",
+      "side_effect_class": "spends_money",
+      "declared_cost": {
+        "currency": "USD",
+        "per_call": 0.002,
+        "latency_ms": null,
+        "max_per_call": null
+      },
+      "touches": [
+        "supplier_registry"
+      ],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null
+    },
+    {
+      "name": "consult",
+      "version": "sha256:39afdd321997",
+      "derived": "sha256:e2f0fd4d4610",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": "end_user",
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null
+    },
+    {
+      "name": "post_ledger",
+      "version": "sha256:2c07edff79d7",
+      "side_effect_class": "writes",
+      "declared_cost": null,
+      "touches": [
+        "ledger"
+      ],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null
+    }
+  ],
+  "constants": [
+    {
+      "module": "agent",
+      "name": "RECEIPT_REQUIRED_OVER",
+      "value": 25.0
+    },
+    {
+      "module": "agent",
+      "name": "MAX_AGE_DAYS",
+      "value": 90
+    }
+  ],
+  "redaction": {
+    "enabled": true,
+    "builtin": true,
+    "at_boundary": [
+      "secret_env",
+      "sensitive_keys",
+      "builtin"
+    ],
+    "builtin_rules": [
+      "aws_access_key_id",
+      "bearer_token",
+      "github_token",
+      "google_api_key",
+      "huggingface_token",
+      "jwt",
+      "private_key_block",
+      "sk_prefixed_key",
+      "slack_token"
+    ],
+    "declared_rules": [],
+    "sensitive_keys": [
+      "access_token",
+      "api_key",
+      "apikey",
+      "auth_token",
+      "authorization",
+      "client_secret",
+      "cookie",
+      "passwd",
+      "password",
+      "proxy_authorization",
+      "refresh_token",
+      "secret",
+      "set_cookie",
+      "x_api_key",
+      "x_auth_token"
+    ],
+    "secret_env": [
+      "GEMINI_API_KEY"
+    ],
+    "secret_env_unusable": []
+  },
+  "recording": {
+    "payload_rate": 1.0,
+    "payloads": "kept"
+  },
+  "schemas": {
+    "sha256:661329bfbbbea3c5": {
+      "$defs": {
+        "Unknown": {
+          "description": "The value the field asks for, where the agent established that it is not available. Supply `reason` saying what was looked for and what was found instead.",
+          "properties": {
+            "type": {
+              "const": "unknown",
+              "default": "unknown",
+              "title": "Type",
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "What was looked for, and what was found instead.",
+              "title": "Reason"
+            }
+          },
+          "title": "Unknown",
+          "type": "object"
+        }
+      },
+      "description": "What one expense claim says, read off the text the claimant sent.",
+      "properties": {
+        "vendor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "Who was paid: the shop, hotel, rail company or supplier as named. Send {\"type\": \"unknown\", \"reason\": \"...\"} where the claim names no vendor, such as a cash purchase from a market stall or a mileage claim.",
+          "title": "Vendor"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "The amount claimed in pounds, as one number. Where the claim lists lines, service or VAT, the total is the sum actually paid. Where two receipts are claimed together it is their sum. Send {\"type\": \"unknown\", \"reason\": \"...\"} where no amount can be read.",
+          "title": "Total"
+        },
+        "category": {
+          "description": "meals: food and drink. travel: transport, hotels, parking, mileage. equipment: physical things for work. software: licences, seats, subscriptions and credits for software services. other: anything else, such as tickets, printing, memberships or stock images.",
+          "enum": [
+            "meals",
+            "travel",
+            "equipment",
+            "software",
+            "other"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "po_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "The purchase order number exactly as written (for example \"PO-80115\"). Send {\"type\": \"unknown\", \"reason\": \"...\"} where the claim states none.",
+          "title": "Po Number"
+        },
+        "receipt": {
+          "description": "What proof is attached: a receipt, invoice, e-ticket or mileage log is 'receipt'; a bank or card statement is 'statement'; nothing is 'none'.",
+          "enum": [
+            "receipt",
+            "statement",
+            "none"
+          ],
+          "title": "Receipt",
+          "type": "string"
+        },
+        "expense_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "The date the expense was incurred, as YYYY-MM-DD. Dates in the claim are written day first (03/08/2026 is 3 August 2026). Send {\"type\": \"unknown\", \"reason\": \"...\"} where the claim gives no date.",
+          "title": "Expense Date"
+        },
+        "submitted_on": {
+          "description": "The submission date given with the claim, copied as YYYY-MM-DD.",
+          "title": "Submitted On",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vendor",
+        "total",
+        "category",
+        "po_number",
+        "receipt",
+        "expense_date",
+        "submitted_on"
+      ],
+      "title": "Claim",
+      "type": "object"
+    },
+    "sha256:1a8fc65ae338d0e9": {
+      "$defs": {
+        "Unknown": {
+          "description": "The value the field asks for, where the agent established that it is not available. Supply `reason` saying what was looked for and what was found instead.",
+          "properties": {
+            "type": {
+              "const": "unknown",
+              "default": "unknown",
+              "title": "Type",
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "What was looked for, and what was found instead.",
+              "title": "Reason"
+            }
+          },
+          "title": "Unknown",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "decision": {
+          "enum": [
+            "approve",
+            "reject",
+            "escalate"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "One sentence naming the rule the decision rests on. If it is not available, send {\"type\": \"unknown\", \"reason\": \"...\"} rather than the word \"unknown\".",
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "decision",
+        "reason"
+      ],
+      "title": "Decision",
+      "type": "object"
+    },
+    "sha256:0d982f91fd5d620b": {
+      "$defs": {
+        "Unknown": {
+          "description": "The value the field asks for, where the agent established that it is not available. Supply `reason` saying what was looked for and what was found instead.",
+          "properties": {
+            "type": {
+              "const": "unknown",
+              "default": "unknown",
+              "title": "Type",
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "What was looked for, and what was found instead.",
+              "title": "Reason"
+            }
+          },
+          "title": "Unknown",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "agrees": {
+          "description": "Whether the decision follows the policy as stated.",
+          "title": "Agrees",
+          "type": "boolean"
+        },
+        "decision": {
+          "description": "The decision the policy gives. The same as the one audited where it agrees.",
+          "enum": [
+            "approve",
+            "reject",
+            "escalate"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "why": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "Where it disagrees, which rule was misapplied. If it is not available, send {\"type\": \"unknown\", \"reason\": \"...\"} rather than the word \"unknown\".",
+          "title": "Why"
+        }
+      },
+      "required": [
+        "agrees",
+        "decision",
+        "why"
+      ],
+      "title": "Audit",
+      "type": "object"
+    }
+  },
+  "graph_fingerprint": "sha256:61d487b2d4086ca8",
+  "behaviour_fingerprint": "sha256:bf66760225290cfd",
+  "fetch_policy": [],
+  "mcp": [],
+  "unfinished": {},
+  "suspensions": [],
+  "resume_waivers": [],
+  "stream_waivers": [],
+  "cassette": {
+    "mode": "record",
+    "path": "cassettes/evaluation.jsonl",
+    "dropped": null,
+    "hits": 0,
+    "misses": 0,
+    "recorded": 3,
+    "diverged": 0
+  },
+  "memory": null,
+  "paths": {
+    "trajectory": "runs/eval/eval_644fcb1ff4a8/c-015-1/trajectory.jsonl",
+    "workspace": "runs/eval/eval_644fcb1ff4a8/c-015-1/workspace"
+  },
+  "counts": {
+    "records": 16,
+    "run_start": 1,
+    "node_execution": 9,
+    "model_call": 3,
+    "tool_call": 1,
+    "consultation": 0,
+    "delegation": 0,
+    "resource_access": 2
+  },
+  "totals": {
+    "tokens": {
+      "input_uncached": 709,
+      "input_cache_read": 0,
+      "input_cache_write": {
+        "type": "unknown",
+        "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+      },
+      "output": 206
+    },
+    "cost": {
+      "value": 0.0001533,
+      "currency": "USD",
+      "basis": "price",
+      "is_upper_bound": false,
+      "reason": null,
+      "measured": 0.0001533,
+      "priced_calls": 3,
+      "unpriced_calls": 0
+    },
+    "tool_spend": {
+      "amount": null,
+      "currency": null,
+      "calls": 0,
+      "source": null
+    },
+    "charged_cost": 0.0001533,
+    "held_back_ms": 0
+  }
+}

@@ -1,0 +1,2206 @@
+{
+  "eval_format_version": "0.29",
+  "eval_id": "eval_320dd2a44191",
+  "created_at": "2026-08-28T21:41:27.579Z",
+  "config": {
+    "split": "held_out",
+    "k": 2,
+    "n": 4,
+    "seed": 44,
+    "concurrency": 4,
+    "run_concurrency": 1,
+    "example_set": {
+      "content_hash": "ex_573e36ba3881932a",
+      "splits": {
+        "held_out": 4,
+        "dev": 2
+      },
+      "held_out": "held_out",
+      "absent_proportion": 0.25
+    },
+    "matches": {
+      "version": "sha256:3a5c473d076f",
+      "source": "derived"
+    },
+    "baseline": {
+      "version": "sha256:52a243b152ac",
+      "source": "derived"
+    },
+    "criteria": {},
+    "judgements": null,
+    "metrics": [],
+    "node_metrics": {},
+    "bootstrap": {
+      "resamples": 2000,
+      "confidence": 0.95,
+      "seed": 44
+    },
+    "slice": {
+      "of": "sha256:d755d943bc7de3eb",
+      "nodes": [
+        "classify",
+        "research",
+        "draft",
+        "critique",
+        "answer_directly",
+        "escalate",
+        "apologise",
+        "publish"
+      ],
+      "start": "classify",
+      "end": null,
+      "dropped": [
+        "intake"
+      ],
+      "cut_edges": [
+        {
+          "from": "intake",
+          "to": "classify",
+          "kind": "successor"
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "node_id": "classify",
+        "node_kind": "llm",
+        "successors": [
+          "research",
+          "answer_directly",
+          "escalate"
+        ],
+        "route": {
+          "version": "sha256:2b7b3f2ce1ce",
+          "source": "derived"
+        },
+        "consultation_route": null,
+        "loop": null,
+        "on_error": "apologise",
+        "retry": {
+          "attempts": 2,
+          "backoff_ms": 200
+        },
+        "schema": "sha256:e220302c76c44207",
+        "accepts": "sha256:02605d4edde9a1da",
+        "tools": [],
+        "planned": false,
+        "touches": [],
+        "allow_unknown": true,
+        "context_builder": {
+          "name": "AppendAll",
+          "config": {
+            "max_input_tokens": null
+          }
+        },
+        "stream": false,
+        "model": null,
+        "sampling": {
+          "temperature": null,
+          "max_output_tokens": 500,
+          "extra": {}
+        },
+        "finish_check": null,
+        "node_budget": null,
+        "node_budget_per_item": null,
+        "fan_out": {
+          "over": null,
+          "keep": [],
+          "max_failures": null
+        }
+      },
+      {
+        "node_id": "research.pick_sources",
+        "node_kind": "deterministic",
+        "successors": [
+          "research.read_source"
+        ],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": null,
+        "accepts": "sha256:e220302c76c44207",
+        "tools": [
+          "handbook_lookup"
+        ],
+        "planned": false,
+        "touches": [],
+        "fn": {
+          "version": "sha256:5c9cbe91b434",
+          "source": "derived"
+        }
+      },
+      {
+        "node_id": "research.read_source",
+        "node_kind": "llm",
+        "successors": [],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": "sha256:d9e3945a50b45c69",
+        "accepts": "sha256:02605d4edde9a1da",
+        "tools": [],
+        "planned": false,
+        "touches": [],
+        "allow_unknown": true,
+        "context_builder": {
+          "name": "AppendAll",
+          "config": {
+            "max_input_tokens": null
+          }
+        },
+        "stream": false,
+        "model": null,
+        "sampling": {
+          "temperature": null,
+          "max_output_tokens": 400,
+          "extra": {}
+        },
+        "finish_check": null,
+        "node_budget": null,
+        "node_budget_per_item": null,
+        "fan_out": {
+          "over": "sources",
+          "keep": [],
+          "max_failures": null
+        }
+      },
+      {
+        "node_id": "draft",
+        "node_kind": "llm",
+        "successors": [
+          "critique"
+        ],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": "sha256:9d1abf695a7db4fa",
+        "accepts": "sha256:295ca9336dc1935b",
+        "tools": [],
+        "planned": false,
+        "touches": [],
+        "allow_unknown": true,
+        "context_builder": {
+          "name": "AppendAll",
+          "config": {
+            "max_input_tokens": null
+          }
+        },
+        "stream": false,
+        "model": null,
+        "sampling": {
+          "temperature": null,
+          "max_output_tokens": 600,
+          "extra": {}
+        },
+        "finish_check": null,
+        "node_budget": null,
+        "node_budget_per_item": null,
+        "fan_out": {
+          "over": null,
+          "keep": [],
+          "max_failures": null
+        }
+      },
+      {
+        "node_id": "critique",
+        "node_kind": "llm",
+        "successors": [
+          "draft",
+          "publish"
+        ],
+        "route": {
+          "version": "sha256:3bcc94541b87",
+          "source": "derived"
+        },
+        "consultation_route": null,
+        "loop": {
+          "max_iterations": 2,
+          "then": "publish"
+        },
+        "on_error": null,
+        "retry": null,
+        "schema": "sha256:f87e6948368bd6d0",
+        "accepts": "sha256:9d1abf695a7db4fa",
+        "tools": [],
+        "planned": false,
+        "touches": [],
+        "allow_unknown": true,
+        "context_builder": {
+          "name": "AppendAll",
+          "config": {
+            "max_input_tokens": null
+          }
+        },
+        "stream": false,
+        "model": null,
+        "sampling": {
+          "temperature": null,
+          "max_output_tokens": 400,
+          "extra": {}
+        },
+        "finish_check": null,
+        "node_budget": null,
+        "node_budget_per_item": null,
+        "fan_out": {
+          "over": null,
+          "keep": [],
+          "max_failures": null
+        }
+      },
+      {
+        "node_id": "answer_directly",
+        "node_kind": "agent",
+        "successors": [
+          "publish"
+        ],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": "sha256:9d1abf695a7db4fa",
+        "accepts": "sha256:e220302c76c44207",
+        "tools": [
+          "consult",
+          "handbook_lookup",
+          "web_search"
+        ],
+        "planned": false,
+        "touches": [],
+        "allow_unknown": true,
+        "allow_unfinished": false,
+        "context_builder": {
+          "name": "AppendAll",
+          "config": {
+            "max_input_tokens": null
+          }
+        },
+        "stream": false,
+        "model": null,
+        "sampling": {
+          "temperature": null,
+          "max_output_tokens": 600,
+          "extra": {}
+        },
+        "finish_check": null,
+        "node_budget": {
+          "max_steps": 4,
+          "max_tokens": 8000,
+          "max_cost": 0.05,
+          "max_wall_clock_ms": null
+        },
+        "node_budget_per_item": null,
+        "fan_out": {
+          "over": null,
+          "keep": [],
+          "max_failures": null
+        }
+      },
+      {
+        "node_id": "escalate",
+        "node_kind": "deterministic",
+        "successors": [
+          "publish"
+        ],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": null,
+        "accepts": "sha256:e220302c76c44207",
+        "tools": [],
+        "planned": false,
+        "touches": [],
+        "fn": {
+          "version": "sha256:3bdfd7b9083c",
+          "source": "derived"
+        }
+      },
+      {
+        "node_id": "apologise",
+        "node_kind": "deterministic",
+        "successors": [
+          "publish"
+        ],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": null,
+        "accepts": null,
+        "tools": [],
+        "planned": false,
+        "touches": [],
+        "fn": {
+          "version": "sha256:e719dc4545df",
+          "source": "derived"
+        }
+      },
+      {
+        "node_id": "publish",
+        "node_kind": "deterministic",
+        "successors": [],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": null,
+        "accepts": "sha256:295ca9336dc1935b",
+        "tools": [
+          "consult"
+        ],
+        "planned": false,
+        "touches": [
+          "outbox"
+        ],
+        "fn": {
+          "version": "sha256:b23a2598c97c",
+          "source": "derived"
+        }
+      }
+    ],
+    "containers": [
+      {
+        "node_id": "research",
+        "node_kind": "pipeline",
+        "nodes": [
+          "research.pick_sources",
+          "research.read_source"
+        ],
+        "successors": [
+          "draft"
+        ],
+        "route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "suspend_before": false,
+        "budget": {
+          "max_steps": 6,
+          "max_tokens": 20000,
+          "max_cost": null,
+          "max_wall_clock_ms": null
+        },
+        "reached_by": null
+      }
+    ],
+    "graph_fingerprint": "sha256:7fea42ff55becbdb",
+    "behaviour_fingerprint": "sha256:0f9e53bd63a0333d",
+    "prompts": {
+      "classify": {
+        "version": "sha256:41be87db262d",
+        "source": "derived"
+      },
+      "research.read_source": {
+        "version": "sha256:8f997861297d",
+        "source": "derived"
+      },
+      "draft": {
+        "version": "sha256:ad41bef6a03f",
+        "source": "derived"
+      },
+      "critique": {
+        "version": "sha256:a0dddd175518",
+        "source": "derived"
+      },
+      "answer_directly": {
+        "version": "sha256:c93081d3dd51",
+        "source": "derived"
+      }
+    },
+    "tools": [
+      {
+        "name": "handbook_lookup",
+        "version": "sha256:7c92a3187881",
+        "side_effect_class": "read_only"
+      },
+      {
+        "name": "web_search",
+        "version": "sha256:c67d962aeb11",
+        "side_effect_class": "spends_money"
+      },
+      {
+        "name": "consult",
+        "version": "sha256:ffdee4e0bb7e",
+        "side_effect_class": "read_only"
+      }
+    ],
+    "model": {
+      "backend": "hosted_api",
+      "request_model": "gemini-3.1-flash-lite",
+      "model_revision": null
+    },
+    "cost_basis": {
+      "kind": "price",
+      "currency": "USD",
+      "input_uncached_per_mtok": 0.1,
+      "input_cache_read_per_mtok": 0.025,
+      "input_cache_write_per_mtok": 0.0,
+      "cache_write_per_mtok_by_ttl": {},
+      "output_per_mtok": 0.4
+    },
+    "cassette": {
+      "mode": "record",
+      "path": "cassettes/rung.jsonl",
+      "dropped": null,
+      "hits": 0,
+      "misses": 0,
+      "recorded": 32,
+      "diverged": 0
+    },
+    "budget": {
+      "max_steps": 14,
+      "max_tokens": 60000,
+      "max_cost": 0.2,
+      "max_wall_clock_ms": null
+    },
+    "max_spend": 2.0,
+    "scored_from": "rollouts",
+    "seed_source": "evaluation"
+  },
+  "examples": {
+    "t-export-filter": {
+      "split": "held_out",
+      "expects_absence": false,
+      "absent_parts": [],
+      "source": "archive:2026-06",
+      "metadata": {},
+      "metadata_omitted": [],
+      "label": "critique"
+    },
+    "t-seat-count": {
+      "split": "held_out",
+      "expects_absence": false,
+      "absent_parts": [],
+      "source": "archive:2026-06",
+      "metadata": {},
+      "metadata_omitted": [],
+      "label": "critique"
+    },
+    "t-thanks": {
+      "split": "held_out",
+      "expects_absence": false,
+      "absent_parts": [],
+      "source": "archive:2026-07",
+      "metadata": {},
+      "metadata_omitted": [],
+      "label": "answer_directly"
+    },
+    "t-nonsense": {
+      "split": "held_out",
+      "expects_absence": true,
+      "absent_parts": [],
+      "source": "archive:2026-07",
+      "metadata": {},
+      "metadata_omitted": []
+    }
+  },
+  "metrics": {
+    "accuracy": {
+      "name": "accuracy",
+      "definition": "right answers, counting a right report of absence, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 8,
+      "examples": 4,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.75,
+        "low": 0.25,
+        "high": 1.0,
+        "n": 4,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "graded_accuracy": {
+      "name": "graded_accuracy",
+      "definition": "right answers with partial credit, counting a right report of absence, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 8,
+      "examples": 4,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.75,
+        "low": 0.25,
+        "high": 1.0,
+        "n": 4,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "false_confidence_rate": {
+      "name": "false_confidence_rate",
+      "definition": "rollouts that asserted a wrong answer, meeting none of its answer key or missing a condition the key declared required, over all rollouts. An answer that fell short only by saying nothing is not one of these",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 8,
+      "examples": 4,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.4898908364545972,
+        "n": 4,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "partially_correct_rate": {
+      "name": "partially_correct_rate",
+      "definition": "rollouts that asserted an answer meeting part of its answer key, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 8,
+      "examples": 4,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.4898908364545972,
+        "n": 4,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "recall": {
+      "name": "recall",
+      "definition": "rollouts that found the right value, over rollouts of examples where a value exists",
+      "population": "rollouts of examples where a value exists",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 6,
+      "examples": 3,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.6666666666666666,
+        "low": 0.0,
+        "high": 1.0,
+        "n": 3,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "abstention_rate": {
+      "name": "abstention_rate",
+      "definition": "rollouts that reported absence, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 8,
+      "examples": 4,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.5,
+        "low": 0.0,
+        "high": 1.0,
+        "n": 4,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "failure_rate": {
+      "name": "failure_rate",
+      "definition": "rollouts that produced no answer at all, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 8,
+      "examples": 4,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.4898908364545972,
+        "n": 4,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "precision_when_asserting": {
+      "name": "precision_when_asserting",
+      "definition": "rollouts that asserted the right value, over rollouts that asserted anything",
+      "population": "rollouts that asserted an answer",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 4,
+      "examples": 2,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 1.0,
+        "low": 0.3423802275066532,
+        "high": 1.0,
+        "n": 2,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 44,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    }
+  },
+  "criteria": {},
+  "nodes": {
+    "classify": {
+      "node_id": "classify",
+      "node_kind": "llm",
+      "runs": 8,
+      "reached": 8,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 1.0,
+          "low": 0.5101091635454027,
+          "high": 1.0,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": {
+        "name": "accuracy",
+        "definition": "rollouts where this node's output matched its label, over rollouts that reached it and carry one",
+        "population": "rollouts that reached this node and carry a label for it",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 6,
+        "examples": 3,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 1.0,
+          "low": 0.4385029682449546,
+          "high": 1.0,
+          "n": 3,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "metrics": {},
+      "executions": 8,
+      "errors": 0,
+      "model_calls": 8,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 6916,
+      "absent_outputs": 4,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {},
+      "tokens": {
+        "input_uncached": 570,
+        "input_cache_read": 0,
+        "input_cache_write": {
+          "type": "unknown",
+          "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+        },
+        "output": 489
+      },
+      "cost": {
+        "value": 0.0002526,
+        "currency": "USD",
+        "basis": "price",
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": 0.0002526,
+        "priced_calls": 8,
+        "unpriced_calls": 0
+      }
+    },
+    "research.pick_sources": {
+      "node_id": "research.pick_sources",
+      "node_kind": "deterministic",
+      "runs": 8,
+      "reached": 4,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 0.5,
+          "low": 0.0,
+          "high": 1.0,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "percentile bootstrap, resampling examples"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 4,
+      "errors": 0,
+      "model_calls": 0,
+      "tool_calls": 8,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 6,
+      "absent_outputs": 0,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {},
+      "tokens": {},
+      "cost": {
+        "value": null,
+        "currency": null,
+        "basis": null,
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": null,
+        "priced_calls": 0,
+        "unpriced_calls": 0
+      }
+    },
+    "research.read_source": {
+      "node_id": "research.read_source",
+      "node_kind": "llm",
+      "runs": 8,
+      "reached": 4,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 0.5,
+          "low": 0.0,
+          "high": 1.0,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "percentile bootstrap, resampling examples"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 4,
+      "errors": 0,
+      "model_calls": 8,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 6027,
+      "absent_outputs": 0,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {},
+      "tokens": {
+        "input_uncached": 259,
+        "input_cache_read": 0,
+        "input_cache_write": {
+          "type": "unknown",
+          "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+        },
+        "output": 220
+      },
+      "cost": {
+        "value": 0.0001139,
+        "currency": "USD",
+        "basis": "price",
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": 0.0001139,
+        "priced_calls": 8,
+        "unpriced_calls": 0
+      }
+    },
+    "draft": {
+      "node_id": "draft",
+      "node_kind": "llm",
+      "runs": 8,
+      "reached": 4,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 0.5,
+          "low": 0.0,
+          "high": 1.0,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "percentile bootstrap, resampling examples"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 4,
+      "errors": 0,
+      "model_calls": 4,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 3629,
+      "absent_outputs": 0,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {
+        "skipped": 4
+      },
+      "tokens": {
+        "input_uncached": 595,
+        "input_cache_read": 0,
+        "input_cache_write": {
+          "type": "unknown",
+          "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+        },
+        "output": 286
+      },
+      "cost": {
+        "value": 0.00017390000000000003,
+        "currency": "USD",
+        "basis": "price",
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": 0.00017390000000000003,
+        "priced_calls": 4,
+        "unpriced_calls": 0
+      }
+    },
+    "critique": {
+      "node_id": "critique",
+      "node_kind": "llm",
+      "runs": 8,
+      "reached": 4,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 0.5,
+          "low": 0.0,
+          "high": 1.0,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "percentile bootstrap, resampling examples"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 4,
+      "errors": 0,
+      "model_calls": 4,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 3224,
+      "absent_outputs": 0,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {
+        "skipped": 4
+      },
+      "tokens": {
+        "input_uncached": 358,
+        "input_cache_read": 0,
+        "input_cache_write": {
+          "type": "unknown",
+          "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+        },
+        "output": 175
+      },
+      "cost": {
+        "value": 0.0001058,
+        "currency": "USD",
+        "basis": "price",
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": 0.0001058,
+        "priced_calls": 4,
+        "unpriced_calls": 0
+      }
+    },
+    "answer_directly": {
+      "node_id": "answer_directly",
+      "node_kind": "agent",
+      "runs": 8,
+      "reached": 0,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.4898908364545972,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 0,
+      "errors": 0,
+      "model_calls": 0,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 0,
+      "absent_outputs": 0,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {
+        "skipped": 8
+      },
+      "tokens": {},
+      "cost": {
+        "value": null,
+        "currency": null,
+        "basis": null,
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": null,
+        "priced_calls": 0,
+        "unpriced_calls": 0
+      }
+    },
+    "escalate": {
+      "node_id": "escalate",
+      "node_kind": "deterministic",
+      "runs": 8,
+      "reached": 4,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 0.5,
+          "low": 0.0,
+          "high": 1.0,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "percentile bootstrap, resampling examples"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 4,
+      "errors": 0,
+      "model_calls": 0,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 0,
+      "absent_outputs": 4,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {
+        "skipped": 4
+      },
+      "tokens": {},
+      "cost": {
+        "value": null,
+        "currency": null,
+        "basis": null,
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": null,
+        "priced_calls": 0,
+        "unpriced_calls": 0
+      }
+    },
+    "apologise": {
+      "node_id": "apologise",
+      "node_kind": "deterministic",
+      "runs": 8,
+      "reached": 0,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.4898908364545972,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 0,
+      "errors": 0,
+      "model_calls": 0,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 1,
+      "absent_outputs": 0,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {
+        "skipped": 8
+      },
+      "tokens": {},
+      "cost": {
+        "value": null,
+        "currency": null,
+        "basis": null,
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": null,
+        "priced_calls": 0,
+        "unpriced_calls": 0
+      }
+    },
+    "publish": {
+      "node_id": "publish",
+      "node_kind": "deterministic",
+      "runs": 8,
+      "reached": 8,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 8,
+        "examples": 4,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 1.0,
+          "low": 0.5101091635454027,
+          "high": 1.0,
+          "n": 4,
+          "k": 2,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 44,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 8,
+      "errors": 0,
+      "model_calls": 0,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 8,
+      "consultation_resolutions": {
+        "unavailable": 8
+      },
+      "consultation_answered_by": {
+        "nobody": 8
+      },
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {
+        "outbox": 8
+      },
+      "delegations": 0,
+      "replayed_calls": 0,
+      "wall_clock_ms": 3,
+      "absent_outputs": 0,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {},
+      "tokens": {},
+      "cost": {
+        "value": null,
+        "currency": null,
+        "basis": null,
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": null,
+        "priced_calls": 0,
+        "unpriced_calls": 0
+      }
+    }
+  },
+  "totals": {
+    "tokens": {
+      "input_uncached": 1782,
+      "input_cache_read": 0,
+      "input_cache_write": {
+        "type": "unknown",
+        "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+      },
+      "output": 1170
+    },
+    "cost": {
+      "value": 0.0006462000000000001,
+      "currency": "USD",
+      "basis": "price",
+      "is_upper_bound": false,
+      "reason": null,
+      "measured": 0.0006462000000000001,
+      "priced_calls": 24,
+      "unpriced_calls": 0,
+      "unpriced_nodes": []
+    },
+    "tool_spend": {
+      "amount": null,
+      "currency": null,
+      "calls": 0
+    }
+  },
+  "contamination": null,
+  "rollouts": [
+    {
+      "example_id": "t-export-filter",
+      "rollout": 0,
+      "seed": 1089886398,
+      "outcome": "correct",
+      "answer": "critique",
+      "run_id": "t-export-filter-0",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-export-filter-0/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-export-filter",
+      "rollout": 1,
+      "seed": 887032751,
+      "outcome": "correct",
+      "answer": "critique",
+      "run_id": "t-export-filter-1",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-export-filter-1/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-nonsense",
+      "rollout": 0,
+      "seed": 578660240,
+      "outcome": "correct_abstention",
+      "answer": {
+        "type": "unknown",
+        "reason": "escalated to the rota, so no reply went out"
+      },
+      "run_id": "t-nonsense-0",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-nonsense-0/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-nonsense",
+      "rollout": 1,
+      "seed": 1395509457,
+      "outcome": "correct_abstention",
+      "answer": {
+        "type": "unknown",
+        "reason": "escalated to the rota, so no reply went out"
+      },
+      "run_id": "t-nonsense-1",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-nonsense-1/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-seat-count",
+      "rollout": 0,
+      "seed": 1169098866,
+      "outcome": "correct",
+      "answer": "critique",
+      "run_id": "t-seat-count-0",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-seat-count-0/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-seat-count",
+      "rollout": 1,
+      "seed": 1712912651,
+      "outcome": "correct",
+      "answer": "critique",
+      "run_id": "t-seat-count-1",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-seat-count-1/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-thanks",
+      "rollout": 0,
+      "seed": 1505529386,
+      "outcome": "missed",
+      "answer": {
+        "type": "unknown",
+        "reason": "escalated to the rota, so no reply went out"
+      },
+      "run_id": "t-thanks-0",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-thanks-0/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-thanks",
+      "rollout": 1,
+      "seed": 615908969,
+      "outcome": "missed",
+      "answer": {
+        "type": "unknown",
+        "reason": "escalated to the rota, so no reply went out"
+      },
+      "run_id": "t-thanks-1",
+      "trajectory": "runs/eval/eval_320dd2a44191/t-thanks-1/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "classify": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.pick_sources": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "research.read_source": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "draft": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "critique": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "answer_directly": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "escalate": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "apologise": {
+          "reached": false,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "publish": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 1,
+      "unreached_items": 0
+    }
+  ],
+  "baseline": [
+    {
+      "example_id": "t-export-filter",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 0.0,
+        "met": 0,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-seat-count",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 0.0,
+        "met": 0,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-thanks",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 0.0,
+        "met": 0,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-nonsense",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    }
+  ],
+  "baseline_unscored": []
+}

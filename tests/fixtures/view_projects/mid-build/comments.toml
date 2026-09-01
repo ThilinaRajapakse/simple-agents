@@ -1,0 +1,30 @@
+# What was said about parts of the system, and what came back. Written by the served
+# `simple-agents view` and by the coding agent; read by both, and by the gates (FT-39).
+# docs/view.md#5 is the shape.
+version = "1"
+
+
+[[comment]]
+id = "c1"
+at = "next_pick/judge_books"
+said = "Why does the judge see the whole pool? I thought we agreed on unread only."
+when = "2026-08-26"
+status = "open"
+
+[[comment.replies]]
+by = "builder"
+said = "Is this fixed now?"
+when = "2026-08-26T09:19:30.962Z"
+
+[[comment.replies]]
+by = "coding_agent"
+said = "Yes: gather_pool asks the shelf for unread rows only (shelf_rows(only_unread=True)), so the judge can only ever see the unread pool. The thread stays open for you to confirm."
+when = "2026-08-26T09:27:47.821Z"
+
+[[comment]]
+id = "c2"
+at = "next_pick/gather_pool"
+said = "Filter looks right now."
+when = "2026-08-25"
+status = "addressed"
+addressed_by = "decisions.candidate_pool"

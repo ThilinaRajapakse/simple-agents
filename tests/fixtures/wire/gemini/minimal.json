@@ -1,0 +1,50 @@
+{
+  "status": 200,
+  "request": {
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Reply with the word OK."
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "temperature": 0.0,
+      "seed": 41
+    }
+  },
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "OK",
+              "thoughtSignature": "EjQKMgERTTIPo0gwCyLMi+5ek/UJySmCJ0kMKYl80jOVEOrlhiY+/a+qK0Y7RJ0EZKjm4a9B"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 7,
+      "candidatesTokenCount": 1,
+      "totalTokenCount": 8,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 7
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.1-flash-lite",
+    "responseId": "4qN7av_0Hd3cvdIPkcKDiAI"
+  }
+}

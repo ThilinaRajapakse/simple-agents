@@ -1,0 +1,57 @@
+{
+  "status": 200,
+  "request": {
+    "model": "Qwen/Qwen3-1.7B",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is 5+5? Answer briefly."
+      }
+    ],
+    "max_tokens": 400,
+    "temperature": 0.0
+  },
+  "response": {
+    "id": "chatcmpl-b9ba4ab103680f55",
+    "object": "chat.completion",
+    "created": 1785930231,
+    "model": "Qwen/Qwen3-1.7B",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "\n\n5 + 5 = 10.",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "reasoning": "\nOkay, the user is asking \"What is 5+5? Answer briefly.\" Let me think. The question is straightforward. 5 plus 5 is 10. But I need to make sure I'm not missing anything. Sometimes people might add numbers in a different way, but no, addition is just combining the numbers. So 5 + 5 equals 10. I should keep it simple. The answer is 10. Just need to present it clearly.\n"
+        },
+        "logprobs": null,
+        "finish_reason": "stop",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.26.0-c4324e44",
+    "usage": {
+      "prompt_tokens": 18,
+      "total_tokens": 131,
+      "completion_tokens": 113,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "created_cache_tokens": 16,
+        "multimodal_tokens": null
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

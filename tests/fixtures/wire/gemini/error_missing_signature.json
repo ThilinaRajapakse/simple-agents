@@ -1,0 +1,76 @@
+{
+  "status": 400,
+  "request": {
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Which retailer sells the trouser with a 34 inch inseam? Search the catalogue."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "functionCall": {
+              "name": "search",
+              "args": {
+                "query": "trouser 34 inch inseam"
+              },
+              "id": "XnBIe2Ih"
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "XnBIe2Ih",
+              "name": "search",
+              "response": {
+                "result": "belmont: 34 inch inseam. Sold by Kirkwall."
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "tools": [
+      {
+        "functionDeclarations": [
+          {
+            "name": "search",
+            "description": "Search the product catalogue.",
+            "parametersJsonSchema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "A few words"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "temperature": 0.0,
+      "seed": 41
+    }
+  },
+  "response": {
+    "error": {
+      "code": 400,
+      "message": "Function call is missing a thought_signature in functionCall parts. This is required for tools to work correctly, and missing thought_signature may lead to degraded model performance. Additional data, function call `default_api:search` , position 2. Please refer to https://ai.google.dev/gemini-api/docs/thought-signatures for more details.",
+      "status": "INVALID_ARGUMENT"
+    }
+  }
+}

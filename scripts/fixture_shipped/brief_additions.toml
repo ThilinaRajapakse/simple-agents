@@ -1,0 +1,47 @@
+
+# The four the `ship` gate requires, and the two decision kinds nothing else records.
+
+[entries.someone_there]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "Yes. Finance is on the desk in office hours, and a claim the agent cannot settle waits for them rather than being decided."
+
+[entries.live_records]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "The claim text and what the agent decided, kept for a year. The claimant's name is redacted out of the trajectory."
+
+[entries.watching_live]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "Finance sees every rejection before it goes out, and would say so. The share of claims parked for a person is the number I watch."
+
+[entries.stored_output]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "The ledger. `book` posts an approved claim to it, and a claim posted by an older pipeline is left alone rather than re-decided."
+
+[decisions.the_supplier_registry]
+kind = "dependency"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "the approved-supplier registry, charged per lookup, rather than a copy refreshed nightly"
+considered = ["a nightly copy of the registry", "no supplier check at all"]
+because = "a copy goes stale between refreshes and an approval against a stale registry is the error that costs most"
+produces = ["vendor_registry"]
+
+[decisions.what_counts_as_right]
+kind = "measurement"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "a claim is right when the decision matches and every field read off it matches"
+considered = ["the decision alone"]
+because = "a right decision reached off a misread total is right by accident"

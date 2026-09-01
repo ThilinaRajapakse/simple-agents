@@ -1,0 +1,24 @@
+{
+  "status": 200,
+  "sse": "data: {\"id\":\"a00bb4429bcb40c3932c56fcfa753959\",\"object\":\"chat.completion.chunk\",\"created\":1785859796,\"model\":\"mistral-small-2603\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"a00bb4429bcb40c3932c56fcfa753959\",\"object\":\"chat.completion.chunk\",\"created\":1785859796,\"model\":\"mistral-small-2603\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"OK\"},\"finish_reason\":null}],\"p\":\"ab\"}\n\ndata: {\"id\":\"a00bb4429bcb40c3932c56fcfa753959\",\"object\":\"chat.completion.chunk\",\"created\":1785859796,\"model\":\"mistral-small-2603\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":21,\"total_tokens\":23,\"completion_tokens\":2,\"prompt_tokens_details\":{\"cached_tokens\":0},\"service_tier\":\"standard\"},\"p\":\"abcdefghijkl\"}\n\ndata: [DONE]\n",
+  "headers": {
+    "date": "Tue, 04 Aug 2026 16:09:57 GMT",
+    "content-type": "text/event-stream; charset=utf-8",
+    "transfer-encoding": "chunked",
+    "connection": "keep-alive",
+    "mistral-correlation-id": "019fcd89-ee22-7d6f-a6a2-a0ab877bbfe5",
+    "x-kong-request-id": "019fcd89-ee22-7d6f-a6a2-a0ab877bbfe5",
+    "x-max-retry-attempts-reached": "false",
+    "x-envoy-upstream-service-time": "515",
+    "server": "cloudflare",
+    "access-control-allow-origin": "*",
+    "x-kong-upstream-latency": "517",
+    "x-kong-proxy-latency": "14",
+    "set-cookie": "__cf_bm=[redacted]; HttpOnly; SameSite=None; Secure; Path=/; Domain=mistral.ai",
+    "x-content-type-options": "nosniff",
+    "cf-cache-status": "DYNAMIC",
+    "strict-transport-security": "max-age=15552000; includeSubDomains; preload",
+    "cf-ray": "a25ed4501bd1a6a3-AMS",
+    "alt-svc": "h3=\":443\"; ma=86400"
+  }
+}

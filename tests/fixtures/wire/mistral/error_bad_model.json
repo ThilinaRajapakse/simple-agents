@@ -1,0 +1,21 @@
+{
+  "status": 400,
+  "request": {
+    "model": "definitely-not-a-model-2020-01",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with the word OK."
+      }
+    ],
+    "max_tokens": 16
+  },
+  "response": {
+    "object": "error",
+    "message": "Invalid model: definitely-not-a-model-2020-01",
+    "type": "invalid_model",
+    "param": null,
+    "code": "1500",
+    "raw_status_code": 400
+  }
+}

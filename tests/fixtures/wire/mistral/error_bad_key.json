@@ -1,0 +1,15 @@
+{
+  "status": 401,
+  "request": {
+    "model": "mistral-small-latest",
+    "messages": [
+      {
+        "role": "user",
+        "content": "hi"
+      }
+    ]
+  },
+  "response": {
+    "detail": "Unauthorized"
+  }
+}

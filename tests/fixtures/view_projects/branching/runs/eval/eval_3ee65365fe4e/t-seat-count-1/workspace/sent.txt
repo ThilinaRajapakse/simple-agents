@@ -1,0 +1,1 @@
+good_enough=True why='The response is accurate, professional, uses plain language, and avoids inventing information while clearly stating the limitations of the current documentation.'

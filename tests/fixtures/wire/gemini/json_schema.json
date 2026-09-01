@@ -1,0 +1,66 @@
+{
+  "status": 200,
+  "request": {
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "What is the capital of France?"
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "temperature": 0.0,
+      "seed": 41,
+      "responseMimeType": "application/json",
+      "responseJsonSchema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string"
+          },
+          "confident": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "answer",
+          "confident"
+        ]
+      }
+    }
+  },
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "{\n  \"answer\": \"Paris\",\n  \"confident\": true\n}",
+              "thoughtSignature": "EjQKMgERTTIPhxfLHOrrTUm0f0jjvDr6KXFQC3us0saAp7/89gmJEAwXxXlnN7OWz3FDH8j3"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 8,
+      "candidatesTokenCount": 17,
+      "totalTokenCount": 25,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 8
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.1-flash-lite",
+    "responseId": "5aN7aoO_Gpq7vdIPgYDMQA"
+  }
+}

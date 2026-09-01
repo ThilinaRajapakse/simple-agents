@@ -1,0 +1,79 @@
+{
+  "status": 200,
+  "request": {
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Which retailer sells the trouser with a 34 inch inseam? Search the catalogue."
+          }
+        ]
+      }
+    ],
+    "tools": [
+      {
+        "functionDeclarations": [
+          {
+            "name": "search",
+            "description": "Search the product catalogue.",
+            "parametersJsonSchema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "A few words"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "temperature": 0.0,
+      "seed": 41
+    }
+  },
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "functionCall": {
+                "name": "search",
+                "args": {
+                  "query": "trouser 34 inch inseam"
+                },
+                "id": "XnBIe2Ih"
+              },
+              "thoughtSignature": "EjQKMgERTTIPVV98y3BGHXhXJBRmxgTTxVNdeRvA+8ffuVZlAj9IVihveITTDqbJw5U9f68l"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0,
+        "finishMessage": "Model generated function call(s)."
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 67,
+      "candidatesTokenCount": 21,
+      "totalTokenCount": 88,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 67
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.1-flash-lite",
+    "responseId": "5KN7ateqCZSkxN8Pwv-IiQQ"
+  }
+}

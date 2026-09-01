@@ -1,0 +1,101 @@
+{
+  "status": 200,
+  "request": {
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Which retailer sells the trouser with a 34 inch inseam? Search the catalogue."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "functionCall": {
+              "name": "search",
+              "args": {
+                "query": "trouser 34 inch inseam"
+              },
+              "id": "XnBIe2Ih"
+            },
+            "thoughtSignature": "EjQKMgERTTIPVV98y3BGHXhXJBRmxgTTxVNdeRvA+8ffuVZlAj9IVihveITTDqbJw5U9f68l"
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "XnBIe2Ih",
+              "name": "search",
+              "response": {
+                "result": "belmont: 34 inch inseam. Sold by Kirkwall."
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "tools": [
+      {
+        "functionDeclarations": [
+          {
+            "name": "search",
+            "description": "Search the product catalogue.",
+            "parametersJsonSchema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "A few words"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "temperature": 0.0,
+      "seed": 41
+    }
+  },
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "The trousers with a 34-inch inseam are the **Belmont** model, which are sold by **Kirkwall**.",
+              "thoughtSignature": "EjQKMgERTTIPU9O+PloVbAdK8XhzU9ORUKuIP6DyQLZPUSRIIt2BUsXKhPucrmiVbUCrOScJ"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 114,
+      "candidatesTokenCount": 27,
+      "totalTokenCount": 141,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 114
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.1-flash-lite",
+    "responseId": "5KN7ap7cLKaJxN8PlO7pqAc"
+  }
+}

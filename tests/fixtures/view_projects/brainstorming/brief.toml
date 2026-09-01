@@ -1,0 +1,55 @@
+# A project part way through its first conversation: some answers given, one question put off
+# to a later stage, and the rest not asked yet. What the `brainstorm` page is drawn against.
+tier = "evaluated"
+stage = "brainstorm"
+comments_block_gates = false
+
+[entries.purpose]
+status = "answered"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = "The rota spends its mornings answering the same handbook questions. This should take those away."
+
+[entries.end_user]
+status = "answered"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = "The person on the support rota. They know the product and not the handbook by heart."
+
+[entries.what_it_does]
+status = "answered"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = "Reads a support ticket and writes the reply a person would send, or hands it to the rota when it cannot."
+
+[entries.one_real_input]
+status = "answered"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = "\"The export button greys out after I add a second filter. Is that expected?\""
+
+[entries.finished_version]
+status = "answered"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = "It answers most tickets from the handbook, asks the rota when unsure, and is never confidently wrong."
+
+[entries.smallest_worthwhile]
+status = "answered"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = "A draft for the handbook questions alone. Anything it cannot answer goes to the rota untouched."
+
+[entries.used_through]
+status = "deferred"
+deferred_to = "shape"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = ""
+
+[entries.anything_else]
+status = "answered"
+asked_at = "brainstorm"
+recorded_at = "2026-08-29T08:00:00Z"
+source = "builder"
+answer = "Nothing yet."

@@ -1,0 +1,1 @@
+park: The vendor (Figma) is not an approved supplier, and the required PO number is missing. As per instructions, the claim must be parked because the finance lead could not be reached to provide approval for the policy exception.

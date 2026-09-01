@@ -1,0 +1,720 @@
+{
+  "variant_format_version": "0.3",
+  "baseline": {
+    "eval_id": "eval_43ba83d51c6f",
+    "graph_fingerprint": "sha256:d755d943bc7de3eb",
+    "behaviour_fingerprint": "sha256:da935b68100f2403"
+  },
+  "variants": {
+    "no revision": {
+      "plan": {
+        "name": "no revision",
+        "differs_at": [
+          "critique"
+        ],
+        "changed": {
+          "nodes.critique.loop.max_iterations": [
+            2,
+            1
+          ]
+        },
+        "live_calls": 0,
+        "replayed_calls": 3,
+        "estimated_cost": 0.00028050000000000004,
+        "nodes": [
+          {
+            "node_id": "intake",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "classify",
+            "status": "unchanged",
+            "calls": "replayed",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0002406
+          },
+          {
+            "node_id": "research.pick_sources",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "research.read_source",
+            "status": "unchanged",
+            "calls": "replayed",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0001294
+          },
+          {
+            "node_id": "draft",
+            "status": "unchanged",
+            "calls": "live",
+            "estimated_calls": 0,
+            "estimated_cost": 0.0001751
+          },
+          {
+            "node_id": "critique",
+            "status": "changed",
+            "calls": "live",
+            "estimated_calls": 0,
+            "estimated_cost": 0.00010540000000000001
+          },
+          {
+            "node_id": "answer_directly",
+            "status": "unchanged",
+            "calls": "replayed",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0008856000000000001
+          },
+          {
+            "node_id": "escalate",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "apologise",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "publish",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          }
+        ]
+      },
+      "eval_id": "eval_3ee65365fe4e",
+      "graph_fingerprint": "sha256:e6aa2bd179c9a971",
+      "behaviour_fingerprint": "sha256:8b5c628b2fcbcb50",
+      "comparison": {
+        "comparison_format_version": "0.1",
+        "shared_examples": 4,
+        "only_before": [],
+        "only_after": [],
+        "changed": {
+          "baseline": [
+            {
+              "version": "sha256:52a243b152ac",
+              "source": "derived"
+            },
+            null
+          ],
+          "nodes.critique.loop.max_iterations": [
+            2,
+            1
+          ],
+          "graph_fingerprint": [
+            "sha256:d755d943bc7de3eb",
+            "sha256:e6aa2bd179c9a971"
+          ],
+          "behaviour_fingerprint": [
+            "sha256:da935b68100f2403",
+            "sha256:8b5c628b2fcbcb50"
+          ]
+        },
+        "moved": [],
+        "undecided": [
+          "accuracy",
+          "graded_accuracy",
+          "false_confidence_rate",
+          "partially_correct_rate",
+          "recall",
+          "abstention_rate",
+          "failure_rate",
+          "precision_when_asserting"
+        ],
+        "moved_criteria": [],
+        "moved_nodes": [],
+        "population_changed": [],
+        "metrics": {
+          "accuracy": {
+            "name": "accuracy",
+            "definition": "right answers, counting a right report of absence, over all rollouts",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 4,
+            "before_examples": 4,
+            "after_examples": 4,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.4898908364545972,
+              "n": 4,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "graded_accuracy": {
+            "name": "graded_accuracy",
+            "definition": "right answers with partial credit, counting a right report of absence, over all rollouts",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 4,
+            "before_examples": 4,
+            "after_examples": 4,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.4898908364545972,
+              "n": 4,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "false_confidence_rate": {
+            "name": "false_confidence_rate",
+            "definition": "rollouts that asserted a wrong answer, meeting none of its answer key or missing a condition the key declared required, over all rollouts. An answer that fell short only by saying nothing is not one of these",
+            "before": 0.0,
+            "after": 0.0,
+            "examples": 4,
+            "before_examples": 4,
+            "after_examples": 4,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.4898908364545972,
+              "n": 4,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "partially_correct_rate": {
+            "name": "partially_correct_rate",
+            "definition": "rollouts that asserted an answer meeting part of its answer key, over all rollouts",
+            "before": 0.0,
+            "after": 0.0,
+            "examples": 4,
+            "before_examples": 4,
+            "after_examples": 4,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.4898908364545972,
+              "n": 4,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "recall": {
+            "name": "recall",
+            "definition": "rollouts that found the right value, over rollouts of examples where a value exists",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 3,
+            "before_examples": 3,
+            "after_examples": 3,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "3 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.5614970317550454,
+              "n": 3,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "abstention_rate": {
+            "name": "abstention_rate",
+            "definition": "rollouts that reported absence, over all rollouts",
+            "before": 0.25,
+            "after": 0.25,
+            "examples": 4,
+            "before_examples": 4,
+            "after_examples": 4,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.4898908364545972,
+              "n": 4,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "failure_rate": {
+            "name": "failure_rate",
+            "definition": "rollouts that produced no answer at all, over all rollouts",
+            "before": 0.0,
+            "after": 0.0,
+            "examples": 4,
+            "before_examples": 4,
+            "after_examples": 4,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.4898908364545972,
+              "n": 4,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "precision_when_asserting": {
+            "name": "precision_when_asserting",
+            "definition": "rollouts that asserted the right value, over rollouts that asserted anything",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 3,
+            "before_examples": 3,
+            "after_examples": 3,
+            "population_note": null,
+            "moved": null,
+            "rollout_noise": 0.0,
+            "verdict_reason": "3 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.5614970317550454,
+              "n": 3,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          }
+        },
+        "criteria": {},
+        "nodes": {
+          "intake": {
+            "node_id": "intake",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "classify": {
+            "node_id": "classify",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": {
+              "name": "accuracy",
+              "definition": "rollouts where this node's output matched its label, over rollouts that reached it and carry one",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 3,
+              "before_examples": 3,
+              "after_examples": 3,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "3 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.5614970317550454,
+                "n": 3,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "metrics": {}
+          },
+          "research.pick_sources": {
+            "node_id": "research.pick_sources",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.5,
+              "after": 0.5,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "research.read_source": {
+            "node_id": "research.read_source",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.5,
+              "after": 0.5,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "draft": {
+            "node_id": "draft",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.5,
+              "after": 0.5,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "critique": {
+            "node_id": "critique",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.5,
+              "after": 0.5,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "answer_directly": {
+            "node_id": "answer_directly",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.25,
+              "after": 0.25,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "escalate": {
+            "node_id": "escalate",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.25,
+              "after": 0.25,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "apologise": {
+            "node_id": "apologise",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.0,
+              "after": 0.0,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "publish": {
+            "node_id": "publish",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 4,
+              "before_examples": 4,
+              "after_examples": 4,
+              "population_note": null,
+              "moved": null,
+              "rollout_noise": 0.0,
+              "verdict_reason": "4 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.4898908364545972,
+                "n": 4,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          }
+        },
+        "groups": {}
+      },
+      "cost": {
+        "baseline": 0.0015361,
+        "variant": 0.0015361
+      },
+      "tool_spend": {
+        "baseline": 0.008,
+        "variant": null
+      },
+      "tokens": {
+        "baseline": {
+          "input_uncached": 8005,
+          "input_cache_read": 0,
+          "input_cache_write": {
+            "type": "unknown",
+            "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+          },
+          "output": 1839
+        },
+        "variant": {
+          "input_uncached": 8005,
+          "input_cache_read": 0,
+          "input_cache_write": {
+            "type": "unknown",
+            "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+          },
+          "output": 1839
+        }
+      }
+    }
+  }
+}

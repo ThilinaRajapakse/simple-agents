@@ -1,0 +1,1 @@
+reject: The claim is over the limit of £200 for the 'software' category. The total is £310.0.

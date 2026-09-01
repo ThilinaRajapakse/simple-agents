@@ -1,0 +1,184 @@
+tier = "evaluated"
+stage = "shape"
+comments_block_gates = false
+
+[entries.what_it_does]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Reads a support ticket and writes the reply a person would send, or hands it to the rota when it cannot."
+
+[entries.used_through]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A script the support inbox calls. The reply is saved to the outbox as a draft."
+
+[entries.how_far]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "It drafts. A person presses send. It never sends on its own."
+
+[entries.involvement]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The rota answers when the agent asks, and reads every draft before it goes."
+
+[entries.purpose]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The rota spends its mornings answering the same handbook questions. This should take those away."
+
+[entries.end_user]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The person on the support rota. They know the product and not the handbook by heart."
+
+[entries.one_real_input]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "\"The export button greys out after I add a second filter. Is that expected?\""
+
+[entries.smallest_worthwhile]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A draft for the handbook questions alone. Anything it cannot answer goes to the rota untouched."
+
+[entries.finished_version]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "It answers most tickets from the handbook, asks the rota when unsure, and is never confidently wrong."
+
+[entries.parts]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Classify the ticket, look the questions up in the handbook, draft, check the draft, publish."
+
+[entries.approaches]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "One model call over the whole handbook was tried and lost the detail. Looking each question up separately keeps it."
+
+[entries.available_material]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The handbook, and two years of answered tickets to label from."
+
+[entries.what_goes_wrong]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A confident answer the handbook does not support. That is worse than no answer at all."
+
+[entries.what_this_turns_on]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Whether the draft only ever says what a handbook passage says."
+
+[entries.ground_truth]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The reply the rota actually sent, from the answered-ticket archive."
+
+[entries.answer_form]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A short reply in plain words, or a recorded absence saying the handbook does not cover it."
+
+[entries.judged_steps]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Yes: classify has its own right answer, because a ticket sent down the wrong branch is wrong before anything is drafted."
+
+[entries.judged_path]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "No. Any route to the same reply is fine, as long as the reply is grounded."
+
+[entries.absence_vs_error]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "\"The handbook does not cover this\" is a right answer and is scored as one. A wrong guess is not."
+
+[entries.agency_boundary]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "One step decides for itself: answer_directly, which picks its own tools when there is no handbook question to look up."
+
+[entries.consultation]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The agent may ask the rota one question, through the same channel the rota already watches."
+
+[entries.presentation]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A draft in the outbox, with the handbook passages it used underneath it."
+
+[entries.anything_else]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Nothing yet."
+
+[decisions.route_on_the_handbook]
+kind = "shape"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "classify decides whether the ticket needs the handbook, and only then does research run"
+considered = ["looking every ticket up", "asking the rota which ones need it"]
+because = "most tickets are handbook questions and the rest should not pay for a lookup"
+
+[decisions.one_lookup_per_question]
+kind = "shape"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "read_source runs once per handbook question rather than once over all of them"
+considered = ["one call over the whole handbook"]
+because = "the single call lost the detail the answer turns on"
+
+[decisions.revision_bound]
+kind = "shape"
+status = "changed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "critique sends the draft back at most twice, then publishes whatever it has"
+considered = ["no bound", "one revision"]
+because = "an unbounded revision loop has no budget axis that stops it"
+
+[decisions.escalation]
+kind = "presentation"
+status = "proposed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "a ticket the model cannot classify goes to the rota untouched"
+considered = ["guessing a topic and drafting anyway"]
+because = "a wrong draft costs the rota more than no draft"
+
+
+# A shape decision the coding agent has put to the builder and the builder has not answered. It is what
+# the `shape` page's Agree is for, and the fixture is the only place that state is drawn.
+[decisions.a_step_that_decides]
+kind = "shape"
+status = "proposed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "answer_directly picks its own tools within a budget, rather than a fixed lookup then a draft"
+considered = ["a fixed handbook lookup followed by a draft"]
+because = "a ticket with nothing to look up has no passage to draft from, and the fixed path drafts anyway"

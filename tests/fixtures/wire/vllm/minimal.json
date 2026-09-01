@@ -1,0 +1,56 @@
+{
+  "status": 200,
+  "request": {
+    "model": "Qwen/Qwen3-1.7B",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with the word OK."
+      }
+    ],
+    "max_tokens": 16
+  },
+  "response": {
+    "id": "chatcmpl-a849da9e58a007a4",
+    "object": "chat.completion",
+    "created": 1785087420,
+    "model": "Qwen/Qwen3-1.7B",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "<think>\nOkay, the user just said \"Reply with the word OK.\" Let",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "length",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.26.0-c5827142",
+    "usage": {
+      "prompt_tokens": 14,
+      "total_tokens": 30,
+      "completion_tokens": 16,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "created_cache_tokens": 0,
+        "multimodal_tokens": null
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

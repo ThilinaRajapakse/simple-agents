@@ -1,0 +1,1 @@
+good_enough=True why='The response is clear, direct, and avoids making assumptions or inventing information while providing a logical next step for the user.'

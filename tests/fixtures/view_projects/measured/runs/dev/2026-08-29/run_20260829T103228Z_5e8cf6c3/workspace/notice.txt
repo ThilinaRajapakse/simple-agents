@@ -1,0 +1,1 @@
+reject: The claim amount of £212.00 exceeds the maximum limit of £75.00 for the 'meals' category.

@@ -1,0 +1,1 @@
+reject: The claim is missing a PO number, which is required for software expenses, despite the vendor being an approved supplier.

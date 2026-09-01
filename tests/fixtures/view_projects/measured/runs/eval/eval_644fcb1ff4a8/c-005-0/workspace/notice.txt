@@ -1,0 +1,1 @@
+park: The vendor 'Figma' is not an approved supplier. The claim requires a PO number (category: software), but none was provided. As the finance lead could not be consulted, the claim is parked per instructions.

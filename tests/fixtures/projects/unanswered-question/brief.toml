@@ -1,0 +1,226 @@
+# What this project claims about itself, and what its builder was asked.
+# `docs/conformance.md` covers the file; `simple-agents check` reads it.
+tier = "evaluated"
+stage = "measure"
+understanding_confirmed_at = "measure"
+design_confirmed_at = "measure"
+research_confirmed_at = "measure"
+confirmed_against = "sha256:add27436ac048be7"
+
+[entries.what_it_does]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "It answers a question about a collection of passages with the shortest span that answers it, or reports that the collection does not answer it. It is for the support team who maintain the collection."
+
+[entries.used_through]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "A terminal on the support team's shared machine: they run the answer script with the question and read the span it prints. A run happens when someone asks; nothing runs on a schedule and nothing is kept between runs."
+
+[entries.how_far]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Through `measure`, at tier `evaluated`. The builder: 'People are going to act on these answers, so I want to know how often it is right before anyone does.'"
+
+[entries.involvement]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "A batch at each stage gate. The builder: 'Show me what you picked and why when you get to the end of a stage. I do not want to be asked about every constant.'"
+
+[entries.purpose]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Something other people depend on: the support team acts on the answers."
+
+[entries.end_user]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "The support team, who are not the builder and cannot check a passage themselves."
+
+[entries.one_real_input]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "A question and the passage collection. One real set was read before any node was written: passages run to about 120 words, and 3 of the 20 questions have no answer anywhere in the collection."
+
+[entries.smallest_worthwhile]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Answering questions whose answer is a span in one passage, and reporting absence for the rest."
+
+[entries.finished_version]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "The same over the whole collection, with the passage each answer came from cited beside it, so the support team can check one without reading everything."
+
+[entries.parts]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Four: finding the passages that bear on a question, answering from what was found, deciding a question is unanswerable, and judging whether a span is right. The builder added the fourth: 'Somebody has to say what a right answer is, and it is going to be us.'"
+
+[entries.approaches]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Retrieval is BM25 and embeddings together rather than either alone, since a question worded differently from its passage is what BM25 misses. Answering is one call over every retrieved passage; the per-passage variant was rejected on cost, with nothing found saying the merge was better. A hosted answering service was found and rejected: the collection may not leave the network."
+
+[entries.available_material]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "The passage collection itself, which ships with the project and was read. No external corpus applies, since the questions are about this collection and nothing outside it can answer one. The support team's own ticket history was found and not used, because it records answers rather than the questions that produced them."
+
+[entries.what_goes_wrong]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "A confident answer to a question the collection does not cover, which is the failure reported everywhere and the one this project has no signal for beyond its labels. A span lifted from a passage that is topically close and does not answer the question. Retrieval that finds the passage only when the question repeats its wording. Each is visible here through the held-out labels, which is why absent questions are in the set."
+
+[entries.what_this_turns_on]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Deciding a question is unanswerable. The other three parts have established approaches and the choice between them is cost; nothing found says how to decide absence well, and what was adopted records it rather than deciding it. Finding passages worded differently from the question is second, and is why retrieval runs both methods."
+
+[entries.ground_truth]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "The retailer's name, as written in the passage. Asked for a second acceptable answer, the builder gave none: the passage names one retailer and the trading name is not used. The builder decides, against the passage."
+
+[entries.answer_form]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "One value, compared case-insensitively as a substring. Offered any-of, a collection, a tolerance and conditions, and none of them fits: a question has one span that answers it or none. The output is that span, which is what `presentation` records."
+
+[entries.judged_steps]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "No. Both steps produce the run's own answer, `hunt` finding the span and `verify` re-checking it against the passages, so a label for either is the label the run already carries. The search is a tool inside `hunt` rather than a step of its own."
+
+[entries.judged_path]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Yes: an answer counts only where the span is in a passage the search returned. An answer the run did not read is a wrong answer whatever it says."
+
+[entries.absence_vs_error]
+status = "unanswered"
+
+[entries.agency_boundary]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "The builder wants it to find its own passages: 'I am not going to tell it where to look.' The search is the one step discovered from what the last one returned; everything else is settled before the run."
+
+[entries.consultation]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Nothing. Every input the agent needs is in the collection."
+
+[entries.presentation]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "The span and the passage it came from, printed, read once by the builder and by nobody else. No page, no file, no record kept, so the output schema carries the two fields the answer needs and nothing for a reader who was not there."
+
+[entries.backend]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "mistral-small-2603. A change to it is the builder's to approve."
+
+[entries.budget]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "8 steps, 50k tokens, no cost cap, 120s. Read off the first run."
+
+[entries.tool_effects]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Nothing. The one tool is a read-only search over a fixed collection."
+
+[entries.unproven_answer]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Report absence. An answer the passage does not support is not usable."
+
+[entries.keep_payloads]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Yes. The collection is public and the questions carry nothing personal."
+
+[entries.who_labels]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "The builder wrote the labels before the first run."
+
+[entries.improvement]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Three rollouts over the held-out split, compared on the interval."
+
+[entries.leakage]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Checked: the passages carry no file names, ids or headings naming the answer."
+
+[entries.too_similar]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Two examples drawn from one passage are the same example twice; the check runs at threshold 0.8."
+
+[entries.anything_else]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+asked_at = "measure"
+answer = "brainstorm: nothing. research: 'the collection gets a new batch most Mondays, so do not build anything that assumes it is finished.' Every stage since: nothing."
+
+[entries.prices]
+status = "deferred"
+deferred_to = "measure"
+
+[decisions.dependency_of_this_project]
+kind = "dependency"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "The passages that ship with the example set, indexed in-process. No external service, because the collection is fixed and travels with the project."
+considered = ["a hosted answering service", "the support team's ticket history as a second corpus"]
+because = "the builder said so, and the reason is recorded here"
+from = ["approaches", "available_material"]
+produces = ["catalogue_search"]
+
+[decisions.shape_of_this_project]
+kind = "shape"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "Two nodes, one agentic. `search` decides how to look, `answer` extracts the span. Both on the run's model, since neither is expensive enough to split."
+considered = ["what was rejected", "and the other thing"]
+because = "the builder said so, and the reason is recorded here"
+from = ["what_it_does", "used_through", "smallest_worthwhile", "finished_version", "purpose", "end_user", "parts", "what_this_turns_on", "agency_boundary"]
+produces = ["hunt", "verify"]
+
+[decisions.constant_of_this_project]
+kind = "constant"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "`top_k=5` on the document search. Higher crowds the turn and lower loses the answer on a question whose wording differs from the passage's."
+considered = ["what was rejected", "and the other thing"]
+because = "the builder said so, and the reason is recorded here"
+produces = ["EVAL_K", "EVAL_SEED", "SEED"]
+
+[decisions.prompt_rule_of_this_project]
+kind = "prompt_rule"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "The answer must be a span from the passages, and absence must be reported rather than inferred. Both came from the builder rather than from testing."
+considered = ["what was rejected", "and the other thing"]
+because = "the builder said so, and the reason is recorded here"
+produces = ["hunt", "verify"]
+
+[decisions.presentation_of_this_project]
+kind = "presentation"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "The span, the passage it came from, and nothing else, printed. There is no reader other than the builder, so nothing renders it further."
+considered = ["what was rejected", "and the other thing"]
+because = "the builder said so, and the reason is recorded here"
+from = ["what_it_does", "purpose", "end_user"]
+
+[decisions.measurement_of_this_project]
+kind = "measurement"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "Exact match over held-out questions, a third of which have no answer in the collection. Chance is near zero on a free-text span, so a rate above it is real."
+considered = ["what was rejected", "and the other thing"]
+because = "the builder said so, and the reason is recorded here"

@@ -1,0 +1,298 @@
+tier = "evaluated"
+stage = "ship"
+understanding_confirmed_at = "ship"
+design_confirmed_at = "ship"
+research_confirmed_at = "ship"
+confirmed_against = "sha256:bf66760225290cfd"
+results = "evals/results/held-out.json"
+comments_block_gates = false
+
+[entries.what_it_does]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Reads an expense claim, checks it against the expense policy, and approves it, refuses it, or hands it to finance."
+
+[entries.used_through]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A script the claims inbox calls once a claim is submitted. The claimant receives a notice, and approved claims are added to the ledger automatically."
+
+[entries.how_far]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "It approves and books claims that follow the policy on its own. Anything the policy sends to finance is settled by finance, or parked."
+
+[entries.involvement]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Finance answers when the agent asks. A parked claim waits for a person."
+
+[entries.purpose]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Finance spends two days a month on claims that the policy already decides. This should take those away."
+
+[entries.end_user]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The claimant, who wants a decision the same day, and the finance lead, who wants nothing booked that the policy refuses."
+
+[entries.one_real_input]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "\"Client lunch at The Copper Kettle, 14 Aug 2026. Total £48.30 incl. service. Receipt attached.\""
+
+[entries.smallest_worthwhile]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Approve the plain claims and refuse the plainly refused. Everything else goes to finance untouched."
+
+[entries.finished_version]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "It settles most claims without finance, never books a claim the policy refuses, and parks what it cannot settle."
+
+[entries.parts]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Read the claim, apply the policy's arithmetic, decide, audit the decision, then book it, refuse it, or hand it to finance."
+
+[entries.approaches]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "One model call reading the claim and deciding in one go was tried and applied the rules loosely. Reading first and deciding on the facts read keeps them apart."
+
+[entries.available_material]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The expense policy, and a year of settled claims to label from."
+
+[entries.what_goes_wrong]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A claim booked that the policy refuses, or a total read wrongly and booked at the wrong amount."
+
+[entries.what_this_turns_on]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Whether the fields are read off the claim correctly, and whether the decision follows the policy on those fields."
+
+[entries.ground_truth]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The settled claims: what finance decided, and the fields as finance recorded them."
+
+[entries.answer_form]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A decision with the fields it rests on: vendor, total, category and PO number. A parked claim is an absence, since nothing was decided."
+
+[entries.judged_steps]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Yes: extract and decide each have their own right answer, because a field misread is wrong before anything is decided, and a decision can be wrong on fields read correctly."
+
+[entries.judged_path]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "No. Any route to the right decision is fine."
+
+[entries.absence_vs_error]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A parked claim is a right answer where finance could not settle it, and is scored as one. A claim booked that should have been parked is not."
+
+[entries.agency_boundary]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "One step decides for itself: finance, which chooses whether to look the vendor up and whether to ask a person."
+
+[entries.consultation]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The agent may ask the finance lead one question about an escalated claim, through the channel finance already watches."
+
+[entries.presentation]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "A notice to the claimant with the decision and the rule it rests on, and a ledger entry where it was approved."
+
+[entries.backend]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "gemini-3.1-flash-lite while this is being built. Cheap enough to run every settled claim through."
+
+[entries.budget]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Five cents a claim at the outside, and finance's own step gets two."
+
+[entries.tool_effects]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The policy is read-only, the supplier registry spends money per lookup, and only book writes the ledger."
+
+[entries.unproven_answer]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "It goes to finance as an escalation with the facts read beside it, so a misread field is visible before anything is booked."
+
+[entries.keep_payloads]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Keep them. Claims are short and the facts read are what a wrong decision has to be read against."
+
+[entries.who_labels]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Finance, from the settled claims. What they decided and recorded is the label."
+
+[entries.anything_else]
+status = "answered"
+asked_at = "ship"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Nothing yet."
+
+[decisions.read_then_decide]
+kind = "shape"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "extract reads the claim into fields, and decide is given the fields and the policy's arithmetic rather than the claim"
+considered = ["one call that reads and decides", "deciding in plain code from the fields"]
+because = "the single call applied the rules loosely, and the free-text justifications need reading"
+
+[decisions.audit_bound]
+kind = "shape"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "audit sends the decision back at most twice, then finance has it"
+considered = ["no audit", "an unbounded loop"]
+because = "two decisions that cannot agree are what finance is for"
+
+[decisions.parking]
+kind = "presentation"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "a claim finance cannot settle is parked rather than decided"
+considered = ["refusing it", "approving an approved-looking vendor"]
+because = "a parked claim costs a person a look; a wrong booking costs a reversal"
+
+[entries.improvement]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Approving everything is the floor: an agent that reads nothing and approves every claim scores whatever that scores."
+
+[entries.leakage]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "The held-out claims are from the last quarter. Nothing from them was used to write the policy prompt the dev split was tuned against."
+
+[entries.too_similar]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Repeat claims from the same vendor are common, so the set is checked at 0.8 and near-duplicates are kept in one split."
+
+# The shape the builder was last shown and agreed to, per pipeline. `simple-agents view`
+# reads it to say whether the picture has moved since.
+
+[shape_confirmed]
+claims = "sha256:61d487b2d4086ca8"
+
+# One number the builder settled and one still unconfirmed, so the `build` page draws both states.
+[decisions.receipt_threshold]
+kind = "constant"
+status = "agreed"
+recorded_at = "2026-08-28T10:02:00Z"
+chose = "a receipt is required over £25, not over £50"
+considered = ["over £50", "on every claim"]
+because = "most single-item claims land between £25 and £50 and those are the ones that go wrong"
+produces = ["RECEIPT_REQUIRED_OVER"]
+
+# One prompt whose rule the builder agreed to; the other three are the coding agent's alone.
+[decisions.refuse_before_escalating]
+kind = "prompt_rule"
+status = "agreed"
+recorded_at = "2026-08-28T10:04:00Z"
+chose = "the prompt tells decide to refuse a claim failing the receipt or age rule even where it would also have gone to finance"
+considered = ["escalating anything ambiguous"]
+because = "a claim that breaks a rule is refused, and sending it on would read as approval"
+produces = ["decide"]
+
+# The four the `ship` gate requires, and the two decision kinds nothing else records.
+
+[entries.someone_there]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "Yes. Finance is on the desk in office hours, and a claim the agent cannot settle waits for them rather than being decided."
+
+[entries.live_records]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "The claim text and what the agent decided, kept for a year. The claimant's name is redacted out of the trajectory."
+
+[entries.watching_live]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "Finance sees every rejection before it goes out, and would say so. The share of claims parked for a person is the number I watch."
+
+[entries.stored_output]
+status = "answered"
+recorded_at = "2026-08-29T09:00:00Z"
+asked_at = "ship"
+source = "builder"
+answer = "The ledger. `book` posts an approved claim to it, and a claim posted by an older pipeline is left alone rather than re-decided."
+
+[decisions.the_supplier_registry]
+kind = "dependency"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "the approved-supplier registry, charged per lookup, rather than a copy refreshed nightly"
+considered = ["a nightly copy of the registry", "no supplier check at all"]
+because = "a copy goes stale between refreshes and an approval against a stale registry is the error that costs most"
+produces = ["vendor_registry"]
+
+[decisions.what_counts_as_right]
+kind = "measurement"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "a claim is right when the decision matches and every field read off it matches"
+considered = ["the decision alone"]
+because = "a right decision reached off a misread total is right by accident"

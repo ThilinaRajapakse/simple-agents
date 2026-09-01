@@ -1,0 +1,1 @@
+reject: The claim total of £132.50 exceeds the policy limit of £100.00 for the 'other' category.

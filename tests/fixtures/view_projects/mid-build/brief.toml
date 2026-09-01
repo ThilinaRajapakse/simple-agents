@@ -1,0 +1,32 @@
+tier = "prototype"
+stage = "build"
+comments_block_gates = false
+
+[entries.purpose]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Track my reading list and tell me what to pick up next."
+
+[entries.agency_boundary]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "One step decides for itself: judge_books, which weighs the candidates and picks how many to look at."
+
+[decisions.candidate_pool]
+kind = "shape"
+status = "agreed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "gather_pool filters the shelf to unread books before anything ranks them"
+considered = ["ranking the whole shelf every time"]
+because = "the shelf is small and unread-first is what the builder asked for"
+
+[decisions.presentation]
+kind = "presentation"
+status = "changed"
+recorded_at = "2026-08-27T09:14:02Z"
+chose = "three picks with one line each, not a ranked table"
+considered = ["a ranked table"]
+because = "the builder said a table reads like homework"
+

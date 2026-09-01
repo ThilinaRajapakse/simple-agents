@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+      # tests/test_view_runs.py executes the view page's own script, which needs a JS engine
+      # and skips without one. Pinned so it runs here on every commit rather than skipping.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      # The semantic extra carries sentence-transformers, which one pacing test needs; the
+      # mcp extra carries the SDK tests/test_mcp.py skips without.
+      - run: uv sync --extra semantic --extra mcp --python ${{ matrix.python }}
+      # tests/fixtures/view_projects/_stages/ is derived and not tracked, and the fixture
+      # currency test fails while it is missing.
+      - run: uv run python scripts/build_view_fixtures.py
+      # One test of 2933 loads a real embedding model, so it downloads ~90MB the first
+      # time. Every other backend call is monkeypatched or served from a cassette.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ runner.os }}-all-MiniLM-L6-v2
+      - run: uv run pytest -q
+
+  checks:
+    name: citations and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+      - run: uv sync --extra semantic
+      # prose_check runs inside pytest as tests/test_prose.py. This one does not.
+      - run: uv run python scripts/check_citations.py
+      # The docs are force-included in the wheel, so a build proves they still ship.
+      - run: uv build
+      - name: the wheel carries the docs, the skill and py.typed
+        run: |
+          uv run python - <<'PY'
+          import zipfile, glob, sys
+          wheel = glob.glob("dist/*.whl")[0]
+          names = zipfile.ZipFile(wheel).namelist()
+          missing = []
+          if not any(n.endswith("simple_agents/py.typed") for n in names):
+              missing.append("py.typed")
+          if not any(n.endswith("skills/simple-agents/SKILL.md") for n in names):
+              missing.append("the procedure skill")
+          docs = sum(1 for n in names if "/docs/" in n and n.endswith(".md"))
+          if docs < 18:
+              missing.append(f"documents (found {docs}, expected at least 18)")
+          if missing:
+              sys.exit(f"{wheel} is missing: {', '.join(missing)}")
+          print(f"{wheel}: py.typed, the skill and {docs} documents")
+          PY

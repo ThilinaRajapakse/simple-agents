@@ -1,0 +1,798 @@
+{
+  "format_version": "0.39",
+  "trajectory_format_version": "0.29",
+  "library_version": "0.1.0",
+  "run_id": "t-thanks-0",
+  "role": "agent",
+  "live": false,
+  "end_user": {
+    "answered_by": "nobody"
+  },
+  "evaluation": {
+    "eval_id": "eval_fde9669326c2",
+    "example": "t-thanks",
+    "rollout": 0,
+    "turn": 1
+  },
+  "conversation": null,
+  "started_at": "2026-08-28T21:41:18.018Z",
+  "ended_at": "2026-08-28T21:41:22.357Z",
+  "outcome": "completed",
+  "stopped_early": null,
+  "seed": 222504658,
+  "concurrency": 1,
+  "budget": {
+    "max_steps": 14,
+    "max_tokens": 60000,
+    "max_cost": 0.2,
+    "max_wall_clock_ms": null
+  },
+  "cost_basis": {
+    "kind": "price",
+    "currency": "USD",
+    "input_uncached_per_mtok": 0.1,
+    "input_cache_read_per_mtok": 0.025,
+    "input_cache_write_per_mtok": 0.0,
+    "cache_write_per_mtok_by_ttl": {},
+    "output_per_mtok": 0.4
+  },
+  "models": {
+    "configured": {
+      "backend": "hosted_api",
+      "request_model": "gemini-3.1-flash-lite",
+      "model_revision": null
+    },
+    "observed": [
+      {
+        "backend": "hosted_api",
+        "request_model": "gemini-3.1-flash-lite",
+        "response_model": "gemini-3.1-flash-lite",
+        "model_revision": null,
+        "calls": 5
+      }
+    ]
+  },
+  "prompts": {
+    "classify": {
+      "version": "sha256:41be87db262d",
+      "source": "derived"
+    },
+    "research.read_source": {
+      "version": "sha256:8f997861297d",
+      "source": "derived"
+    },
+    "draft": {
+      "version": "sha256:ad41bef6a03f",
+      "source": "derived"
+    },
+    "critique": {
+      "version": "sha256:a0dddd175518",
+      "source": "derived"
+    },
+    "answer_directly": {
+      "version": "sha256:c93081d3dd51",
+      "source": "derived"
+    }
+  },
+  "slice": null,
+  "nodes": [
+    {
+      "node_id": "intake",
+      "node_kind": "deterministic",
+      "successors": [
+        "classify"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:02605d4edde9a1da",
+      "tools": [],
+      "planned": false,
+      "touches": [
+        "inbox"
+      ],
+      "fn": {
+        "version": "sha256:918378b7e454",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "classify",
+      "node_kind": "llm",
+      "successors": [
+        "research",
+        "answer_directly",
+        "escalate"
+      ],
+      "route": {
+        "version": "sha256:2b7b3f2ce1ce",
+        "source": "derived"
+      },
+      "consultation_route": null,
+      "loop": null,
+      "on_error": "apologise",
+      "retry": {
+        "attempts": 2,
+        "backoff_ms": 200
+      },
+      "schema": "sha256:e220302c76c44207",
+      "accepts": "sha256:02605d4edde9a1da",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 500,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "research.pick_sources",
+      "node_kind": "deterministic",
+      "successors": [
+        "research.read_source"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:e220302c76c44207",
+      "tools": [
+        "handbook_lookup"
+      ],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:5c9cbe91b434",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "research.read_source",
+      "node_kind": "llm",
+      "successors": [],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:d9e3945a50b45c69",
+      "accepts": "sha256:02605d4edde9a1da",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 400,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": "sources",
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "draft",
+      "node_kind": "llm",
+      "successors": [
+        "critique"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:9d1abf695a7db4fa",
+      "accepts": "sha256:295ca9336dc1935b",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 600,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "critique",
+      "node_kind": "llm",
+      "successors": [
+        "draft",
+        "publish"
+      ],
+      "route": {
+        "version": "sha256:3bcc94541b87",
+        "source": "derived"
+      },
+      "consultation_route": null,
+      "loop": {
+        "max_iterations": 2,
+        "then": "publish"
+      },
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:f87e6948368bd6d0",
+      "accepts": "sha256:9d1abf695a7db4fa",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 400,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "answer_directly",
+      "node_kind": "agent",
+      "successors": [
+        "publish"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:9d1abf695a7db4fa",
+      "accepts": "sha256:e220302c76c44207",
+      "tools": [
+        "consult",
+        "handbook_lookup",
+        "web_search"
+      ],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "allow_unfinished": false,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": null,
+        "max_output_tokens": 600,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": {
+        "max_steps": 4,
+        "max_tokens": 8000,
+        "max_cost": 0.05,
+        "max_wall_clock_ms": null
+      },
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "escalate",
+      "node_kind": "deterministic",
+      "successors": [
+        "publish"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:e220302c76c44207",
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:3bdfd7b9083c",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "apologise",
+      "node_kind": "deterministic",
+      "successors": [
+        "publish"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": null,
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:e719dc4545df",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "publish",
+      "node_kind": "deterministic",
+      "successors": [],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:295ca9336dc1935b",
+      "tools": [
+        "consult"
+      ],
+      "planned": false,
+      "touches": [
+        "outbox"
+      ],
+      "fn": {
+        "version": "sha256:b23a2598c97c",
+        "source": "derived"
+      }
+    }
+  ],
+  "containers": [
+    {
+      "node_id": "research",
+      "node_kind": "pipeline",
+      "nodes": [
+        "research.pick_sources",
+        "research.read_source"
+      ],
+      "successors": [
+        "draft"
+      ],
+      "route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "suspend_before": false,
+      "budget": {
+        "max_steps": 6,
+        "max_tokens": 20000,
+        "max_cost": null,
+        "max_wall_clock_ms": null
+      },
+      "reached_by": null
+    }
+  ],
+  "tools": [
+    {
+      "name": "handbook_lookup",
+      "version": "sha256:7c92a3187881",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [
+        "handbook"
+      ],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null
+    },
+    {
+      "name": "web_search",
+      "version": "sha256:c67d962aeb11",
+      "side_effect_class": "spends_money",
+      "declared_cost": {
+        "currency": "USD",
+        "per_call": 0.004,
+        "latency_ms": null,
+        "max_per_call": null
+      },
+      "touches": [
+        "web"
+      ],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null
+    },
+    {
+      "name": "consult",
+      "version": "sha256:ffdee4e0bb7e",
+      "derived": "sha256:e2f0fd4d4610",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": "end_user",
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null
+    }
+  ],
+  "constants": [],
+  "redaction": {
+    "enabled": true,
+    "builtin": true,
+    "at_boundary": [
+      "secret_env",
+      "sensitive_keys",
+      "builtin"
+    ],
+    "builtin_rules": [
+      "aws_access_key_id",
+      "bearer_token",
+      "github_token",
+      "google_api_key",
+      "huggingface_token",
+      "jwt",
+      "private_key_block",
+      "sk_prefixed_key",
+      "slack_token"
+    ],
+    "declared_rules": [],
+    "sensitive_keys": [
+      "access_token",
+      "api_key",
+      "apikey",
+      "auth_token",
+      "authorization",
+      "client_secret",
+      "cookie",
+      "passwd",
+      "password",
+      "proxy_authorization",
+      "refresh_token",
+      "secret",
+      "set_cookie",
+      "x_api_key",
+      "x_auth_token"
+    ],
+    "secret_env": [
+      "GEMINI_API_KEY"
+    ],
+    "secret_env_unusable": []
+  },
+  "recording": {
+    "payload_rate": 1.0,
+    "payloads": "kept"
+  },
+  "schemas": {
+    "sha256:688f05343ea1ac7d": {
+      "$defs": {
+        "Unknown": {
+          "description": "The value the field asks for, where the agent established that it is not available. Supply `reason` saying what was looked for and what was found instead.",
+          "properties": {
+            "type": {
+              "const": "unknown",
+              "default": "unknown",
+              "title": "Type",
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "What was looked for, and what was found instead.",
+              "title": "Reason"
+            }
+          },
+          "title": "Unknown",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "The value itself, or {\"type\": \"unknown\", \"reason\": \"...\"} where it is not available. Send the object, not the word \"unknown\".",
+          "title": "Topic"
+        },
+        "needs_handbook": {
+          "title": "Needs Handbook",
+          "type": "boolean"
+        },
+        "questions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "topic",
+        "needs_handbook",
+        "questions"
+      ],
+      "title": "Ticket",
+      "type": "object"
+    },
+    "sha256:237c0bf05ec7043f": [
+      {
+        "name": "handbook_lookup",
+        "description": "Read the support handbook for one question. Returns the passages that match.",
+        "input_schema": {
+          "properties": {
+            "question": {
+              "title": "Question",
+              "type": "string"
+            }
+          },
+          "required": [
+            "question"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "name": "web_search",
+        "description": "Search the web when the handbook has nothing. Costs money per call.",
+        "input_schema": {
+          "properties": {
+            "query": {
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "name": "consult",
+        "description": "Ask the person using this agent a question, and wait for their answer.\n\nUse this for something only they can settle: a preference, which of two readings was\nmeant, or permission to go ahead. Do not use it for anything findable with the other\ntools. Pass `options` to offer a choice rather than an open question. Pass `about` as a\nshort stable name for the thing the question is about, the same name every time it\ncomes up, so an answer arriving later can be matched to it. Returns their answer, or\nnothing if they declined to answer.",
+        "input_schema": {
+          "properties": {
+            "question": {
+              "title": "Question",
+              "type": "string"
+            },
+            "options": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Options"
+            },
+            "about": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "About"
+            }
+          },
+          "required": [
+            "question"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "name": "finish",
+        "description": "Call this tool with the final answer. Its arguments are the answer itself and are validated against the required schema.\nA field that accepts `unknown` takes either form, and both are answers:\n  \"inseam_cm\": 81\n  \"inseam_cm\": {\"type\": \"unknown\", \"reason\": \"not listed on the page\"}\nSend the object, not the word. A guess presented as a fact is not an answer, and neither is the string \"unknown\" where the object belongs.",
+        "input_schema": {
+          "$defs": {
+            "Unknown": {
+              "description": "The value the field asks for, where the agent established that it is not available. Supply `reason` saying what was looked for and what was found instead.",
+              "properties": {
+                "type": {
+                  "const": "unknown",
+                  "default": "unknown",
+                  "title": "Type",
+                  "type": "string"
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "What was looked for, and what was found instead.",
+                  "title": "Reason"
+                }
+              },
+              "title": "Unknown",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "body": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/Unknown"
+                }
+              ],
+              "description": "The value itself, or {\"type\": \"unknown\", \"reason\": \"...\"} where it is not available. Send the object, not the word \"unknown\".",
+              "title": "Body"
+            }
+          },
+          "required": [
+            "body"
+          ],
+          "title": "Reply",
+          "type": "object"
+        }
+      }
+    ]
+  },
+  "graph_fingerprint": "sha256:d755d943bc7de3eb",
+  "behaviour_fingerprint": "sha256:da935b68100f2403",
+  "fetch_policy": [],
+  "mcp": [],
+  "unfinished": {
+    "answer_directly": {
+      "executions": 1,
+      "items": 0,
+      "without_tool_calls": 0,
+      "model_calls": 4,
+      "model_calls_without_tool_calls": 0
+    }
+  },
+  "suspensions": [],
+  "resume_waivers": [],
+  "stream_waivers": [],
+  "cassette": {
+    "mode": "record",
+    "path": "cassettes/evaluation.jsonl",
+    "dropped": null,
+    "hits": 0,
+    "misses": 0,
+    "recorded": 9,
+    "diverged": 0
+  },
+  "memory": null,
+  "paths": {
+    "trajectory": "runs/eval/eval_fde9669326c2/t-thanks-0/trajectory.jsonl",
+    "workspace": "runs/eval/eval_fde9669326c2/t-thanks-0/workspace"
+  },
+  "counts": {
+    "records": 20,
+    "run_start": 1,
+    "node_execution": 8,
+    "model_call": 5,
+    "tool_call": 2,
+    "consultation": 2,
+    "delegation": 0,
+    "resource_access": 2
+  },
+  "totals": {
+    "tokens": {
+      "input_uncached": 3143,
+      "input_cache_read": 0,
+      "input_cache_write": {
+        "type": "unknown",
+        "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+      },
+      "output": 388
+    },
+    "cost": {
+      "value": 0.00046950000000000003,
+      "currency": "USD",
+      "basis": "price",
+      "is_upper_bound": false,
+      "reason": null,
+      "measured": 0.00046950000000000003,
+      "priced_calls": 5,
+      "unpriced_calls": 0
+    },
+    "tool_spend": {
+      "amount": 0.004,
+      "currency": "USD",
+      "calls": 1,
+      "source": "declared"
+    },
+    "charged_cost": 0.0044694999999999995,
+    "held_back_ms": 0
+  }
+}

@@ -1,0 +1,9 @@
+tier = "prototype"
+stage = "build"
+
+[entries.purpose]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+source = "builder"
+answer = "Summarise each meeting note into three lines."
+

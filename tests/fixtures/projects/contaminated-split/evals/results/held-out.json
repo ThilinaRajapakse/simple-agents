@@ -1,0 +1,974 @@
+{
+  "eval_format_version": "0.29",
+  "eval_id": "eval_9568eda4f996",
+  "created_at": "2026-08-31T17:30:13.736Z",
+  "config": {
+    "split": "held_out",
+    "k": 3,
+    "n": 3,
+    "seed": 41,
+    "concurrency": 1,
+    "run_concurrency": 1,
+    "example_set": {
+      "content_hash": "ex_c79d119741a65609",
+      "splits": {
+        "dev": 2,
+        "held_out": 3
+      },
+      "held_out": "held_out",
+      "absent_proportion": 0.3333333333333333
+    },
+    "matches": {
+      "version": "sha256:7f21b0a1b854",
+      "source": "derived"
+    },
+    "baseline": null,
+    "criteria": {},
+    "judgements": null,
+    "metrics": [],
+    "node_metrics": {},
+    "bootstrap": {
+      "resamples": 2000,
+      "confidence": 0.95,
+      "seed": 41
+    },
+    "slice": null,
+    "nodes": [
+      {
+        "node_id": "hunt",
+        "node_kind": "agent",
+        "successors": [
+          "verify"
+        ],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": "sha256:220e748d69ffc27c",
+        "accepts": null,
+        "tools": [
+          "catalogue_search"
+        ],
+        "planned": false,
+        "touches": [],
+        "allow_unknown": true,
+        "allow_unfinished": false,
+        "context_builder": {
+          "name": "AppendAll",
+          "config": {
+            "max_input_tokens": null
+          }
+        },
+        "stream": false,
+        "model": null,
+        "sampling": {
+          "temperature": 0.0,
+          "max_output_tokens": null,
+          "extra": {}
+        },
+        "finish_check": null,
+        "node_budget": {
+          "max_steps": 6,
+          "max_tokens": 30000,
+          "max_cost": null,
+          "max_wall_clock_ms": 120000
+        },
+        "node_budget_per_item": null,
+        "fan_out": {
+          "over": null,
+          "keep": [],
+          "max_failures": null
+        }
+      },
+      {
+        "node_id": "verify",
+        "node_kind": "llm",
+        "successors": [],
+        "route": null,
+        "consultation_route": null,
+        "loop": null,
+        "on_error": null,
+        "retry": null,
+        "schema": "sha256:220e748d69ffc27c",
+        "accepts": null,
+        "tools": [],
+        "planned": false,
+        "touches": [],
+        "allow_unknown": true,
+        "context_builder": {
+          "name": "AppendAll",
+          "config": {
+            "max_input_tokens": null
+          }
+        },
+        "stream": false,
+        "model": null,
+        "sampling": {
+          "temperature": 0.0,
+          "max_output_tokens": null,
+          "extra": {}
+        },
+        "finish_check": null,
+        "node_budget": null,
+        "node_budget_per_item": null,
+        "fan_out": {
+          "over": null,
+          "keep": [],
+          "max_failures": null
+        }
+      }
+    ],
+    "containers": [],
+    "graph_fingerprint": "sha256:66cf6414b271c82e",
+    "tools": [
+      {
+        "name": "catalogue_search",
+        "version": "sha256:d4c17414dd9d",
+        "side_effect_class": "read_only"
+      }
+    ],
+    "budget": {
+      "max_steps": null,
+      "max_tokens": 200000,
+      "max_cost": null,
+      "max_wall_clock_ms": 600000
+    },
+    "behaviour_fingerprint": "sha256:add27436ac048be7",
+    "prompts": {
+      "hunt": {
+        "version": "sha256:eb76a45a9605",
+        "source": "derived"
+      },
+      "verify": {
+        "version": "sha256:3f75baa9790c",
+        "source": "derived"
+      }
+    },
+    "model": {
+      "backend": "hosted_api",
+      "request_model": "mistral-small-2603",
+      "model_revision": null
+    },
+    "cost_basis": {
+      "kind": "price",
+      "currency": "USD",
+      "input_uncached_per_mtok": 0.15,
+      "input_cache_read_per_mtok": 0.015,
+      "input_cache_write_per_mtok": null,
+      "cache_write_per_mtok_by_ttl": {},
+      "output_per_mtok": 0.6
+    },
+    "cassette": {
+      "mode": "replay",
+      "path": "tests/cassettes/eval.jsonl",
+      "dropped": null,
+      "hits": 38,
+      "misses": 0,
+      "recorded": 0,
+      "diverged": 0
+    },
+    "max_spend": null,
+    "scored_from": "rollouts",
+    "seed_source": "evaluation"
+  },
+  "examples": {
+    "e1": {
+      "split": "held_out",
+      "expects_absence": false,
+      "absent_parts": [],
+      "source": "doc:kirkwall-history",
+      "metadata": {},
+      "metadata_omitted": [],
+      "label": "Kirkwall"
+    },
+    "e2": {
+      "split": "held_out",
+      "expects_absence": false,
+      "absent_parts": [],
+      "source": null,
+      "metadata": {},
+      "metadata_omitted": [],
+      "label": "Northgate"
+    },
+    "e3": {
+      "split": "held_out",
+      "expects_absence": true,
+      "absent_parts": [],
+      "source": null,
+      "metadata": {},
+      "metadata_omitted": []
+    }
+  },
+  "metrics": {
+    "accuracy": {
+      "name": "accuracy",
+      "definition": "right answers, counting a right report of absence, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 9,
+      "examples": 3,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.15713484026367722,
+      "interval": {
+        "point": 0.7777777777777777,
+        "low": 0.6666666666666666,
+        "high": 1.0,
+        "n": 3,
+        "k": 3,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "graded_accuracy": {
+      "name": "graded_accuracy",
+      "definition": "right answers with partial credit, counting a right report of absence, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 9,
+      "examples": 3,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.15713484026367722,
+      "interval": {
+        "point": 0.7777777777777777,
+        "low": 0.6666666666666666,
+        "high": 1.0,
+        "n": 3,
+        "k": 3,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "false_confidence_rate": {
+      "name": "false_confidence_rate",
+      "definition": "rollouts that asserted a wrong answer, meeting none of its answer key or missing a condition the key declared required, over all rollouts. An answer that fell short only by saying nothing is not one of these",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 9,
+      "examples": 3,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.5614970317550454,
+        "n": 3,
+        "k": 3,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "partially_correct_rate": {
+      "name": "partially_correct_rate",
+      "definition": "rollouts that asserted an answer meeting part of its answer key, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 9,
+      "examples": 3,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.5614970317550454,
+        "n": 3,
+        "k": 3,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "recall": {
+      "name": "recall",
+      "definition": "rollouts that found the right value, over rollouts of examples where a value exists",
+      "population": "rollouts of examples where a value exists",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 6,
+      "examples": 2,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.23570226039551584,
+      "interval": {
+        "point": 0.6666666666666666,
+        "low": 0.6666666666666666,
+        "high": 0.6666666666666666,
+        "n": 2,
+        "k": 3,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "abstention_rate": {
+      "name": "abstention_rate",
+      "definition": "rollouts that reported absence, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 9,
+      "examples": 3,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.15713484026367722,
+      "interval": {
+        "point": 0.5555555555555555,
+        "low": 0.3333333333333333,
+        "high": 1.0,
+        "n": 3,
+        "k": 3,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "percentile bootstrap, resampling examples"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "failure_rate": {
+      "name": "failure_rate",
+      "definition": "rollouts that produced no answer at all, over all rollouts",
+      "population": "all rollouts",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 9,
+      "examples": 3,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.5614970317550454,
+        "n": 3,
+        "k": 3,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    },
+    "precision_when_asserting": {
+      "name": "precision_when_asserting",
+      "definition": "rollouts that asserted the right value, over rollouts that asserted anything",
+      "population": "rollouts that asserted an answer",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 4,
+      "examples": 2,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": 0.0,
+      "interval": {
+        "point": 1.0,
+        "low": 0.3423802275066532,
+        "high": 1.0,
+        "n": 2,
+        "k": 2,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 41,
+        "method": "Wilson score interval on a proportion"
+      },
+      "reason": null,
+      "numerator": null,
+      "denominator": null,
+      "estimated": true
+    }
+  },
+  "criteria": {},
+  "nodes": {
+    "hunt": {
+      "node_id": "hunt",
+      "node_kind": "agent",
+      "runs": 9,
+      "reached": 9,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 9,
+        "examples": 3,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 1.0,
+          "low": 0.4385029682449546,
+          "high": 1.0,
+          "n": 3,
+          "k": 3,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 41,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": {
+        "name": "accuracy",
+        "definition": "rollouts where this node's output matched its label, over rollouts that reached it and carry one",
+        "population": "rollouts that reached this node and carry a label for it",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 6,
+        "examples": 2,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 1.0,
+          "low": 0.3423802275066532,
+          "high": 1.0,
+          "n": 2,
+          "k": 3,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 41,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "metrics": {},
+      "executions": 9,
+      "errors": 0,
+      "model_calls": 19,
+      "tool_calls": 19,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 19,
+      "wall_clock_ms": 12,
+      "absent_outputs": 3,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {
+        "finish": 9
+      },
+      "tokens": {
+        "input_uncached": 5064,
+        "input_cache_read": 5504,
+        "input_cache_write": 0,
+        "output": 327
+      },
+      "cost": {
+        "value": 0.0010383599999999999,
+        "currency": "USD",
+        "basis": "price",
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": 0.0010383599999999999,
+        "priced_calls": 19,
+        "unpriced_calls": 0
+      }
+    },
+    "verify": {
+      "node_id": "verify",
+      "node_kind": "llm",
+      "runs": 9,
+      "reached": 9,
+      "reach": {
+        "name": "reach",
+        "definition": "rollouts in which this node ran, over all rollouts",
+        "population": "all rollouts",
+        "over": null,
+        "unit": "rate",
+        "rollouts": 9,
+        "examples": 3,
+        "left_out": {},
+        "including_left_out": null,
+        "absent": 0,
+        "rollout_noise": 0.0,
+        "interval": {
+          "point": 1.0,
+          "low": 0.4385029682449546,
+          "high": 1.0,
+          "n": 3,
+          "k": 3,
+          "confidence": 0.95,
+          "resamples": 2000,
+          "seed": 41,
+          "method": "Wilson score interval on a proportion"
+        },
+        "reason": null,
+        "numerator": null,
+        "denominator": null,
+        "estimated": true
+      },
+      "accuracy": null,
+      "metrics": {},
+      "executions": 9,
+      "errors": 0,
+      "model_calls": 9,
+      "tool_calls": 0,
+      "paid_tool_calls": 0,
+      "tool_spend": null,
+      "tool_spend_currency": null,
+      "consultations": 0,
+      "consultation_resolutions": {},
+      "consultation_answered_by": {},
+      "consultation_misreadings": 0,
+      "resource_reads": {},
+      "resource_writes": {},
+      "delegations": 0,
+      "replayed_calls": 9,
+      "wall_clock_ms": 5,
+      "absent_outputs": 5,
+      "unfinished_executions": 0,
+      "unfinished_items": 0,
+      "unfinished_without_tool_calls": 0,
+      "unfinished_model_calls": 0,
+      "unfinished_model_calls_without_tool_calls": 0,
+      "empty_responses": 0,
+      "delegations_out_of_budget": 0,
+      "tools_that_never_succeeded": {},
+      "terminations": {},
+      "tokens": {
+        "input_uncached": 838,
+        "input_cache_read": 156,
+        "input_cache_write": 0,
+        "output": 350
+      },
+      "cost": {
+        "value": 0.00033804,
+        "currency": "USD",
+        "basis": "price",
+        "is_upper_bound": false,
+        "reason": null,
+        "measured": 0.00033804,
+        "priced_calls": 9,
+        "unpriced_calls": 0
+      }
+    }
+  },
+  "totals": {
+    "tokens": {
+      "input_uncached": 5902,
+      "input_cache_read": 5660,
+      "input_cache_write": 0,
+      "output": 677
+    },
+    "cost": {
+      "value": 0.0013763999999999998,
+      "currency": "USD",
+      "basis": "price",
+      "is_upper_bound": false,
+      "reason": null,
+      "measured": 0.0013763999999999998,
+      "priced_calls": 28,
+      "unpriced_calls": 0,
+      "unpriced_nodes": []
+    },
+    "tool_spend": {
+      "amount": null,
+      "currency": null,
+      "calls": 0
+    }
+  },
+  "contamination": {
+    "threshold": 0.8,
+    "compared": 6,
+    "clean": false,
+    "pairs": [
+      {
+        "left": "d1",
+        "right": "e1",
+        "left_split": "dev",
+        "right_split": "held_out",
+        "kind": "shared_source",
+        "similarity": 0.6667,
+        "detail": "d1 (dev) and e1 (held_out) were both drawn from 'doc:kirkwall-history', so what was learned from one applies to the other."
+      }
+    ]
+  },
+  "rollouts": [
+    {
+      "example_id": "e1",
+      "rollout": 0,
+      "seed": 378377484,
+      "outcome": "missed",
+      "answer": {
+        "type": "unknown",
+        "reason": "The retailer notes mention 'Kirkwall' as a location that ships from Leeds and offers free returns, which aligns with the earlier answer. However, the notes do not explicitly confirm that 'Kirkwall' is the answer to the original question, only that it is a location with certain shipping and return policies."
+      },
+      "run_id": "e1-0",
+      "trajectory": "runs/eval/eval_9568eda4f996/e1-0/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e1",
+      "rollout": 1,
+      "seed": 1509034349,
+      "outcome": "correct",
+      "answer": "Kirkwall",
+      "run_id": "e1-1",
+      "trajectory": "runs/eval/eval_9568eda4f996/e1-1/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e1",
+      "rollout": 2,
+      "seed": 65672827,
+      "outcome": "correct",
+      "answer": "Kirkwall",
+      "run_id": "e1-2",
+      "trajectory": "runs/eval/eval_9568eda4f996/e1-2/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e2",
+      "rollout": 0,
+      "seed": 1684488919,
+      "outcome": "missed",
+      "answer": {
+        "type": "unknown",
+        "reason": "The retailer notes mention 'Northgate' as a retailer and state that 'ashford: The Ashford trouser is cut from cotton twill. Sold by Northgate.' However, the earlier answer 'Northgate' was not directly supported as a shipping origin or retailer note in the provided context. The notes do not explicitly confirm the shipping origin or retailer name 'Northgate' as the answer to the earlier question."
+      },
+      "run_id": "e2-0",
+      "trajectory": "runs/eval/eval_9568eda4f996/e2-0/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e2",
+      "rollout": 1,
+      "seed": 1920746699,
+      "outcome": "correct",
+      "answer": "Northgate",
+      "run_id": "e2-1",
+      "trajectory": "runs/eval/eval_9568eda4f996/e2-1/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e2",
+      "rollout": 2,
+      "seed": 963770023,
+      "outcome": "correct",
+      "answer": "Northgate",
+      "run_id": "e2-2",
+      "trajectory": "runs/eval/eval_9568eda4f996/e2-2/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": true,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 1.0,
+        "met": 1,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e3",
+      "rollout": 0,
+      "seed": 1619411693,
+      "outcome": "correct_abstention",
+      "answer": {
+        "type": "unknown",
+        "reason": "The retailer notes for Kirkwall do not mention annual revenue."
+      },
+      "run_id": "e3-0",
+      "trajectory": "runs/eval/eval_9568eda4f996/e3-0/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e3",
+      "rollout": 1,
+      "seed": 1272963495,
+      "outcome": "correct_abstention",
+      "answer": {
+        "type": "unknown",
+        "reason": "The retailer notes mention Kirkwall's shipping origin and return policy but do not provide any information about its annual revenue."
+      },
+      "run_id": "e3-1",
+      "trajectory": "runs/eval/eval_9568eda4f996/e3-1/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "e3",
+      "rollout": 2,
+      "seed": 1172698228,
+      "outcome": "correct_abstention",
+      "answer": {
+        "type": "unknown",
+        "reason": "The retailer notes mention Kirkwall's shipping origin and return policy but do not provide any information about its annual revenue."
+      },
+      "run_id": "e3-2",
+      "trajectory": "runs/eval/eval_9568eda4f996/e3-2/trajectory.jsonl",
+      "error": null,
+      "nodes": {
+        "hunt": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        },
+        "verify": {
+          "reached": true,
+          "matched": null,
+          "scores": {},
+          "ratios": {}
+        }
+      },
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    }
+  ],
+  "baseline": [],
+  "baseline_unscored": []
+}

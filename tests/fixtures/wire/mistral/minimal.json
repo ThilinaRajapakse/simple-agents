@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "request": {
+    "model": "mistral-small-latest",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with the word OK."
+      }
+    ],
+    "max_tokens": 16
+  },
+  "response": {
+    "id": "a889782ef4d0482cb2925ae2fcdfca2d",
+    "created": 1785086299,
+    "model": "mistral-small-latest",
+    "usage": {
+      "prompt_tokens": 21,
+      "total_tokens": 23,
+      "completion_tokens": 2,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "object": "chat.completion",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "stop",
+        "message": {
+          "role": "assistant",
+          "tool_calls": null,
+          "content": "OK"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{"id": "d1", "split": "dev", "inputs": {"question": "Which retailer ships from Bristol?"}, "expected": "Northgate", "source": "doc:kirkwall-history"}
+{"id": "d2", "split": "dev", "inputs": {"question": "How many depots does Kirkwall run?"}, "expected": {"type": "unknown", "reason": "the notes give no count"}}
+{"id": "e1", "split": "held_out", "inputs": {"question": "Which retailer ships from Leeds?"}, "expected": "Kirkwall", "source": "doc:kirkwall-history", "expected_by_node": {"hunt": "Kirkwall"}}
+{"id": "e2", "split": "held_out", "inputs": {"question": "Who sells the Ashford trouser?"}, "expected": "Northgate", "expected_by_node": {"hunt": "Northgate"}}
+{"id": "e3", "split": "held_out", "inputs": {"question": "What is Kirkwall's annual revenue?"}, "expected": {"type": "unknown", "reason": "the notes give no figure"}}

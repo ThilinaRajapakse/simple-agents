@@ -1,0 +1,84 @@
+[project]
+name = "simple-agents"
+version = "0.1.0"
+description = "An opinionated agent shape, a conformance suite that runs against your project, and a staged procedure for building agents correctly."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{ name = "Thilina Rajapakse" }]
+keywords = ["agents", "llm", "evaluation", "conformance", "observability"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+dependencies = [
+    "httpx>=0.28.1",
+    "pydantic>=2.7",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+semantic = ["sentence-transformers>=3.0"]
+# The MCP SDK, for `simple_agents.mcp`. Client and server halves ship together and there is no
+# client-only extra, so this is an extra rather than a runtime dependency: it carries an ASGI
+# server and a compiled `cryptography` that a project reaching no MCP server should not meet.
+mcp = ["mcp>=2.1.1"]
+
+[project.scripts]
+simple-agents = "simple_agents.cli.main:_entry_point"
+
+[project.urls]
+Homepage = "https://github.com/ThilinaRajapakse/simple-agents"
+Documentation = "https://github.com/ThilinaRajapakse/simple-agents/blob/main/docs/index.md"
+Repository = "https://github.com/ThilinaRajapakse/simple-agents"
+Issues = "https://github.com/ThilinaRajapakse/simple-agents/issues"
+Changelog = "https://github.com/ThilinaRajapakse/simple-agents/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/simple_agents"]
+
+# The docs ship with the package. They are the surface a builder's coding agent reads, and
+# docstrings throughout the library cite them by path, so an install without them leaves those
+# references pointing at nothing. `simple_agents.docs_path()` returns the installed location.
+[tool.hatch.build.targets.wheel.force-include]
+"docs" = "simple_agents/docs"
+
+# The procedure ships twice from one file: once as a shipped document, and once at the path a
+# skill installer reads. `simple-agents init` links the second into the project's skills
+# directory. One source means the two cannot drift.
+"docs/procedure.md" = "simple_agents/.agents/skills/simple-agents/SKILL.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src"]
+
+[tool.ruff.lint]
+# Correctness-adjacent rules only. Formatting is `ruff format`, gated the same way by
+# tests/test_lint.py since 2026-08-31. B905 is excluded because `zip(strict=)` changes what
+# running code does on a length mismatch, and each site needs its own reading before that.
+select = ["F", "B", "A", "C4", "PLE"]
+ignore = ["B905"]
+
+[tool.ruff.format]
+# Fixture projects are recorded artifacts: their source feeds `source_version` digests that
+# recorded manifests hold, so the formatter leaves them byte-stable.
+exclude = ["tests/fixtures/**"]

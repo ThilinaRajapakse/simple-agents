@@ -1,0 +1,90 @@
+{
+  "status": 200,
+  "request": {
+    "model": "Qwen/Qwen3-1.7B",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is the inseam of product ABC-123?"
+      }
+    ],
+    "max_tokens": 200,
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "lookup_inseam",
+          "description": "Return the inseam in centimetres for a product code.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "product_code": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "product_code"
+            ]
+          }
+        }
+      }
+    ],
+    "tool_choice": "auto",
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    }
+  },
+  "response": {
+    "id": "chatcmpl-b756012a50bb7cb7",
+    "object": "chat.completion",
+    "created": 1785087628,
+    "model": "Qwen/Qwen3-1.7B",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-8de2fee85ed79964",
+              "type": "function",
+              "function": {
+                "name": "lookup_inseam",
+                "arguments": "{\"product_code\": \"ABC-123\"}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.26.0-c5827142",
+    "usage": {
+      "prompt_tokens": 174,
+      "total_tokens": 201,
+      "completion_tokens": 27,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "created_cache_tokens": 160,
+        "multimodal_tokens": null
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

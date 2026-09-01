@@ -1,0 +1,1817 @@
+{
+  "variant_format_version": "0.3",
+  "baseline": {
+    "eval_id": "eval_6a1476bb4acb",
+    "graph_fingerprint": "sha256:61d487b2d4086ca8",
+    "behaviour_fingerprint": "sha256:bf66760225290cfd"
+  },
+  "variants": {
+    "finance without the registry": {
+      "plan": {
+        "name": "finance without the registry",
+        "differs_at": [
+          "finance"
+        ],
+        "changed": {
+          "nodes.finance.tools": [
+            [
+              "consult",
+              "policy_lookup",
+              "vendor_registry"
+            ],
+            [
+              "consult",
+              "policy_lookup"
+            ]
+          ]
+        },
+        "live_calls": 1,
+        "replayed_calls": 3,
+        "estimated_cost": 0.004339000000000001,
+        "nodes": [
+          {
+            "node_id": "intake",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "extract",
+            "status": "unchanged",
+            "calls": "replayed",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0015931000000000003
+          },
+          {
+            "node_id": "policy_check",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "decide",
+            "status": "unchanged",
+            "calls": "replayed",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0014967000000000003
+          },
+          {
+            "node_id": "audit",
+            "status": "unchanged",
+            "calls": "replayed",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0018472000000000004
+          },
+          {
+            "node_id": "dispatch",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "finance",
+            "status": "changed",
+            "calls": "live",
+            "estimated_calls": 1,
+            "estimated_cost": 0.004339000000000001
+          },
+          {
+            "node_id": "book",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "notify",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          }
+        ]
+      },
+      "eval_id": "eval_c72effafd811",
+      "graph_fingerprint": "sha256:61d487b2d4086ca8",
+      "behaviour_fingerprint": "sha256:c6065c8cd9560f4c",
+      "comparison": {
+        "comparison_format_version": "0.1",
+        "shared_examples": 30,
+        "only_before": [],
+        "only_after": [],
+        "changed": {
+          "nodes.finance.tools": [
+            [
+              "consult",
+              "policy_lookup",
+              "vendor_registry"
+            ],
+            [
+              "consult",
+              "policy_lookup"
+            ]
+          ],
+          "behaviour_fingerprint": [
+            "sha256:bf66760225290cfd",
+            "sha256:c6065c8cd9560f4c"
+          ],
+          "tools.vendor_registry": [
+            {
+              "name": "vendor_registry",
+              "version": "sha256:ce1cc621bb75",
+              "side_effect_class": "spends_money"
+            },
+            null
+          ]
+        },
+        "moved": [
+          "false_confidence_rate",
+          "abstention_rate"
+        ],
+        "undecided": [
+          "precision_when_asserting"
+        ],
+        "moved_criteria": [],
+        "moved_nodes": [],
+        "population_changed": [
+          "precision_when_asserting"
+        ],
+        "metrics": {
+          "accuracy": {
+            "name": "accuracy",
+            "definition": "right answers, counting a right report of absence, over all rollouts",
+            "before": 0.7,
+            "after": 0.7,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "graded_accuracy": {
+            "name": "graded_accuracy",
+            "definition": "right answers with partial credit, counting a right report of absence, over all rollouts",
+            "before": 0.7277777777777777,
+            "after": 0.7277777777777777,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "false_confidence_rate": {
+            "name": "false_confidence_rate",
+            "definition": "rollouts that asserted a wrong answer, meeting none of its answer key or missing a condition the key declared required, over all rollouts. An answer that fell short only by saying nothing is not one of these",
+            "before": 0.2,
+            "after": 0.0,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": true,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": -0.2,
+              "low": -0.3333333333333333,
+              "high": -0.06666666666666667,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "partially_correct_rate": {
+            "name": "partially_correct_rate",
+            "definition": "rollouts that asserted an answer meeting part of its answer key, over all rollouts",
+            "before": 0.03333333333333333,
+            "after": 0.03333333333333333,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "recall": {
+            "name": "recall",
+            "definition": "rollouts that found the right value, over rollouts of examples where a value exists",
+            "before": 0.6538461538461539,
+            "after": 0.6538461538461539,
+            "examples": 26,
+            "before_examples": 26,
+            "after_examples": 26,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.12872892185921525,
+              "n": 26,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "abstention_rate": {
+            "name": "abstention_rate",
+            "definition": "rollouts that reported absence, over all rollouts",
+            "before": 0.2,
+            "after": 0.4,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": true,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.2,
+              "low": 0.06666666666666667,
+              "high": 0.3333333333333333,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "failure_rate": {
+            "name": "failure_rate",
+            "definition": "rollouts that produced no answer at all, over all rollouts",
+            "before": 0.0,
+            "after": 0.0,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "precision_when_asserting": {
+            "name": "precision_when_asserting",
+            "definition": "rollouts that asserted the right value, over rollouts that asserted anything",
+            "before": 0.7083333333333334,
+            "after": 0.9444444444444444,
+            "examples": 18,
+            "before_examples": 24,
+            "after_examples": 18,
+            "population_note": "precision_when_asserting covered 24 of the shared examples in the earlier evaluation and 18 in the later one, because its denominator depends on what the agent did. So `before` and `after` are over different sets of examples and the gap between them is partly which examples fell under the metric. `difference` is over the 18 in both, and is the change.",
+            "moved": null,
+            "rollout_noise": null,
+            "verdict_reason": "18 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.17587922364665756,
+              "n": 18,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "total_error_gbp": {
+            "name": "total_error_gbp",
+            "definition": "pounds between the total read and the total claimed",
+            "before": 0.0,
+            "after": 0.0,
+            "examples": 26,
+            "before_examples": 26,
+            "after_examples": 26,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.12872892185921525,
+              "n": 26,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "money_approved_share": {
+            "name": "money_approved_share",
+            "definition": "pounds approved over pounds claimed",
+            "before": 0.27357837842775035,
+            "after": 0.27357837842775035,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.0,
+              "n": 30,
+              "k": 1,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap on the difference of two ratios, resampling examples"
+            },
+            "reason": null
+          }
+        },
+        "criteria": {
+          "decision": {
+            "name": "decision",
+            "definition": "the decision is approve",
+            "before": 0.75,
+            "after": 1.0,
+            "examples": 18,
+            "before_examples": 24,
+            "after_examples": 18,
+            "population_note": "decision covered 24 of the shared examples in the earlier evaluation and 18 in the later one, because its denominator depends on what the agent did. So `before` and `after` are over different sets of examples and the gap between them is partly which examples fell under the metric. `difference` is over the 18 in both, and is the change.",
+            "moved": null,
+            "rollout_noise": null,
+            "verdict_reason": "18 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.17587922364665756,
+              "n": 18,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "vendor": {
+            "name": "vendor",
+            "definition": "the vendor is The Copper Kettle",
+            "before": 0.9583333333333334,
+            "after": 0.9444444444444444,
+            "examples": 18,
+            "before_examples": 24,
+            "after_examples": 18,
+            "population_note": "vendor covered 24 of the shared examples in the earlier evaluation and 18 in the later one, because its denominator depends on what the agent did. So `before` and `after` are over different sets of examples and the gap between them is partly which examples fell under the metric. `difference` is over the 18 in both, and is the change.",
+            "moved": null,
+            "rollout_noise": null,
+            "verdict_reason": "18 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.17587922364665756,
+              "n": 18,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "total": {
+            "name": "total",
+            "definition": "the total is £48.30",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 18,
+            "before_examples": 24,
+            "after_examples": 18,
+            "population_note": "total covered 24 of the shared examples in the earlier evaluation and 18 in the later one, because its denominator depends on what the agent did. So `before` and `after` are over different sets of examples and the gap between them is partly which examples fell under the metric. `difference` is over the 18 in both, and is the change.",
+            "moved": null,
+            "rollout_noise": null,
+            "verdict_reason": "18 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.17587922364665756,
+              "n": 18,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "category": {
+            "name": "category",
+            "definition": "the category is meals",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 18,
+            "before_examples": 24,
+            "after_examples": 18,
+            "population_note": "category covered 24 of the shared examples in the earlier evaluation and 18 in the later one, because its denominator depends on what the agent did. So `before` and `after` are over different sets of examples and the gap between them is partly which examples fell under the metric. `difference` is over the 18 in both, and is the change.",
+            "moved": null,
+            "rollout_noise": null,
+            "verdict_reason": "18 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.17587922364665756,
+              "n": 18,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "po_number": {
+            "name": "po_number",
+            "definition": "no PO number is stated",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 18,
+            "before_examples": 24,
+            "after_examples": 18,
+            "population_note": "po_number covered 24 of the shared examples in the earlier evaluation and 18 in the later one, because its denominator depends on what the agent did. So `before` and `after` are over different sets of examples and the gap between them is partly which examples fell under the metric. `difference` is over the 18 in both, and is the change.",
+            "moved": null,
+            "rollout_noise": null,
+            "verdict_reason": "18 example(s) carry this metric and a verdict needs 20. The interval is reported and the difference between the two runs is real; whether it would hold on other examples is what this many cannot say. Where every example moves the same way the interval has zero width, which reads as certainty and is the sample having no variation to resample.",
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.17587922364665756,
+              "n": 18,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          }
+        },
+        "nodes": {
+          "intake": {
+            "node_id": "intake",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "extract": {
+            "node_id": "extract",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": {
+              "name": "accuracy",
+              "definition": "rollouts where this node's output matched its label, over rollouts that reached it and carry one",
+              "before": 0.9666666666666667,
+              "after": 0.9666666666666667,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "metrics": {
+              "fields_left_blank": {
+                "name": "fields_left_blank",
+                "definition": "fields the claim stated that extract left blank, over the five it reads",
+                "before": 0.0,
+                "after": 0.0,
+                "examples": 30,
+                "before_examples": 30,
+                "after_examples": 30,
+                "population_note": null,
+                "moved": false,
+                "rollout_noise": null,
+                "verdict_reason": null,
+                "rule_moved": null,
+                "difference": {
+                  "point": 0.0,
+                  "low": 0.0,
+                  "high": 0.0,
+                  "n": 30,
+                  "k": 1,
+                  "confidence": 0.95,
+                  "resamples": 2000,
+                  "seed": 0,
+                  "method": "percentile bootstrap on the difference of two ratios, resampling examples"
+                },
+                "reason": null
+              }
+            }
+          },
+          "policy_check": {
+            "node_id": "policy_check",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "decide": {
+            "node_id": "decide",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": {
+              "name": "accuracy",
+              "definition": "rollouts where this node's output matched its label, over rollouts that reached it and carry one",
+              "before": 0.9666666666666667,
+              "after": 0.9666666666666667,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "metrics": {}
+          },
+          "audit": {
+            "node_id": "audit",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "dispatch": {
+            "node_id": "dispatch",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "finance": {
+            "node_id": "finance",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.4,
+              "after": 0.4,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "book": {
+            "node_id": "book",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.43333333333333335,
+              "after": 0.43333333333333335,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "notify": {
+            "node_id": "notify",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          }
+        },
+        "groups": {}
+      },
+      "cost": {
+        "baseline": 0.009276000000000003,
+        "variant": 0.0089271
+      },
+      "tool_spend": {
+        "baseline": 0.022000000000000006,
+        "variant": null
+      },
+      "tokens": {
+        "baseline": {
+          "input_uncached": 61208,
+          "input_cache_read": 0,
+          "input_cache_write": {
+            "type": "unknown",
+            "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+          },
+          "output": 7888
+        },
+        "variant": {
+          "input_uncached": 56675,
+          "input_cache_read": 0,
+          "input_cache_write": {
+            "type": "unknown",
+            "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+          },
+          "output": 8149
+        }
+      }
+    },
+    "audit cannot send back": {
+      "plan": {
+        "name": "audit cannot send back",
+        "differs_at": [
+          "audit"
+        ],
+        "changed": {
+          "nodes.audit.loop.max_iterations": [
+            2,
+            1
+          ]
+        },
+        "live_calls": 3,
+        "replayed_calls": 1,
+        "estimated_cost": 0.007682900000000001,
+        "nodes": [
+          {
+            "node_id": "intake",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "extract",
+            "status": "unchanged",
+            "calls": "replayed",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0015931000000000003
+          },
+          {
+            "node_id": "policy_check",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "decide",
+            "status": "unchanged",
+            "calls": "live",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0014967000000000003
+          },
+          {
+            "node_id": "audit",
+            "status": "changed",
+            "calls": "live",
+            "estimated_calls": 1,
+            "estimated_cost": 0.0018472000000000004
+          },
+          {
+            "node_id": "dispatch",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "finance",
+            "status": "unchanged",
+            "calls": "live",
+            "estimated_calls": 1,
+            "estimated_cost": 0.004339000000000001
+          },
+          {
+            "node_id": "book",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          },
+          {
+            "node_id": "notify",
+            "status": "unchanged",
+            "calls": "none",
+            "estimated_calls": 0,
+            "estimated_cost": null
+          }
+        ]
+      },
+      "eval_id": "eval_a74a57afed93",
+      "graph_fingerprint": "sha256:77508166ba81039b",
+      "behaviour_fingerprint": "sha256:d90a9d3cdda1c904",
+      "comparison": {
+        "comparison_format_version": "0.1",
+        "shared_examples": 30,
+        "only_before": [],
+        "only_after": [],
+        "changed": {
+          "nodes.audit.loop.max_iterations": [
+            2,
+            1
+          ],
+          "graph_fingerprint": [
+            "sha256:61d487b2d4086ca8",
+            "sha256:77508166ba81039b"
+          ],
+          "behaviour_fingerprint": [
+            "sha256:bf66760225290cfd",
+            "sha256:d90a9d3cdda1c904"
+          ]
+        },
+        "moved": [],
+        "undecided": [],
+        "moved_criteria": [],
+        "moved_nodes": [],
+        "population_changed": [],
+        "metrics": {
+          "accuracy": {
+            "name": "accuracy",
+            "definition": "right answers, counting a right report of absence, over all rollouts",
+            "before": 0.7,
+            "after": 0.7,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "graded_accuracy": {
+            "name": "graded_accuracy",
+            "definition": "right answers with partial credit, counting a right report of absence, over all rollouts",
+            "before": 0.7277777777777777,
+            "after": 0.7277777777777777,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "false_confidence_rate": {
+            "name": "false_confidence_rate",
+            "definition": "rollouts that asserted a wrong answer, meeting none of its answer key or missing a condition the key declared required, over all rollouts. An answer that fell short only by saying nothing is not one of these",
+            "before": 0.2,
+            "after": 0.2,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "partially_correct_rate": {
+            "name": "partially_correct_rate",
+            "definition": "rollouts that asserted an answer meeting part of its answer key, over all rollouts",
+            "before": 0.03333333333333333,
+            "after": 0.03333333333333333,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "recall": {
+            "name": "recall",
+            "definition": "rollouts that found the right value, over rollouts of examples where a value exists",
+            "before": 0.6538461538461539,
+            "after": 0.6538461538461539,
+            "examples": 26,
+            "before_examples": 26,
+            "after_examples": 26,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.12872892185921525,
+              "n": 26,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "abstention_rate": {
+            "name": "abstention_rate",
+            "definition": "rollouts that reported absence, over all rollouts",
+            "before": 0.2,
+            "after": 0.2,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "failure_rate": {
+            "name": "failure_rate",
+            "definition": "rollouts that produced no answer at all, over all rollouts",
+            "before": 0.0,
+            "after": 0.0,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.11351339317396873,
+              "n": 30,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "precision_when_asserting": {
+            "name": "precision_when_asserting",
+            "definition": "rollouts that asserted the right value, over rollouts that asserted anything",
+            "before": 0.7083333333333334,
+            "after": 0.7083333333333334,
+            "examples": 24,
+            "before_examples": 24,
+            "after_examples": 24,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.13797620467498012,
+              "n": 24,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "total_error_gbp": {
+            "name": "total_error_gbp",
+            "definition": "pounds between the total read and the total claimed",
+            "before": 0.0,
+            "after": 0.0,
+            "examples": 26,
+            "before_examples": 26,
+            "after_examples": 26,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.12872892185921525,
+              "n": 26,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "money_approved_share": {
+            "name": "money_approved_share",
+            "definition": "pounds approved over pounds claimed",
+            "before": 0.27357837842775035,
+            "after": 0.27357837842775035,
+            "examples": 30,
+            "before_examples": 30,
+            "after_examples": 30,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.0,
+              "n": 30,
+              "k": 1,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap on the difference of two ratios, resampling examples"
+            },
+            "reason": null
+          }
+        },
+        "criteria": {
+          "decision": {
+            "name": "decision",
+            "definition": "the decision is approve",
+            "before": 0.75,
+            "after": 0.75,
+            "examples": 24,
+            "before_examples": 24,
+            "after_examples": 24,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.13797620467498012,
+              "n": 24,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "vendor": {
+            "name": "vendor",
+            "definition": "the vendor is The Copper Kettle",
+            "before": 0.9583333333333334,
+            "after": 0.9583333333333334,
+            "examples": 24,
+            "before_examples": 24,
+            "after_examples": 24,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.13797620467498012,
+              "n": 24,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "total": {
+            "name": "total",
+            "definition": "the total is £48.30",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 24,
+            "before_examples": 24,
+            "after_examples": 24,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.13797620467498012,
+              "n": 24,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "category": {
+            "name": "category",
+            "definition": "the category is meals",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 24,
+            "before_examples": 24,
+            "after_examples": 24,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.13797620467498012,
+              "n": 24,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          },
+          "po_number": {
+            "name": "po_number",
+            "definition": "no PO number is stated",
+            "before": 1.0,
+            "after": 1.0,
+            "examples": 24,
+            "before_examples": 24,
+            "after_examples": 24,
+            "population_note": null,
+            "moved": false,
+            "rollout_noise": null,
+            "verdict_reason": null,
+            "rule_moved": null,
+            "difference": {
+              "point": 0.0,
+              "low": 0.0,
+              "high": 0.13797620467498012,
+              "n": 24,
+              "k": null,
+              "confidence": 0.95,
+              "resamples": 2000,
+              "seed": 0,
+              "method": "percentile bootstrap, resampling examples, on the paired difference"
+            },
+            "reason": null
+          }
+        },
+        "nodes": {
+          "intake": {
+            "node_id": "intake",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "extract": {
+            "node_id": "extract",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": {
+              "name": "accuracy",
+              "definition": "rollouts where this node's output matched its label, over rollouts that reached it and carry one",
+              "before": 0.9666666666666667,
+              "after": 0.9666666666666667,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "metrics": {
+              "fields_left_blank": {
+                "name": "fields_left_blank",
+                "definition": "fields the claim stated that extract left blank, over the five it reads",
+                "before": 0.0,
+                "after": 0.0,
+                "examples": 30,
+                "before_examples": 30,
+                "after_examples": 30,
+                "population_note": null,
+                "moved": false,
+                "rollout_noise": null,
+                "verdict_reason": null,
+                "rule_moved": null,
+                "difference": {
+                  "point": 0.0,
+                  "low": 0.0,
+                  "high": 0.0,
+                  "n": 30,
+                  "k": 1,
+                  "confidence": 0.95,
+                  "resamples": 2000,
+                  "seed": 0,
+                  "method": "percentile bootstrap on the difference of two ratios, resampling examples"
+                },
+                "reason": null
+              }
+            }
+          },
+          "policy_check": {
+            "node_id": "policy_check",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "decide": {
+            "node_id": "decide",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": {
+              "name": "accuracy",
+              "definition": "rollouts where this node's output matched its label, over rollouts that reached it and carry one",
+              "before": 0.9666666666666667,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.03333333333333333,
+                "low": 0.0,
+                "high": 0.1,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "metrics": {}
+          },
+          "audit": {
+            "node_id": "audit",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "dispatch": {
+            "node_id": "dispatch",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "finance": {
+            "node_id": "finance",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.4,
+              "after": 0.4,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "book": {
+            "node_id": "book",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 0.43333333333333335,
+              "after": 0.43333333333333335,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          },
+          "notify": {
+            "node_id": "notify",
+            "reach": {
+              "name": "reach",
+              "definition": "rollouts in which this node ran, over all rollouts",
+              "before": 1.0,
+              "after": 1.0,
+              "examples": 30,
+              "before_examples": 30,
+              "after_examples": 30,
+              "population_note": null,
+              "moved": false,
+              "rollout_noise": null,
+              "verdict_reason": null,
+              "rule_moved": null,
+              "difference": {
+                "point": 0.0,
+                "low": 0.0,
+                "high": 0.11351339317396873,
+                "n": 30,
+                "k": null,
+                "confidence": 0.95,
+                "resamples": 2000,
+                "seed": 0,
+                "method": "percentile bootstrap, resampling examples, on the paired difference"
+              },
+              "reason": null
+            },
+            "accuracy": null,
+            "metrics": {}
+          }
+        },
+        "groups": {}
+      },
+      "cost": {
+        "baseline": 0.009276000000000003,
+        "variant": 0.008941200000000002
+      },
+      "tool_spend": {
+        "baseline": 0.022000000000000006,
+        "variant": null
+      },
+      "tokens": {
+        "baseline": {
+          "input_uncached": 61208,
+          "input_cache_read": 0,
+          "input_cache_write": {
+            "type": "unknown",
+            "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+          },
+          "output": 7888
+        },
+        "variant": {
+          "input_uncached": 59204,
+          "input_cache_read": 0,
+          "input_cache_write": {
+            "type": "unknown",
+            "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
+          },
+          "output": 7552
+        }
+      }
+    }
+  }
+}

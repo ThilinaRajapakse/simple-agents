@@ -1,0 +1,166 @@
+"""The numbers and the prompts the code carries, against the decisions that name them.
+
+A module-level number changes what the agent does and somebody chose it. The manifest records
+every one a run reached, and a ``constant`` decision names the ones the builder agreed to
+under ``produces``; a ``prompt_rule`` decision does the same for a rule a prompt carries.
+Both halves are on disk and nothing joined them, so a number the coding agent picked alone
+read the same as one the builder settled.
+
+::
+
+    numbers = read_constants(".", pipelines, brief)
+    [n["name"] for n in numbers if n["decision"] is None]     # unconfirmed
+
+What is here is read from what the project's own runs recorded, so a number added since the
+last run appears once something has run.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+__all__ = ["read_constants", "read_prompt_rules"]
+
+
+# How many of the newest runs are read. A project's numbers and prompts are gathered across
+# runs rather than off the newest one: a project with more than one pipeline runs whichever it
+# was asked for, so the newest run describes one of them and the others would vanish from the
+# page on the morning a background pass ran last. FT-42 reads the record the same way.
+MOST_RUNS = 200
+
+
+def _across_the_runs(root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Every number and every prompt the project's own runs recorded, newest value first.
+
+    An evaluation's rollouts are left out: a rollout is measurement, and the numbers it ran
+    against are its own run's. A name recorded by more than one run keeps what the newest of
+    them carried, which is what the code has now.
+    """
+    from ..envelope import runs
+
+    directory = root / "runs"
+    if not directory.is_dir():
+        return [], {}
+    numbers: dict[str, dict[str, Any]] = {}
+    prompts: dict[str, Any] = {}
+    for handle in runs(directory)[:MOST_RUNS]:
+        for held in handle.manifest.get("constants") or []:
+            numbers.setdefault(str(held.get("name") or ""), held)
+        for node_id, held in (handle.manifest.get("prompts") or {}).items():
+            prompts.setdefault(str(node_id), held)
+    return list(numbers.values()), prompts
+
+
+def _decision_card(decision: Any) -> dict[str, Any]:
+    """One decision as the page shows it beside what it names."""
+    from .claims import title_of
+
+    return {
+        "name": decision.name,
+        "title": title_of(decision.name),
+        "status": getattr(decision, "status", None),
+        "chose": str(getattr(decision, "chose", "") or "")[:400],
+        "because": str(getattr(decision, "because", "") or "")[:300],
+    }
+
+
+def _named_by(brief: Any, kind: str) -> dict[str, dict[str, Any]]:
+    """What each decision of one kind names under ``produces``, keyed by the name."""
+    found: dict[str, dict[str, Any]] = {}
+    for decision in getattr(brief, "decisions", ()) or ():
+        if getattr(decision, "kind", None) != kind:
+            continue
+        card = _decision_card(decision)
+        for produced in getattr(decision, "produces", ()) or ():
+            found.setdefault(str(produced), card)
+    return found
+
+
+def _writes_it(code: Any, name: str) -> bool:
+    return name in (((code or {}).get("source") or {}).get("text") or "")
+
+
+def _reached_from(pipelines: list[dict[str, Any]], name: str) -> dict[str, list[str]]:
+    """Where this name is written: the steps that reach it, and the tools they reach it through.
+
+    A text match over the source the page already shows, which is the same kind of join the
+    brief-against-code comparison uses. It reports where the name is written and never that it
+    is unused: a number reached through a helper neither the step nor its tools name is not
+    found here, and a step's source clipped for length can hide one.
+    """
+    steps: list[str] = []
+    tools: list[str] = []
+    for pipeline in pipelines:
+        for node in pipeline["nodes"]:
+            through = [t["name"] for t in node["tools"] if _writes_it(t.get("code"), name)]
+            if through or _writes_it(node.get("code"), name):
+                steps.append(node["id"])
+                tools.extend(through)
+    return {"steps": sorted(set(steps)), "through": sorted(set(tools))}
+
+
+def read_constants(
+    root: str | Path,
+    pipelines: list[dict[str, Any]],
+    brief: Any,
+) -> list[dict[str, Any]]:
+    """Every module-level number the project's runs carried, with the decision that names it.
+
+    ::
+
+        read_constants(".", pipelines, brief)[0]
+        # {'name': 'MAX_AGE_DAYS', 'value': 90, 'module': 'agent',
+        #  'reached_from': {'steps': ['policy_check'], 'through': ['policy_lookup']},
+        #  'decision': None}
+
+    ``decision`` is ``None`` where no ``constant`` decision names the number, which is the
+    page's **Unconfirmed**. Empty where the project has no run, since the numbers are read
+    from what a run recorded.
+    """
+    numbers, _prompts = _across_the_runs(Path(root).expanduser())
+    agreed = _named_by(brief, "constant")
+    rows = []
+    for held in numbers:
+        name = str(held.get("name") or "")
+        rows.append(
+            {
+                "name": name,
+                "value": held.get("value"),
+                "module": held.get("module"),
+                "reached_from": _reached_from(pipelines, name),
+                "decision": agreed.get(name),
+            }
+        )
+    return sorted(rows, key=lambda row: (row["decision"] is not None, row["name"]))
+
+
+def read_prompt_rules(
+    root: str | Path,
+    pipelines: list[dict[str, Any]],
+    brief: Any,
+) -> list[dict[str, Any]]:
+    """Every prompt the project's runs recorded, with the rule decision that names its step.
+
+    ::
+
+        read_prompt_rules(".", pipelines, brief)[0]
+        # {'node_id': 'decide', 'version': 'sha256:80bf…', 'source': 'derived',
+        #  'decision': {'name': 'say_why_it_declined', ...}}
+
+    ``decision`` is ``None`` where no ``prompt_rule`` decision names the step, which is the
+    page's **Unconfirmed**: the prompt tells the model something and nobody said it should.
+    """
+    _numbers, prompts = _across_the_runs(Path(root).expanduser())
+    agreed = _named_by(brief, "prompt_rule")
+    rows = []
+    for node_id, held in prompts.items():
+        rows.append(
+            {
+                "node_id": str(node_id),
+                "version": (held or {}).get("version"),
+                "source": (held or {}).get("source"),
+                "decision": agreed.get(str(node_id)),
+            }
+        )
+    return sorted(rows, key=lambda row: (row["decision"] is not None, row["node_id"]))

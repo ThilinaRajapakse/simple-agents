@@ -1,0 +1,21 @@
+{
+  "status": 400,
+  "request": {
+    "model": "mistral-small-2603",
+    "messages": [
+      {
+        "role": "user",
+        "content": "<filler, 262144 token window overshot 1.2x>"
+      }
+    ],
+    "max_tokens": 16
+  },
+  "response": {
+    "object": "error",
+    "message": "Prompt contains 314588 tokens and 0 draft tokens, too large for model with 262144 maximum context length",
+    "type": "invalid_request_invalid_args",
+    "param": null,
+    "code": "3051",
+    "raw_status_code": 400
+  }
+}

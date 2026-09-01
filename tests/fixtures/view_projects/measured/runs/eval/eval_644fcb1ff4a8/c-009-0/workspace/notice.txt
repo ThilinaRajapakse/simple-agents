@@ -1,0 +1,1 @@
+reject: The claim total of £436.0 exceeds the limit of £400.0 for the travel category.

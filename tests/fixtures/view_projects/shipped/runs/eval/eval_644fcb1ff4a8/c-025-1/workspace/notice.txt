@@ -1,0 +1,1 @@
+park: The claim exceeds the meal category limit (£147.40 > £75.00) and the vendor is not an approved supplier. Per instructions, the finance lead was to be consulted, but no one is available to provide an answer.

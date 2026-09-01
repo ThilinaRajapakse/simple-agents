@@ -1,0 +1,16 @@
+{
+  "status": 400,
+  "request": {
+    "contents": "1,200,000 words, elided",
+    "generationConfig": {
+      "temperature": 0.0
+    }
+  },
+  "response": {
+    "error": {
+      "code": 400,
+      "message": "The input token count exceeds the maximum number of tokens allowed 1048576.",
+      "status": "INVALID_ARGUMENT"
+    }
+  }
+}

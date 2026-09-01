@@ -1,0 +1,1 @@
+good_enough=True why="The response is written in plain, professional language, clearly addresses the user's questions, and honestly admits to the lack of information in the handbook without speculating or making things up."

@@ -1,0 +1,1 @@
+reject: The claim is over the limit for the software category (£220.00 > £200.00).

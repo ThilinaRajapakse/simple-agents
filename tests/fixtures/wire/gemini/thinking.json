@@ -1,0 +1,58 @@
+{
+  "status": 200,
+  "request": {
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "A farmer has 17 sheep, all but 9 run away. How many are left? Explain your reasoning."
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "temperature": 0.0,
+      "seed": 41,
+      "thinkingConfig": {
+        "includeThoughts": true
+      }
+    }
+  },
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "**Sheep Counting Quandary**\n\nAlright, let's break this down methodically. I'm given an initial count of 17 sheep. The crux of the problem lies in that phrase, \"All but 9 run away.\" My expertise kicks in \u2013 I recognize this isn't a complex mathematical equation, but a linguistic puzzle. \"All but 9\" implies that *every single sheep except* those nine bolted.\n\nTherefore, the remaining sheep are those that *didn't* run away. So, the direct interpretation is that 9 sheep stayed put. There's no need for any additional calculation here. The phrase is the key. The sheep that remain equal 9.\n\n\n",
+              "thought": true
+            },
+            {
+              "text": "There are **9** sheep left.\n\n**Reasoning:**\nThe phrase \"all but 9 run away\" means that every sheep left the farm **except** for 9 of them. Therefore, those 9 are the ones that remain.",
+              "thoughtSignature": "Eq4ECqsEARFNMg+h6LG08iFJv7oHoSjF+uSuVKSNQFHd4jS/+4A6qx/BEksYm4DVH8mRgvVAAlTe7maMhabbBvQCbvHKCGsUwWIXYX0MYGahLfHjBmozKh/5usjKbD8mdWLiabqpLYsrCY9ELYze0eLcfuemsIFywT/yNul8O9DZWCLJ/BKERzZRzkjRIXuZYyYFdHehIUarT7Ho0ha/OCkMQzOaNitCVu/Us1iEkx/uqQqfqJnfxTgdI6hEE5BaAFkd6aFVrQO1JTX7yYM313fpWJDfAknIdOZXSGsTVpj2zG173n5fLkox6KhiSYTIPL2HCeAFb4ItNCTQWGH83gvVSUuqAwkmOwix12ocMETYZkMU+w0KJq7pQX4e8aKp26KO2T6968W2R6dhk5AewdbWp3KOOa4TaqPFBPGMA0mh8fyQCqV41HF+esorxuZY+HYO/TwRYiK6YcIT83eWPyMTpLztG6TFR4sQUg1fgXJZoEFXo2feKmeJMKALv6bZo+xVrsjl48K8OSKgG/cjC27t+uZLC1M5sD3Bpq9q4PAxs56Ea91zBPilY47Un6YXk88mhkN59b+Pbh3w4F/mnPEOINIETtRJ/fKPcGSxj4qADonY7dQ8yKLCo1ZB49KWpb8FZFge1UKK++ft5f3vNoUJXgAhiX96Grf8rRigTdeRZAhQlVCNTXlOfY6oicMS77rCQczTrU+7vF2Q5HyDSNyadhIyXSQBSGR8nCTEB/iD"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 25,
+      "candidatesTokenCount": 51,
+      "totalTokenCount": 241,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 25
+        }
+      ],
+      "thoughtsTokenCount": 165,
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3-flash-preview",
+    "responseId": "5qN7arW4CdWIxN8P16vR0Q8"
+  }
+}
