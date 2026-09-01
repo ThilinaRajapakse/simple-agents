@@ -4,8 +4,8 @@ Fixes for the fourteen items in the stream brief, drawn from
 [`area-g-model-clients.md`](../findings/area-g-model-clients.md) G-1 and G-2,
 [`area-hb-suspension-envelope.md`](../findings/area-hb-suspension-envelope.md) B-1 and B-2,
 [`area-de-retrieval-memory.md`](../findings/area-de-retrieval-memory.md), and the "Statements
-that look false" section of
-[`claims-envelope-trajectory.md`](../inventory/claims-envelope-trajectory.md).
+that look false" section of `inventory/claims-envelope-trajectory.md`, one of the pass's
+machine artifacts, which are untracked.
 
 Files touched: `src/simple_agents/adapters/{_http,embeddings_openai}.py`,
 `src/simple_agents/{pacing,manifest,cassette,cost,models}.py`, `docs/model-clients.md`,
