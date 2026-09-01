@@ -1,0 +1,37 @@
+name: Release
+
+# Pushing a tag `v*` publishes to PyPI, after the full CI workflow passes on that tag.
+# Authentication is PyPI trusted publishing (OIDC): no token is stored in the repository.
+# The publisher is registered on pypi.org under the project's Publishing settings, naming
+# this repository, this filename, and the `pypi` environment.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  tests:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: publish to PyPI
+    needs: tests
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+      # A tag naming a version pyproject.toml does not hold publishes the wrong artifact,
+      # so the mismatch fails here instead.
+      - name: the tag names the version being published
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "$tag" != "$version" ]; then
+            echo "tag v$tag does not match pyproject.toml version $version"
+            exit 1
+          fi
+      - run: uv build
+      - run: uv publish --trusted-publishing always

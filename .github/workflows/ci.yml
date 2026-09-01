@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # release.yml runs this whole workflow before publishing, so a tag cannot ship what main
+  # would have failed.
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
