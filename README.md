@@ -22,7 +22,7 @@ Python 3.11 or newer. The import is `simple_agents` and the CLI is `simple-agent
 
 1. The build runs in six staged gates, and the coding agent asks questions as needed to build your idea. [Building with a coding agent](#building-with-a-coding-agent) covers the stages and the two commands that drive them.
 2. **[A first agent](#a-first-agent)** is what the code looks like. Every run it makes writes a manifest, a trajectory and a cassette, so it can be read back, re-priced and replayed for free.
-3. **`simple-agents view`** shows the project as it stands, on one page: what is built, what is planned, what changed, and where everything flows.
+3. **`simple-agents view --serve`** provides a live view of the project: what is built, what is planned, what changed, and how everything fits together.
 4. An evaluation runs the pipeline over a held-out split and reports rates with confidence intervals. [Measuring the agent](#measuring-the-agent) is the short version, and the `measure` stage settles the rest.
 
 ## A first agent

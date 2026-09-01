@@ -1,4 +1,4 @@
-"""Simple Agents: an opinionated agent shape with conformance built in.
+"""Simple Agents: a library for building an agent that can be evaluated, debugged, and improved.
 
 The library holds the coding agent's hand so the coding agent can hold the builder's hand.
 
@@ -256,7 +256,7 @@ from .tools import (
 from .records.shelf import SHELF_FORMAT_VERSION, ShelvedQuestion
 from .records.trajectory import FORMAT_VERSION, Trajectory, TrajectoryWriter, read_trajectory
 
-__version__ = "0.1.0"
+__version__ = "0.1.0.post1"
 
 
 def docs_path() -> Path:
