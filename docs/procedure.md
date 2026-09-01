@@ -23,7 +23,10 @@ includes the stages before it. `ship` is a stage every tier has, so a project at
 live (`docs/conformance.md` §1).
 
 `simple-agents init`, run once in the project root, registers this file as a skill and writes
-`AGENTS.md`. `docs/index.md` is the reference documents and when to open each.
+`AGENTS.md`. `docs/index.md` is the reference documents and when to open each. Every
+`docs/*.md` name in this file is a file installed with the package:
+`python -c "import simple_agents; print(simple_agents.docs_path())"` prints the directory
+holding them.
 
 ---
 

@@ -65,12 +65,13 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # 2550 at P3-35, which added the view every gate rewrites, the skeleton at `shape` and the
 # comment record, and from 2600 at P3-37, which added the four rules for how a question is
 # put, that an evaluation puts none of them to a person, and the one run at `build` that
-# reaches a consultation and is continued, and from 3200 at P3-66, which added the feature
+# reaches a consultation and is continued, from 3200 at P3-66, which added the feature
 # index: one line per document naming every capability the library ships, so a coding agent
-# finds one without knowing which document owns it. New content rather than a restatement of
-# another document, which is what the budget is against, and the index is pointers rather
-# than restatement.
-WORD_BUDGET = 3800
+# finds one without knowing which document owns it, and from 3800 on 2026-09-01, when the
+# first installed-package session ran `find /` hunting for the docs: the file now says
+# `docs_path()` prints the directory its 39 `docs/*.md` names live in. New content rather
+# than a restatement of another document, which is what the budget is against.
+WORD_BUDGET = 3840
 # Raised from 3000 on 2026-08-28, on Thilina's call at `P3-53`. Stage 5 stood at 2999 of 3000,
 # so the paragraph naming per-step reporting could not go in without cutting prose that was
 # carrying its own instruction. What the budget is against is restatement, and the ceiling is

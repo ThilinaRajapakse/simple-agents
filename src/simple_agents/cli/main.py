@@ -76,6 +76,9 @@ def agents_note(skill: str) -> str:
         f"This project is built with Simple Agents. The procedure is in\n"
         f"`{skill}`, and it is staged: each stage ends at a gate that runs\n"
         f"`simple-agents check`. Read it before writing a node, a tool or an evaluation.\n"
+        f"The `docs/*.md` files it names install with the package;\n"
+        f'`python -c "import simple_agents; print(simple_agents.docs_path())"` prints the\n'
+        f"directory holding them.\n"
     )
 
 
