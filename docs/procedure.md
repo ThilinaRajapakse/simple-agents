@@ -72,9 +72,9 @@ when. Both govern every exchange after them.
 - Look up any number the question turns on before asking, and say where the number came from.
 - Name the options, and say which one is recommended and why.
 - Explain every term the builder has not used themselves, the project's own code names included.
-- One question per exchange, through the session's question mechanism where it has one. A
-  question left in prose beside another that got answered goes unanswered, and silence is
-  recorded as nothing rather than as agreement.
+- Do not mix prose questions into an exchange that puts questions through the session's
+  question mechanism: only the mechanism's questions come back answered. A question that got
+  no answer stays unanswered, and is put again.
 
 `ask` is the question and `scaffold` is what makes it answerable. Use the `scaffold` to formulate a clear, answerable question.
 

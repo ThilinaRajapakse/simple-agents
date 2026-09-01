@@ -463,9 +463,9 @@ How to ask a question, here and for any question composed later:
   - The options are named, with which one is recommended and why.
   - Every term the builder has not used themselves is explained, including names from the
     project's own code.
-  - One question per exchange, through the session's question mechanism where it has one.
-    A question left in prose beside another that got answered goes unanswered, and silence
-    is recorded as nothing rather than as agreement.
+  - Do not mix prose questions into an exchange that puts questions through the session's
+    question mechanism: only the mechanism's questions come back answered. A question that
+    got no answer stays unanswered, and is put again.
 
 An entry the builder has not seen records source = "coding_agent", and a required one fails \
 the gate until it is put to them (FT-24).
