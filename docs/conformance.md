@@ -422,6 +422,16 @@ run carries the end user's material and can be sampled down to no payloads. FT-3
 reads one, and `runs("runs/", live=True)` reads them all.
 ```
 
+**The builder's comments are open.** A comment arrives unprompted from the served view, and between gates nothing else brings it to the coding agent. FT-39 fails the gate where the brief says `comments_block_gates = true`; otherwise the open threads print here:
+
+```
+1 comment thread(s) from the builder are open: recommend/judge_candidates: 'Why does this
+rank the whole catalogue before truncating?'. Each is the builder pointing at a part of the
+system from the view. Read them with `simple-agents comments`, do what each asks or take it
+back to the builder, then set status = "addressed" with addressed_by naming what answered
+it. comments_block_gates = true in the brief makes an open thread refuse the gate.
+```
+
 **Spend that produced nothing.** A node with an execution or a fan-out item that ended without producing an output, where some of them acted before running out (§3.7). It names what those spent:
 
 ```

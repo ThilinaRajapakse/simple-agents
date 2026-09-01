@@ -2691,6 +2691,24 @@ class TestTheDocumentedNotesAreWhatIsPrinted:
         assert note is not None
         assert " ".join(note.split()) in self.documented()
 
+    def test_the_open_comments_note_is_what_is_printed(self, tmp_path) -> None:
+        from simple_agents.conformance.brief import Brief
+        from simple_agents.conformance.run import _comments_awaiting
+
+        (tmp_path / "comments.toml").write_text(
+            "[[comment]]\n"
+            'at = "recommend/judge_candidates"\n'
+            'said = "Why does this rank the whole catalogue before truncating?"\n'
+            'status = "open"\n',
+            encoding="utf-8",
+        )
+        found = self._artifacts(tmp_path)
+
+        note = _comments_awaiting(found, Brief(path=None, tier="prototype"))
+
+        assert note is not None
+        assert " ".join(note.split()) in self.documented()
+
     def test_the_stale_headline_note_is_what_is_printed(self, tmp_path) -> None:
         from simple_agents.conformance.run import _the_number_came_from_elsewhere
 

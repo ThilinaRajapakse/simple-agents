@@ -74,6 +74,9 @@ DECIDED = {
 }
 
 ANSWERS = {
+    "comments_block_gates": (
+        "Reporting rather than blocking; the builder answers comments in batches at each gate."
+    ),
     "how_far": (
         "Through `measure`, at tier `evaluated`. The builder: 'People are going to act on "
         "these answers, so I want to know how often it is right before anyone does.'"

@@ -89,7 +89,7 @@
       "module lines": 1769
     },
     "src/simple_agents/conformance/elicitation.py::module": {
-      "module lines": 948
+      "module lines": 968
     },
     "src/simple_agents/conformance/run.py::function::_answers_no_decision_rests_on": {
       "function branches": 17
@@ -98,7 +98,7 @@
       "function branches": 15
     },
     "src/simple_agents/conformance/run.py::function::run_checks": {
-      "function lines": 70
+      "function lines": 71
     },
     "src/simple_agents/conformance/spend.py::function::unfinished_across": {
       "function branches": 18,

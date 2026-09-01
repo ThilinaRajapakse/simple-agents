@@ -296,3 +296,8 @@ recorded_at = "2026-08-27T09:14:02Z"
 chose = "a claim is right when the decision matches and every field read off it matches"
 considered = ["the decision alone"]
 because = "a right decision reached off a misread total is right by accident"
+
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-08-26T10:00:00Z"
+answer = "Reporting; comments are answered in batches."

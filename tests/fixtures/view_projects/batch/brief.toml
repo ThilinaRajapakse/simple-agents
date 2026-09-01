@@ -1,2 +1,7 @@
 tier = "prototype"
 stage = "build"
+
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-08-26T10:00:00Z"
+answer = "Reporting; comments are answered in batches."

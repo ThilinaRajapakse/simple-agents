@@ -182,3 +182,8 @@ recorded_at = "2026-08-27T09:14:02Z"
 chose = "answer_directly picks its own tools within a budget, rather than a fixed lookup then a draft"
 considered = ["a fixed handbook lookup followed by a draft"]
 because = "a ticket with nothing to look up has no passage to draft from, and the fixed path drafts anyway"
+
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-08-26T10:00:00Z"
+answer = "Reporting; comments are answered in batches."

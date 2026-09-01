@@ -45,12 +45,12 @@ class Question:
     one: it puts two scenarios side by side, takes which is worse, then asks by how much. The
     brief records one answer per question whatever it took to get there.
 
-    **Four rules govern how any of these is put**, and they govern a question the coding agent
-    composes for itself as well. Put it against something of the builder's own, written into
+    **Five rules govern how any of these is put**, this one and any the coding agent
+    composes. Put it against something of the builder's own, written into
     the question. Look up any number it turns on first, and say where the number came from.
     Name the options, and say which one is recommended and why. Explain every term the builder
-    has not used themselves, the project's own code names included. `docs/procedure.md` carries
-    them, and a question put without its scaffold is one the builder answers by guessing.
+    has not used themselves, the project's own code names included. Never mix a prose question into an exchange
+    with questions put through the session's question mechanism. `docs/procedure.md` carries them.
     """
 
     name: str
@@ -573,6 +573,26 @@ QUESTIONS: tuple[Question, ...] = (
             "then built to produce; the surface showing it is `used_through`'s answer and the "
             "design section's subject (`docs/product.md`). Record the decision under "
             "`presentation` as well (FT-30)."
+        ),
+    ),
+    Question(
+        name="comments_block_gates",
+        title="Whether an open comment blocks a gate",
+        stage="shape",
+        required=True,
+        ask=(
+            "When a comment on the view is still open, should the build stop until it is "
+            "answered, or keep moving and report it?"
+        ),
+        scaffold=(
+            "Ask once the served view exists, over something of the builder's own on the "
+            "page. Two options. Blocking: an open comment refuses every gate until it is "
+            "addressed, so nothing said on the view is built past; recommend it where the "
+            "view is the builder's main channel. Reporting: gates pass, open comments print "
+            "under every report, and they are answered in their own time; recommend it where "
+            "the builder answers in batches. Record the choice in this entry and as "
+            "comments_block_gates = true or false at the top of brief.toml, which is what "
+            "FT-39 reads."
         ),
     ),
     Question(

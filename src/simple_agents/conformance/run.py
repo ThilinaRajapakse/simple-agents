@@ -120,6 +120,7 @@ def run_checks(
                 _dependencies_no_research_rests_under(declared, stage),
                 _produced_by_no_decision(declared, ctx.produced, stage),
                 _spend_that_produced_nothing(ctx.unfinished),
+                _comments_awaiting(found, declared),
                 _no_step_carries_a_figure(declared, found, ctx.produced, stage),
             )
             if note
@@ -158,6 +159,37 @@ def _what_the_checks_read(found: Artifacts) -> str | None:
         f"reading {found.relative(found.run_dir)}, {len(nodes)} node(s): {shape}. A pass the "
         f"project makes for itself declares RunEnvelope(role=...) so it is not read as the "
         f"agent (docs/run-envelope.md §2.1)."
+    )
+
+
+def _comments_awaiting(found: Artifacts, brief: Brief) -> str | None:
+    """Open comment threads, on a project whose brief has them reporting rather than blocking.
+
+    A comment is the builder writing into the record unprompted, and between gates nothing
+    brings it to the coding agent. Where ``comments_block_gates = true`` FT-39 refuses the
+    gate and needs no second voice; here the threads are printed under the checks, because a
+    passing detail line inside the wall of results is read past.
+    """
+    if brief.comments_block_gates:
+        return None
+    from ..errors import ConfigurationError
+    from ..records.comments import DEFAULT_COMMENTS, read_comments
+
+    try:
+        comments = read_comments(found.root / DEFAULT_COMMENTS)
+    except ConfigurationError:
+        return None
+    if comments.path is None or not comments.open:
+        return None
+    held = comments.open
+    named = ", ".join(f"{c.at}: {c.said[:60]!r}" for c in held[:3])
+    more = f", and {len(held) - 3} more" if len(held) > 3 else ""
+    return (
+        f"{len(held)} comment thread(s) from the builder are open: {named}{more}. Each is "
+        f"the builder pointing at a part of the system from the view. Read them with "
+        f"`simple-agents comments`, do what each asks or take it back to the builder, then "
+        f'set status = "addressed" with addressed_by naming what answered it. '
+        f"comments_block_gates = true in the brief makes an open thread refuse the gate."
     )
 
 

@@ -113,7 +113,7 @@ hold that no decision names (`docs/conformance.md` §2.2).
 **Serve the view, and read what comes back.** `simple-agents view --serve` is the live
 page (`docs/view.md`): the builder comments on any element, answers open questions and
 amends recorded answers in place, each landing as a thread in `comments.toml`. Read them
-with `simple-agents comments` before each session, do what each asks, reply in the thread,
+with `simple-agents comments` before each session and at every gate, do what each asks, reply in the thread,
 and record an `answer` or `amendment` into the brief before addressing it (FT-39).
 
 **And at every stage, ask `anything_else`.** After that stage's own questions and before the

@@ -30,3 +30,7 @@ chose = "three picks with one line each, not a ranked table"
 considered = ["a ranked table"]
 because = "the builder said a table reads like homework"
 
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-08-26T10:00:00Z"
+answer = "Reporting; comments are answered in batches."

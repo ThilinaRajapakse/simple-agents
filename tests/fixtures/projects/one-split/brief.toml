@@ -117,6 +117,11 @@ status = "answered"
 recorded_at = "2026-08-27T09:14:02Z"
 answer = "The span and the passage it came from, printed, read once by the builder and by nobody else. No page, no file, no record kept, so the output schema carries the two fields the answer needs and nothing for a reader who was not there."
 
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-08-27T09:14:02Z"
+answer = "Reporting rather than blocking; the builder answers comments in batches at each gate."
+
 [entries.backend]
 status = "answered"
 recorded_at = "2026-08-27T09:14:02Z"

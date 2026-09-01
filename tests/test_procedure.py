@@ -384,6 +384,7 @@ class TestTheElicitationGate:
             "agency_boundary": "answered",
             "consultation": "answered",
             "presentation": "answered",
+            "comments_block_gates": "answered",
             "backend": "answered",
             "budget": "answered",
             "tool_effects": "answered",

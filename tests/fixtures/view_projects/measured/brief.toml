@@ -244,3 +244,8 @@ chose = "the prompt tells decide to refuse a claim failing the receipt or age ru
 considered = ["escalating anything ambiguous"]
 because = "a claim that breaks a rule is refused, and sending it on would read as approval"
 produces = ["decide"]
+
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-08-26T10:00:00Z"
+answer = "Reporting; comments are answered in batches."
