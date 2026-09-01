@@ -14,11 +14,11 @@ It is designed to be used by a builder and a coding agent working together. `sim
 ## Quick start
 
 ```
-uv add simple-agents      # or: pip install simple-agents
-simple-agents init        # or: simple-agents init --claude
+uv add simple-llm-agents      # or: pip install simple-llm-agents
+simple-agents init            # or: simple-agents init --claude
 ```
 
-Python 3.11 or newer. `init` registers the build procedure as a skill for your coding agent and points your project's `AGENTS.md` at it. From there:
+Python 3.11 or newer. The import is `simple_agents` and the CLI is `simple-agents`. `init` registers the build procedure as a skill for your coding agent and points your project's `AGENTS.md` at it. From there:
 
 1. The build runs in six staged gates, and the coding agent asks questions as needed to build your idea. [Building with a coding agent](#building-with-a-coding-agent) covers the stages and the two commands that drive them.
 2. **[A first agent](#a-first-agent)** is what the code looks like. Every run it makes writes a manifest, a trajectory and a cassette, so it can be read back, re-priced and replayed for free.

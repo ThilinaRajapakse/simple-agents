@@ -1,5 +1,5 @@
 [project]
-name = "simple-agents"
+name = "simple-llm-agents"
 version = "0.1.0"
 description = "An opinionated agent shape, a conformance suite that runs against your project, and a staged procedure for building agents correctly."
 readme = "README.md"

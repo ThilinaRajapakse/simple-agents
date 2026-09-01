@@ -1784,7 +1784,7 @@ wheels = [
 ]
 
 [[package]]
-name = "simple-agents"
+name = "simple-llm-agents"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

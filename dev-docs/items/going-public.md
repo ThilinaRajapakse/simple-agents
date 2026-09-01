@@ -107,6 +107,12 @@ public with the repository is intended. The sweep now gates in the suite through
 - **The repositories.** This repository is renamed `simple-agents-prototype` and stays the
   private archive; the fresh public repository takes `simple-agents`, initialized from the
   scanned tree and holding only what `git ls-files` holds here.
+- **The PyPI name is `simple-llm-agents`**, ruled 2026-09-01 after the upload was refused:
+  `simple-agents` is blocked by PyPI's similarity rule against `simpleagents` (a one-release
+  0.0.1 placeholder from 2025-02) and `simple-agent` (one release, 2023). The import stays
+  `simple_agents` and the CLI stays `simple-agents`. A PEP 541 request for `simple-agents`
+  and a transfer request for `simpleagents` go to pypi/support; either succeeding reopens the
+  name question at a later release.
 
 ## What it waits on
 
