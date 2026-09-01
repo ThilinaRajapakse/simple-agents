@@ -35,7 +35,7 @@ README's install line, `uv add simple-agents`, satisfies it, so a project that p
 got no pointer and nothing was printed about it.
 
 Detection is now on the note's own heading, `## Simple Agents`, and three cases are separated in
-[`cli.py` `_note`](../../../../src/simple_agents/cli/main.py#L585):
+[`cli.py` `_note`](../../../../src/simple_agents/cli/main.py#L591):
 
 | The file | What happens |
 |---|---|
@@ -46,7 +46,7 @@ Detection is now on the note's own heading, `## Simple Agents`, and three cases 
 
 **The replace case is what makes running `init --claude` after `init` correct.** Without it a
 project that moved harness ends up with two notes or one stale one.
-[`_replaced_note`](../../../../src/simple_agents/cli/main.py#L614) takes the section from the heading to
+[`_replaced_note`](../../../../src/simple_agents/cli/main.py#L620) takes the section from the heading to
 the next heading at the same level or above, so a project's own `## House rules` below it
 survives.
 

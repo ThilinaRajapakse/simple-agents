@@ -91,7 +91,7 @@ being true when FT-34 joined at `shape`.
 
 **One consolidation was found and reverted.** Stage 3 opens *"Agree the shape before writing it"*,
 which now duplicates stage 2. Cutting it saves 11 words and reads well on the merits, and
-[`test_it_puts_the_design_discussion_before_the_pipeline_is_written`](../../tests/test_procedure.py#L1088) guards that sentence with *"The decisions
+[`test_it_puts_the_design_discussion_before_the_pipeline_is_written`](../../tests/test_procedure.py#L1093) guards that sentence with *"The decisions
 are settled where the code is written, not only named at the start."* **It was found while hunting
 for words, and changing shipped guidance a test protects for that reason is the wrong order of
 operations.** It stays open as a question to argue on its own.

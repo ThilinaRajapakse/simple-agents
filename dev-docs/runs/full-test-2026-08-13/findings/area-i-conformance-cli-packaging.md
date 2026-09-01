@@ -206,7 +206,7 @@ from simple_agents.conformance import taxonomy
 
 **Claimed.** [`cli.py` `--stage`](../../../../src/simple_agents/cli/main.py#L503) sets the help to "shape,
 build or measure. Earlier stages are included".
-[`main.py` `is not a stage`](../../../../src/simple_agents/cli/main.py#L474) `_questions` refuses an unknown stage with
+[`main.py` `is not a stage`](../../../../src/simple_agents/cli/main.py#L480) `_questions` refuses an unknown stage with
 `'bogus' is not a stage.`
 
 **Actually.** There are four stages. `brainstorm` is the first, is what a project that has
@@ -229,7 +229,7 @@ simple-agents questions --stage bogus   # "'bogus' is not a stage." and nothing 
 
 ### 11. The symlink `init` writes does not survive what its docstring says it survives
 
-**Claimed.** [`cli.py` `_place`](../../../../src/simple_agents/cli/main.py#L651), line 200: "it is
+**Claimed.** [`cli.py` `_place`](../../../../src/simple_agents/cli/main.py#L657), line 200: "it is
 relative so a project that commits it survives being cloned elsewhere."
 
 **Actually.** The link is relative, and it points out of the project into site-packages:
@@ -260,7 +260,7 @@ written today carry citations that do not resolve. Checks `SCRIPT-002` to `SCRIP
 
 **Actual.** `simple-agents init` over a project that already has the skill prints
 "`<path>` already exists. Pass --force to replace it." and returns 0
-([`cli.py` `already exists`](../../../../src/simple_agents/cli/main.py#L521) `_print_one_question`). It also returns before the
+([`cli.py` `already exists`](../../../../src/simple_agents/cli/main.py#L527) `_print_one_question`). It also returns before the
 AGENTS.md step, so a project whose AGENTS.md was deleted does not get it back from a re-run.
 
 **Severity: cosmetic.** Check `INIT-009`.

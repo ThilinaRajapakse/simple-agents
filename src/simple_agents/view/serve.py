@@ -13,6 +13,7 @@ and records, asking whatever follow-up the question's scaffold needs.
 
 from __future__ import annotations
 
+import copy
 import json
 import threading
 from http import HTTPStatus
@@ -50,17 +51,20 @@ def _runs_pieces(runs: Path) -> list[str]:
     Runs are filed by role and day (`runs/live/<date>/<run>/`), rollouts one deeper
     (`runs/eval/<eval_id>/<rollout>/`), and a project from before the layout keeps
     `runs/<run>/`. The manifests at those depths are the runs the page reads.
+
+    Every run contributes its manifest and its trajectory. The page reads both of each run,
+    and two runs can be in flight together: stamping only the newest left a second run's
+    growth out of the token, and a finished run's manifest out of it entirely.
     """
-    manifests = [
+    manifests = sorted(
         found
         for pattern in ("*/manifest.json", "*/*/manifest.json", "*/*/*/manifest.json")
         for found in runs.glob(pattern)
-    ]
+    )
     pieces = [f"runs:{len(manifests)}"]
-    if manifests:
-        # The newest run's trajectory grows while a run moves, and the page follows it.
-        newest = max(manifests, key=lambda held: held.stat().st_mtime_ns)
-        moving = newest.parent / "trajectory.jsonl"
+    for manifest in manifests:
+        pieces.append(_stamp(manifest))
+        moving = manifest.parent / "trajectory.jsonl"
         if moving.exists():
             pieces.append("moving:" + _stamp(moving))
     pieces.extend(_stamp(found) for found in runs.glob("eval/*/progress.json"))
@@ -134,6 +138,8 @@ class _Handler(BaseHTTPRequestHandler):
     server_version = "simple-agents-view"
     root: Path  # set by serve_view on the class it builds
     lock: threading.Lock
+    assembling: threading.Lock
+    reading: dict[str, Any]  # the last assembled project, under the token it was read at
 
     # -- plumbing --------------------------------------------------------------------------
 
@@ -169,9 +175,26 @@ class _Handler(BaseHTTPRequestHandler):
         return held if isinstance(held, dict) else {}
 
     def _fresh(self) -> dict[str, Any]:
-        data = assemble(self.root)
-        data["live"] = True
-        return data
+        """The project as it stands, read again only where something the page reads has moved.
+
+        Assembling imports the project, runs its checks and computes every figure, which is
+        hundreds of milliseconds on a project with runs. A page the builder holds open asks
+        for this on every poll, so the reading is kept and `project_state` says when it is
+        spent: the same token the page itself polls to know it is stale.
+
+        One reading happens at a time. Assembling clears the pipeline registry and loads the
+        project's modules, so two at once would read each other's half-built state.
+
+        The caller gets a copy, so writing into it leaves the kept reading alone.
+        """
+        state = project_state(self.root)
+        with self.assembling:
+            if self.reading.get("state") != state:
+                data = assemble(self.root)
+                data["live"] = True
+                self.reading.clear()
+                self.reading.update(state=state, data=data)
+            return copy.deepcopy(self.reading["data"])
 
     # -- routes ----------------------------------------------------------------------------
 
@@ -414,6 +437,8 @@ def build_server(root: str | Path = ".", *, port: int = 7350) -> ThreadingHTTPSe
         {
             "root": where,
             "lock": threading.Lock(),
+            "assembling": threading.Lock(),
+            "reading": {},
         },
     )
     return ThreadingHTTPServer(("127.0.0.1", port), handler)

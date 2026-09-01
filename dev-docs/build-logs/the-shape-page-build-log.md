@@ -106,7 +106,7 @@ What shipped:
   `decisionsRegion`, `oneClick` and `agreeToDecision`; every edge gains `data-edge` and a
   `gline` class so lighting is a class toggle rather than a redraw; the findings band renders
   a finding's own actions in place of the button that only goes and looks.
-- Tests: [`test_view.py`](../../tests/test_view.py#L786) `TestTheSeamsTheShapeSettles` holds the seams and the story rows as
+- Tests: [`test_view.py`](../../tests/test_view.py#L793) `TestTheSeamsTheShapeSettles` holds the seams and the story rows as
   data, [`test_view_runs.py`](../../tests/test_view_runs.py#L141) `TestTheShapePage` drives the rendered page's
   regions, and [`test_view_comments_e2e.py`](../../tests/test_view_comments_e2e.py#L111)
   presses both Agree buttons through the page's own function against a live server and reads

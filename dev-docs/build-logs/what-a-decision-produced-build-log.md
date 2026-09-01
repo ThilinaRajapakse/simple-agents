@@ -27,7 +27,7 @@ because it had been corrected the same morning and still guessed at a split.
 
 **And the join surface was measured**, which the record had as the newest run's manifest. Dogfood
 #5's newest agent run is one pipeline of seven: 5 node ids of the 34 its 2,669 runs recorded.
-[`load_project`](../../src/simple_agents/view/discovery.py#L43) does not rescue it, finding zero
+[`load_project`](../../src/simple_agents/view/discovery.py#L44) does not rescue it, finding zero
 pipelines there, since the project declares `build_*()` functions rather than
 `@pipeline_factory` or a module-level `Pipeline`.
 
@@ -240,7 +240,7 @@ out of cycle 1's read, 4 and 5 out of cycle 3's, 6 out of cycle 4's.
 | `README.md` | 41 failures to 42, twenty-four checks to twenty-five |
 
 **`docs/procedure.md` is at exactly its 3000-word budget**, which
-[`test_procedure.py`](../../tests/test_procedure.py#L70) `WORD_BUDGET` enforces. It had 47 words of headroom
+[`test_procedure.py`](../../tests/test_procedure.py#L74) `WORD_BUDGET` enforces. It had 47 words of headroom
 before this item. The next addition to that file has to take something out.
 
 ## 6. Left open
