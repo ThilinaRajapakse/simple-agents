@@ -141,6 +141,48 @@ class TestServing:
         _status, after = call(base, "/version")
         assert json.loads(before)["state"] != json.loads(after)["state"]
 
+    def test_a_second_request_reuses_the_reading(self, served, monkeypatch) -> None:
+        """A page held open polls, and assembling a project is hundreds of milliseconds."""
+        from simple_agents.view import serve as module
+
+        root, base = served
+        counted = []
+        real = module.assemble
+        monkeypatch.setattr(module, "assemble", lambda where: counted.append(where) or real(where))
+
+        call(base, "/data")
+        call(base, "/data")
+        call(base, "/")
+        assert len(counted) == 1
+
+        (root / "agent.py").write_text((root / "agent.py").read_text() + "\n# moved\n")
+        call(base, "/data")
+        assert len(counted) == 2
+
+    def test_the_reading_the_caller_gets_is_its_own(self, served) -> None:
+        """A caller writing into what it was handed leaves the kept reading alone."""
+        _root, base = served
+        _status, first = call(base, "/data")
+        held = json.loads(first)
+        held["project"] = "written over"
+        _status, second = call(base, "/data")
+        assert json.loads(second)["project"] != "written over"
+
+    def test_state_moves_when_a_run_beside_the_newest_grows(self, tmp_path) -> None:
+        """Two runs can be in flight together, and the page reads the trajectory of each.
+
+        The token stamped only the newest run's trajectory, so a second run's growth left it
+        still and the served page sat through it.
+        """
+        root = tmp_path / "p"
+        shutil.copytree(
+            FIXTURE.parent / "shipped", root, ignore=shutil.ignore_patterns("__pycache__")
+        )
+        beside = sorted((root / "runs").glob("*/*/*/trajectory.jsonl"))[0]
+        one = project_state(root)
+        beside.write_text(beside.read_text() + '{"kind": "note"}\n', encoding="utf-8")
+        assert project_state(root) != one
+
     def test_state_reads_without_a_server_too(self, tmp_path) -> None:
         root = tmp_path / "p"
         shutil.copytree(FIXTURE, root)

@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.29",
   "eval_id": "eval_ef8abe5df07a",
-  "created_at": "2026-09-01T03:27:39.998Z",
+  "created_at": "2026-09-01T11:46:44.287Z",
   "config": {
     "split": "held_out",
     "k": 3,
@@ -584,7 +584,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 9,
-      "wall_clock_ms": 4,
+      "wall_clock_ms": 5,
       "absent_outputs": 5,
       "unfinished_executions": 0,
       "unfinished_items": 0,
