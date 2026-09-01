@@ -10,6 +10,8 @@ screenshots, which a suite cannot do.
 
 from __future__ import annotations
 
+import copy
+import functools
 import json
 import re
 from pathlib import Path
@@ -24,8 +26,13 @@ from simple_agents.view import assemble, generate_view, render
 FIXTURES = Path(__file__).parent / "fixtures" / "view_projects"
 
 
-def shape(name: str) -> dict:
+@functools.lru_cache(maxsize=None)
+def _assembled(name: str) -> dict:
     return assemble(FIXTURES / name)
+
+
+def shape(name: str) -> dict:
+    return copy.deepcopy(_assembled(name))
 
 
 class TestNotBuilt:

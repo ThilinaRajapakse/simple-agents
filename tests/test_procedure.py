@@ -240,6 +240,7 @@ class TestTheQuestions:
             assert "where the number came from" in place
             assert "recommended" in place
             assert "the project's own code" in place
+            assert "One question per exchange" in place
 
     def test_the_five_rewritten_asks_name_what_goes_in_front_of_the_builder(self) -> None:
         """Each of the five offered a choice, or asked for a value, with no instance in it."""
