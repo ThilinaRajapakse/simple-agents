@@ -25,7 +25,7 @@
   ([`decisions.py`](../../src/simple_agents/conformance/decisions.py#L69)) and nothing joins it
   to the candidate it was chosen over.
 - **`questions_at(stage, tier)` gives what each stage asks**
-  ([`elicitation.py`](../../src/simple_agents/conformance/elicitation.py#L967) `questions_at`), cumulatively,
+  ([`elicitation.py`](../../src/simple_agents/conformance/elicitation.py#L987) `questions_at`), cumulatively,
   so a stage's own questions are the ones whose `stage` is that stage.
 
 ## 2. Design

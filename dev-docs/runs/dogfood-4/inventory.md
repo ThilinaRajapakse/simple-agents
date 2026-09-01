@@ -432,7 +432,7 @@ fingerprint.** Measured 2026-08-18 on two pipelines differing in one tool's body
 **It lands on the recipe the stamp was built for.** `docs/shipping.md` §6 tells a project to take
 `behaviour_fingerprint()`, write it beside each stored row, and query for the rows a current
 pipeline did not produce. Swap the client at `run(model=)` or edit a tool and the query returns
-nothing. [`_the_pipeline_moved`](../../../src/simple_agents/conformance/run.py#L369) reads the same
+nothing. [`_the_pipeline_moved`](../../../src/simple_agents/conformance/run.py#L401) reads the same
 value, and `backend` is one of the twelve `about_the_pipeline` questions, so a backend swap never
 marks the brief entry due.
 

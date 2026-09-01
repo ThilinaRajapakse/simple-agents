@@ -54,7 +54,7 @@ copy every one of them points outside the tree, so a check comparing paths would
 
 **`simple-agents check` prints the `confirmed_against` note with twelve entries due**, and the
 log records it printing on all 21 runs of the suite with nothing recorded on any of them. Its
-rationale is in shipped code ([`run.py` `_the_pipeline_moved`](../../src/simple_agents/conformance/run.py#L369)): *"It reports and never fails."*
+rationale is in shipped code ([`run.py` `_the_pipeline_moved`](../../src/simple_agents/conformance/run.py#L401)): *"It reports and never fails."*
 
 **`simple-agents report runs/` prints three produce-nothing lines the check does not.**
 `judge_candidates` 29 units spending 251 of 3,451 model calls, `find_candidates` 5 units
@@ -140,11 +140,11 @@ where the stamp cannot be taken, which FT-37 reports as blocked.
 **`Report` gains `reading`**, a header line under the tier, and the JSON carries it.
 
 **One header line and three notes**, none of which fails anything:
-[`_what_the_checks_read`](../../src/simple_agents/conformance/run.py#L130) is the header;
-[`_what_the_live_runs_did`](../../src/simple_agents/conformance/run.py#L164) fires at `ship`;
-[`_the_number_came_from_elsewhere`](../../src/simple_agents/conformance/run.py#L187) is FT-37
+[`_what_the_checks_read`](../../src/simple_agents/conformance/run.py#L131) is the header;
+[`_what_the_live_runs_did`](../../src/simple_agents/conformance/run.py#L196) fires at `ship`;
+[`_the_number_came_from_elsewhere`](../../src/simple_agents/conformance/run.py#L219) is FT-37
 before `ship`; and
-[`_rollouts_the_results_file_does_not_describe`](../../src/simple_agents/conformance/run.py#L273)
+[`_rollouts_the_results_file_does_not_describe`](../../src/simple_agents/conformance/run.py#L305)
 is the identity join. `_the_pipeline_moved` now stops at `ship`, so the report carries that
 comparison once.
 

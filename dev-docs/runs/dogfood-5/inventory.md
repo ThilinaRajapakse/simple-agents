@@ -435,7 +435,7 @@ and the procedure says so, is the decision.
 **Decided 2026-08-25, and they are one decision.**
 
 **`confirmed_against` becomes a gate at `ship`, a note before it.** This defeats a rationale
-written into shipped code: [`_the_pipeline_moved`](../../../src/simple_agents/conformance/run.py#L369)
+written into shipped code: [`_the_pipeline_moved`](../../../src/simple_agents/conformance/run.py#L401)
 says *"It reports and never fails. A graph moves several times an hour while a project is built,
 and a failure that frequent is cleared by re-recording the value rather than by reading."* The
 situation against it, measured on the frozen copy at the sitting: the note prints twelve entries

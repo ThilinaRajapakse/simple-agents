@@ -56,7 +56,7 @@ nothing in place to keep them current."* The §2.2 entry is deleted.
 `tests/fixtures/projects/` holds 18 projects built by
 [`build_conformance_fixtures.py`](../../scripts/build_conformance_fixtures.py#L1), which replays the
 committed cassette and applies one named mutation each, and
-[`test_conformance.py` `TestTheFixturesAreCurrent`](../../tests/test_conformance.py#L2915) fails
+[`test_conformance.py` `TestTheFixturesAreCurrent`](../../tests/test_conformance.py#L2933) fails
 when they drift. All 18 are current. `tests/fixtures/view_projects/` has no generator and no check.
 
 **And what they do not cover cost a live defect.** Found 2026-08-28 in `P3-52`'s seventh

@@ -11,7 +11,7 @@ because it had been corrected the same morning and still guessed at a split.
 |---|---|---|
 | `Decision` carries `rests_on` as a structured tuple, so `produces` has a precedent | [`decisions.py` `Decision`](../../src/simple_agents/conformance/decisions.py#L166) | Yes. Parsed from `from`, refuses a bare string |
 | FT-32 reads side-effect classes and no tool name, so it is untouched | [`checks.py` `ft_32`](../../src/simple_agents/conformance/checks.py#L1000) | Yes |
-| The two neighbouring mechanisms are report notes | [`run.py` `_answers_no_decision_rests_on`](../../src/simple_agents/conformance/run.py#L454), [`_dependencies_no_research_rests_under`](../../src/simple_agents/conformance/run.py#L518) | Yes |
+| The two neighbouring mechanisms are report notes | [`run.py` `_answers_no_decision_rests_on`](../../src/simple_agents/conformance/run.py#L486), [`_dependencies_no_research_rests_under`](../../src/simple_agents/conformance/run.py#L550) | Yes |
 | FT-40 and FT-41 are the note-then-fail pattern to copy | [`checks.py` `ft_40`](../../src/simple_agents/conformance/checks.py#L1791), [`ft_41`](../../src/simple_agents/conformance/checks.py#L1882) | Yes. Neither names a `Stage:` field; each reads `ctx.stage()` |
 | FT-41 is the highest entry | `docs/failure-taxonomy.md` | Yes, so this is FT-42 |
 
@@ -178,7 +178,7 @@ date.
 | [`pipeline.py` `manifest_constants`](../../src/simple_agents/pipeline/core.py#L2001) | The public accessor, beside `manifest_tools` and `manifest_prompts` |
 | [`decisions.py` `PRODUCING_KINDS`](../../src/simple_agents/conformance/decisions.py#L354) | `produces` on `Decision` and `DecisionKind`, and the refusal on the two kinds that carry none |
 | [`checks.py` `ft_42`](../../src/simple_agents/conformance/checks.py#L2016) | The forward direction |
-| [`run.py` `_produced_by_no_decision`](../../src/simple_agents/conformance/run.py#L557) | The reverse, grouped by recency |
+| [`run.py` `_produced_by_no_decision`](../../src/simple_agents/conformance/run.py#L588) | The reverse, grouped by recency |
 | [`produced.py`](../../src/simple_agents/conformance/produced.py#L1) | What every run recorded, read once for both |
 
 **3487 tests, up from 3415.** Two new files: `tests/test_manifest_constants.py` and

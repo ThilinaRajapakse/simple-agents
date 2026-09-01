@@ -460,7 +460,7 @@ it was resolved against the code. 2618 passed with this work in the tree.
   `procedure.md` to change, which came in shorter than what it replaced.
 - **The note wording was coy.** "the answer to the note is `tier = \"evaluated\"`" became
   "gets a note suggesting `tier = \"evaluated\"`", which is what
-  [`_stages_the_tier_drops`](../../src/simple_agents/conformance/run.py#L696) actually prints.
+  [`_stages_the_tier_drops`](../../src/simple_agents/conformance/run.py#L728) actually prints.
 - **Renumbering by two passes double-applied itself**, turning `2.1` into `3.1` and then into
   `4.1`. Caught by reading the headings back, and redone as one pass through a marker.
 

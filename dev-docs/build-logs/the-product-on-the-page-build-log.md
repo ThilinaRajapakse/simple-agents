@@ -27,7 +27,7 @@ into §2 here.
   ([`manifest.py`](../../src/simple_agents/records/manifest.py#L830)), so the same machinery reads a
   surface's own numbers from the module that declares it.
 - **`DeclaredPipelines` is the one thing a check gets from importing the project**
-  ([`run.py` `_pipelines_in_the_code`](../../src/simple_agents/conformance/run.py#L631)), which
+  ([`run.py` `_pipelines_in_the_code`](../../src/simple_agents/conformance/run.py#L663)), which
   is where a declared product can reach a check without a second import path.
 - **Neither fixture the item named could show a shipped project.** `measured` is at `measure`
   and declares no product; nothing under `view_projects/` had a live run.

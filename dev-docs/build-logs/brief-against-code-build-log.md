@@ -25,7 +25,7 @@ consultation points"*, and nothing counts consultation points: the `consultation
 prose answer. Registering the check meant rewriting the message, which is done.
 
 **Notes are assembled in `run_checks`** from `Artifacts` methods plus `_stages_the_tier_drops`
-([run.py:696](../../src/simple_agents/conformance/run.py#L696)), and the brief is in scope there,
+([run.py:728](../../src/simple_agents/conformance/run.py#L728)), and the brief is in scope there,
 so the trigger is a fourth note rather than new machinery.
 
 **The taxonomy is parsed out of the shipped document**
