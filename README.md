@@ -14,8 +14,9 @@ It is designed to be used by a builder and a coding agent working together. `sim
 ## Quick start
 
 ```
+uv init                       # start a project, if the directory has none
 uv add simple-llm-agents      # or: pip install simple-llm-agents
-simple-agents init            # or: simple-agents init --claude
+uv run simple-agents init     # add --claude for Claude Code
 ```
 
 Python 3.11 or newer. The import is `simple_agents` and the CLI is `simple-agents`. `init` registers the build procedure as a skill for your coding agent and points your project's `AGENTS.md` at it. From there:
