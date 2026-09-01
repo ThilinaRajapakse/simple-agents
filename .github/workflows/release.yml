@@ -33,5 +33,16 @@ jobs:
             echo "tag v$tag does not match pyproject.toml version $version"
             exit 1
           fi
+      # A changelog that says nothing about the version being published is the one gap the
+      # check above cannot see: the tag and pyproject can agree while the section is still
+      # headed "Unreleased". `scripts/release.py` writes the heading; this refuses without it.
+      - name: the changelog names the version being published
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          if ! grep -q "^## $tag (" CHANGELOG.md; then
+            echo "CHANGELOG.md has no '## $tag (<date>)' section."
+            echo "Prepare the release with: uv run python scripts/release.py $tag"
+            exit 1
+          fi
       - run: uv build
       - run: uv publish --trusted-publishing always
