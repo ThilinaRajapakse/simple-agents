@@ -12,22 +12,20 @@ pipeline.
 
 ## 0.1.1 (2026-09-01)
 
-No format moves. Two fixes out of the first builds against an installed copy:
+### Fixed
 
-- **The `AGENTS.md` note and the procedure both say where the installed docs live.** The
-  procedure names `docs/*.md` files thirty-nine times, and a builder's project has no `docs/`
-  directory: `python -c "import simple_agents; print(simple_agents.docs_path())"` prints the
-  directory holding them, and both surfaces now say so.
-- **A fifth rule for how a question is put**: prose questions are never mixed into an
-  exchange that puts questions through the session's question mechanism, since only the
-  mechanism's questions come back answered. A question that got no answer is put again.
+- `AGENTS.md` and the procedure now say where the installed docs live:
+  `simple_agents.docs_path()` prints the directory.
+- New asking rule in the procedure: prose questions are not mixed into an exchange with
+  questions put through the session's question mechanism, and an unanswered question is put
+  again.
 
-## 0.1.0 (2026-09-01), the first public release
+## 0.1.0 (2026-09-01)
 
-The formats at release are trajectory `0.29`, manifest `0.39`, suspension `0.5`, shelf `0.1`,
-conversation `0.2`, results file `0.29`, and variant comparison `0.3`. `0.1.0.post1` and
-`0.1.0.post2` are the same code with the project summary and the README's quick start
-corrected. Everything below was built before the release.
+First public release. Formats: trajectory `0.29`, manifest `0.39`, suspension `0.5`,
+shelf `0.1`, conversation `0.2`, results file `0.29`, variant comparison `0.3`.
+`0.1.0.post1` and `0.1.0.post2` corrected the package summary and the README quick start.
+Everything below was built before the release.
 
 ### The pre-release refactor inside the files, 2026-08-31
 

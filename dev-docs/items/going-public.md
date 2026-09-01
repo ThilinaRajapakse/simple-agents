@@ -95,8 +95,8 @@ public with the repository is intended. The sweep now gates in the suite through
 
 - **The version is `0.1.0` and the tag is `v0.1.0`.** Releasing before v0.1's recorded
   criterion (*"a dogfood run produces no library defect worth building"*) is a knowing
-  override: *"I don't care about some arbitrary recorded rule. Yes."*
-- **The README pass is closed**: *"Looks fine to me."* The Corner item closes with it.
+  override, ruled at the sitting.
+- **The README pass is closed** on Thilina's read. The Corner item closes with it.
 - **The example project follows the release.** `P3-2` stays queued behind it.
 - **Release does not start the format-stability clock.** Breaking format bumps stay allowed
   pre-1.0, recorded in `CHANGELOG.md` as they always were; `simple-agents.md` §9 item 7 stands

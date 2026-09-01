@@ -974,7 +974,7 @@ Recorded so the next run is read against it.
   admissions never used; `P3-30`'s same-day mechanism held under a site and a corpus pass at once.
 - **The evaluation's reporting rules.** `P3-24`'s denominators under a 429 storm; `P3-27`'s
   baseline declared and its `rollout_noise` on every metric; intervals on everything; an
-  `improvement` entry that reports two numbers apart because averaging them "is dumb", in the
+  `improvement` entry that reports the two numbers apart rather than averaged, in the
   builder's words, which the library's two-suite shape allowed.
 - **The cost basis correction.** The project invented $0.12/hour for the GPU, found the
   procedure's "Do not invent an hourly rate to fill in a cost", removed it and reports
@@ -1014,7 +1014,7 @@ scaffolded questions are plain; the ones the coding agent composes at `measure` 
 not, and nothing in the procedure says how a question to the builder is put.
 
 **Wanted and never asked for.** The five notes, and what the log shows arriving after the last
-gate: agency (`:5987`, `:6093`), *"users need the fucking option to rate and track shows"*
+gate: agency (`:5987`, `:6093`), users need the option to rate and track shows
 (`:5718`), whether ratings and tags reach the recommender (`ROADMAP.md:213`, "recorded at the
 builder's request"), ratings on the cards (`:5110`), sortable queues (`:4744`), and the
 open-ended question itself (`DF5-D9`).
