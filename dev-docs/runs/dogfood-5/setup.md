@@ -61,7 +61,7 @@ whatever he can export or recall. Both reach the run only through elicitation.
 ### 2.1 The run straddles the release, knowingly
 
 Accepted 2026-08-20. Dogfood #4 took three days, this run starts today, and
-[`P3-31`](../../items/going-public.md#L1) goes public tomorrow-ish. What lands before release
+[`P3-31`](../../build-logs/going-public-build-log.md#L1) goes public tomorrow-ish. What lands before release
 is the front half: cold-start defects in elicitation, research, shape and design, historically
 the cheapest to fix and the first an adopter hits. Evaluation- and ship-stage defects land
 after the repository is public, which v0.1's own criterion tolerates, being unmet either way.
@@ -160,7 +160,7 @@ What is sharper this time, all decided 2026-08-20:
 - **vLLM likewise.** Not running at handover. It is started only if the coding agent asks for a
   local or free backend and Thilina agrees.
 - **Personal viewing data lands in this run's records the day before the `dev-docs` scan
-  pass** ([`going-public.md`](../../items/going-public.md#L1) already flags the
+  pass** ([`going-public.md`](../../build-logs/going-public-build-log.md#L1) already flags the
   Goodreads-derived material in earlier runs). Keep real exports out of what this run's records
   commit, or flag them for the scan explicitly.
 

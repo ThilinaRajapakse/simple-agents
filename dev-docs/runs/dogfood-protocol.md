@@ -3,8 +3,9 @@
 How a dogfood run is set up and what is recorded. Reused by every run and by the meta-eval
 (`items/meta-eval.md`), so it lives here rather than in `plan.md`.
 
-**Ran five times**: dogfood #1 twice on 2026-08-07, dogfood #2 on 2026-08-07 to 08, dogfood #3 on
-2026-08-10 to 11, dogfood #4 on 2026-08-11 to 13, dogfood #5 on 2026-08-20 to 24. Each run has its
+**Ran six times**: dogfood #1 twice on 2026-08-07, dogfood #2 on 2026-08-07 to 08, dogfood #3 on
+2026-08-10 to 11, dogfood #4 on 2026-08-11 to 13, dogfood #5 on 2026-08-20 to 24, and dogfood #6 on
+2026-09-01 to 02, which was Thilina's own build against the public package rather than a protocol run. Each run has its
 own directory beside this file, and `archive/plan-history.md` holds the run-by-run narrative.
 
 ## 1. Protocol
@@ -36,7 +37,10 @@ manifests carry elapsed per stage and every clock time in the log's prose matche
 a minute, so it was redundant; before `build` the manifests carry nothing and half of dogfood #3's
 stamps were composed rather than read, so it was untrustworthy. What replaced it is `recorded_at`
 on every answered brief entry and every decision, which is in a formatted file a gate reads rather
-than in prose (`docs/conformance.md` §2.1).
+than in prose (`docs/conformance.md` §2.1). **The stamp is still written by hand**: dogfood #6's coding agent wrote
+twenty of thirty-three in local time with a `Z` suffix, two hours off, while the view's own stamps
+were right ([`dogfood-6/findings.md` `DF6-D9`](dogfood-6/findings.md#L242)). A formatted file makes
+the stamp readable and not true.
 
 **Nothing is said about deleting or overwriting an artifact.** Asking the coding agent to record
 what it deleted tells it that deleting is expected, and what a run destroys is a finding about the

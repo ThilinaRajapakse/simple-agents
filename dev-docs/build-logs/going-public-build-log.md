@@ -1,18 +1,19 @@
-# Going public
+# Build log — going public
 
-`plan.md` §1 P3-31's record. **Built so far**: LICENSE, CI, packaging and the run-record
-cleanup at `2b774e8`; the `dev-docs` scan pass, `P3-65`, `P3-66` and `P3-67`, all 2026-09-01.
-**Every decision is settled** as of the 2026-09-01 release sitting; what remains is mechanics:
-the fresh repository, the tag, the push and the PyPI claim.
+`plan.md` §1 P3-31. Scheduled 2026-08-20, built in pieces to 2026-09-01, closed 2026-09-02.
+This file is the item's record transformed in place: §1 and §2 are what `build-logs/going-public-build-log.md`
+held, under the six headings, and §3 to §6 are the build.
 
-## Where it came from
+## 1. Before any design
+
+### Where it came from
 
 Thilina, 2026-08-20, at the P3-1 completeness audit: *"I am thinking of doing DF-5 today and
 going public with the library tomorrow-ish. Is there anything waiting that should be done first
 before it's public-ready?"* The readiness sweep from that conversation is what this record
 carries.
 
-## What the problem is
+### What the problem is, checked 2026-08-20
 
 The repository is not release-shaped, checked 2026-08-20:
 
@@ -36,7 +37,11 @@ The repository is not release-shaped, checked 2026-08-20:
 - **No example project exists** (`P3-2`): the on-ramp a public library is judged by, six tasks
   decided and none built.
 
-## What has to be decided
+## 2. Design
+
+Every decision below is Thilina's, at the sitting named beside it.
+
+### What had to be decided
 
 **Settled 2026-08-20, ahead of dogfood #5:**
 
@@ -114,7 +119,7 @@ public with the repository is intended. The sweep now gates in the suite through
   and a transfer request for `simpleagents` go to pypi/support; either succeeding reopens the
   name question at a later release.
 
-## What it waits on
+### What it waited on
 
 `P3-32`, working through dogfood #5's findings, all of it. Decided 2026-08-25: the whole of
 [`runs/dogfood-5/inventory.md`](../runs/dogfood-5/inventory.md#L1) is dispositioned and what it
@@ -125,3 +130,46 @@ all 40 candidates disposed.
 **`P3-63`, the pre-release refactor, scheduled 2026-08-31 ahead of this item** on Thilina's
 2026-08-17 call that the refactor precedes the public release.
 [`build-logs/pre-release-refactor-build-log.md`](../build-logs/pre-release-refactor-build-log.md#L1) is its record.
+
+## 3. Build
+
+Nineteen commits on the public repository, 2026-09-01 to 02, all mechanics as §2 left them:
+
+- **`46bcaef` Simple Agents 0.1.0**, the scanned tree as the first commit; `v0.1.0` tagged.
+- **`becf370`**: the first CI run failed on a tracked record linking an untracked machine
+  artifact, fixed the same hour.
+- **`8e52a6b`**: the distribution renamed `simple-llm-agents` after PyPI refused the upload
+  under its similarity rule; import and CLI names unchanged.
+- **`e22e127`, `1dc3065`**: `0.1.0.post1` and `.post2`, the package summary and the PyPI page's
+  quick start, which had not worked from an empty directory (`98adf3d`).
+- **`77a85aa`, `2d4d24d`, `6ba9763`**: a coding agent is told where the installed docs live,
+  and a fifth asking rule; released as **`0.1.1`** (`30eb4cb`).
+- **`f81297e`**: `release.yml`, so pushing a `v*` tag runs the CI workflow and publishes by
+  trusted publishing with no token in the repository.
+- **`d36c71c`**: **`0.1.2`**, five view fixes found by the first public project.
+- **`5982abb`**: cutting a release is one command, and a changelog that says nothing about the
+  version refuses.
+
+No format moved. 4,134 tests at close.
+
+## 4. Verification
+
+Three releases went through `release.yml` on the tag and landed on PyPI. Dogfood #6 installed
+`0.1.1` from PyPI cold, upgraded to `0.1.2` mid-build with every pipeline still importing, and
+met no packaging defect ([`runs/dogfood-6/findings.md` §2](../runs/dogfood-6/findings.md#L1),
+`DF6-L1`). `tests/test_private_data.py` gates the scan in CI and passes over the tree as closed.
+
+## 5. Doc consequences
+
+`CHANGELOG.md` gained `0.1.0`, `0.1.1` and `0.1.2` in short bullets; `README.md`'s quick start
+runs from an empty directory; `AGENTS.md` and the skill name `docs_path()`; `docs/procedure.md`
+gained the fifth asking rule. "Nothing is released yet" stopped being true.
+
+## 6. Left open
+
+- **The PyPI name.** A PEP 541 request for `simple-agents` and a transfer request for
+  `simpleagents` are with pypi/support; either succeeding reopens the name at a later release.
+  Nothing here can act on it. Destination: nothing.
+- **The example project** stays [`plan.md` §1 `P3-2`](../plan.md#L1), behind the release as ruled.
+- **v0.1's own criterion** stays unmet: dogfood #6 produced nineteen candidates,
+  [`plan.md` §1 `P3-71`](../plan.md#L1).

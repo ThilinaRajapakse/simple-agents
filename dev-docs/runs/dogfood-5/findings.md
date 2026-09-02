@@ -408,7 +408,7 @@ build work. `ft_33` is identical in the current source.
 **Acted on:** `DF5-I09`.
 
 **Library.** On the frozen copy `simple-agents check` prints `pass FT-03`, and under it: "No
-threshold was set, so this evaluation ran no contamination check." [`checks.py` `ft_03`](../../../src/simple_agents/conformance/checks.py#L1299)
+threshold was set, so this evaluation ran no contamination check." [`checks.py` `ft_03`](../../../src/simple_agents/conformance/checks.py#L1300)
 `ft_03` returns `PASSED` where the results file carries no contamination report. The brief's
 `too_similar` answer explains why no threshold fits this project, and the explanation is sound;
 what the report line says is that the check passed, and it did not run. The suite has an
@@ -1089,6 +1089,6 @@ and a disposition.
   not converge" evidence was a 4-bit 30B model with a 16k window.
 - **The scan pass.** `live_records` in the brief accepted that "a person's viewing data sits in
   run records"; 3.1GB of trajectories under `runs/` carry the builder's watch history, and this
-  record quotes show titles from it. [`items/going-public.md`](../../items/going-public.md#L1)'s
+  record quotes show titles from it. [`build-logs/going-public-build-log.md`](../../build-logs/going-public-build-log.md#L1)'s
   scan reads this record too.
 - **The tail.** The offline cache for the mobile app, committed after the freeze, is not read.
