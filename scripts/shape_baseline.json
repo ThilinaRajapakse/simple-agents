@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "P3-64 sitting 5: the dispatch namespace is one declaration",
+  "reason": "P3-72: FT-44 joins checks.py, and _parser gains the record command's one registration call",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -65,7 +65,7 @@
       "function lines": 53
     },
     "src/simple_agents/cli/main.py::function::_parser": {
-      "function lines": 110
+      "function lines": 111
     },
     "src/simple_agents/cli/reporting.py::function::_tool_reach": {
       "function branches": 14
@@ -86,7 +86,7 @@
       "function lines": 61
     },
     "src/simple_agents/conformance/checks.py::module": {
-      "module lines": 1769
+      "module lines": 1811
     },
     "src/simple_agents/conformance/elicitation.py::module": {
       "module lines": 968

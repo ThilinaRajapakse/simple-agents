@@ -255,7 +255,7 @@ without checking it, which is what §1.12 does.
 
 ### 1.8 FT-14 is blind to an embedding identity, and `models.observed` does not save it
 
-[`checks.py` `_serving_models`](../../src/simple_agents/conformance/checks.py#L447) reads
+[`checks.py` `_serving_models`](../../src/simple_agents/conformance/checks.py#L448) reads
 `manifest["nodes"]` filtered to `node_kind` in `("llm", "agent")`, falling back to
 `models.configured`. Four manifests, one unpinned embedding identity, FT-14 run over each:
 

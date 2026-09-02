@@ -16,11 +16,11 @@ The command reads the files the project has already produced. It executes nothin
 
 | Tier | The project it describes | Its stages | Checks |
 |---|---|---|---|
-| `prototype` | built to find out whether the idea works, and reports no number about how well it does | every stage but `measure` | nineteen of the twenty-six |
-| `evaluated` | reports a measured number about how well it works | all six | all twenty-six |
-| `trained` | an `evaluated` project that will also be trained on its own runs | all six | all twenty-six |
+| `prototype` | built to find out whether the idea works, and reports no number about how well it does | every stage but `measure` | twenty of the twenty-seven |
+| `evaluated` | reports a measured number about how well it works | all six | all twenty-seven |
+| `trained` | an `evaluated` project that will also be trained on its own runs | all six | all twenty-seven |
 
-**`prototype` drops seven of the twenty-six checks, the ones that read a results file**, as it does not produce one. They are FT-01, FT-02, FT-03, FT-04, FT-06, FT-07 and FT-37 (§3).
+**`prototype` drops seven of the twenty-seven checks, the ones that read a results file**, as it does not produce one. They are FT-01, FT-02, FT-03, FT-04, FT-06, FT-07 and FT-37 (§3).
 
 **`prototype` has no `measure` stage**, because it reports no number. Its `measure` questions are not required. A `prototype` project that produced a results file anyway gets a note suggesting `tier = "evaluated"`.
 
@@ -92,9 +92,9 @@ FT-24 compares these against the questions required at the stage the project is 
 
 **An entry may carry `asked_at`, the stage the question was last put at.** On most entries it records when the answer was taken, and nothing reads it back. On `anything_else`, which every gate puts again, FT-24 refuses while it is absent or names an earlier stage than the project is at: the answer accumulates under the stage it was given at, *nothing* is an answer, and a deferral is refused because there is no later stage to defer it to. This is what the three `*_confirmed_at` keys above do for a document, applied to a question.
 
-**Every answered entry carries `recorded_at`, when what it now says was written down.** The coding agent reads it off the system clock and writes it, in ISO 8601 with a time zone; a value that is not a timestamp, or one naming no zone, is refused when the brief is read. A stage says how far the project had got and a clock says when, and the second is what a question of whether the code has moved since an answer was given anchors against. A re-asked question moves it with `asked_at`, whether or not the answer changed, since what it dates is the writing. A `deferred` or `unanswered` entry may carry one and is not held to it.
+**Every answered entry carries `recorded_at`, when what it now says was written down.** `simple-agents record` writes it from the clock (§2.3), in ISO 8601 in UTC; a value that is not a timestamp, or one naming no zone, is refused when the brief is read. A stage says how far the project had got and a clock says when, and the second is what a question of whether the code has moved since an answer was given anchors against. A re-asked question moves it with `asked_at`, whether or not the answer changed, since what it dates is the writing. A `deferred` or `unanswered` entry may carry one and is not held to it.
 
-Nothing in the library writes a brief, so nothing checks the clock the value came from. What is checked is that it is a timestamp.
+A stamp written by hand is a guess about the time, and FT-44 fails one ahead of the clock the suite runs on.
 
 ```
 simple-agents questions --stage brainstorm   # and research, shape, build, measure, ship
@@ -136,9 +136,37 @@ FT-42 reads these against the node ids, tool names and constants of every run un
 
 ---
 
+### 2.3 Recording an answer or a decision
+
+`simple-agents record` writes the entry and stamps it from the clock, so `recorded_at` is read rather than composed:
+
+```
+simple-agents record answer used_through --text "A phone app over an HTTP API on the builder's machine."
+simple-agents record answer anything_else --asked-at build --file answer.md
+simple-agents record answer budget --status deferred --deferred-to measure
+simple-agents record decision pool_size --kind constant --status agreed --chose "200" \
+    --considered "60, the first guess" --produces CANDIDATES_RETRIEVED --from presentation \
+    --because "the audit measured recall at 200"
+```
+
+The answer or the reason comes from `--text`, from a file, or from standard input as `--file -`. A table already in the file is replaced whole, keeping any key the command did not name, and the rest of the file is left as it was. The name is a question's key, a status one of the three, a stage one of the six, and the file is re-read as a brief before it is written, so a value the checks would refuse is refused here and nothing changes on disk. A question every gate puts again needs `--asked-at`.
+
+The same two from Python:
+
+```python
+from simple_agents.conformance import record_answer, record_decision
+
+record_answer("brief.toml", "used_through", answer="A phone app over an HTTP API on the builder's machine.")
+record_decision("brief.toml", "pool_size", kind="constant", status="agreed", chose="200",
+                considered=["60, the first guess"], produces=["CANDIDATES_RETRIEVED"],
+                rests_on=["presentation"], because="the audit measured recall at 200")
+```
+
+`rests_on` is written as `from`. Both return what was written: the table, the stamp, and whether an earlier table was replaced.
+
 ## 3. What each check reads
 
-All twenty-six are `artifact` surface: they read files and run nothing.
+All twenty-seven are `artifact` surface: they read files and run nothing.
 
 | Entry | Reads | Fires when |
 |---|---|---|
@@ -168,6 +196,7 @@ All twenty-six are `artifact` surface: they read files and run nothing.
 | FT-41 | `suspensions` in the manifest of every run under `runs/` | a run stopped to ask and is still waiting, and no run was ever resumed: counted at every stage, a failure from `ship` |
 | FT-42 | `produces` in the brief, against `nodes`, `tools` and `constants` in the manifest of every agent run under `runs/` | a decision names something no run of this project recorded: counted at every stage, a failure from `ship` |
 | FT-43 | `mcp` in `runs/<latest>/manifest.json`, one entry per MCP server the run declared tools from | a server offers a description, a schema or a set of tools other than what the project declared |
+| FT-44 | `recorded_at` on every entry and decision in `brief.toml`, against the clock the suite runs on | a stamp is ahead of the clock by more than five minutes, so it was composed rather than read |
 
 The report names the run and the results file it read, so a passing report can be checked by hand.
 
@@ -322,8 +351,10 @@ declares RunEnvelope(role=...) so it is not read as the agent (docs/run-envelope
         6 name(s) under `produces` were all recorded by runs under runs/.
      pass  FT-43  The MCP server changed under the project                            runs/run_7f2a/manifest.json
         This run declared tools from no MCP server.
+     pass  FT-44  A stamp the clock did not write                                     brief.toml
+        39 stamp(s), none ahead of the clock.
 
-1 failed, 17 passed, 5 blocked, 3 not applicable
+1 failed, 18 passed, 5 blocked, 3 not applicable
 ```
 
 | | Means |
@@ -333,7 +364,7 @@ declares RunEnvelope(role=...) so it is not read as the agent (docs/run-envelope
 | `blocked` | the artifact this check reads is missing, and another check reports why |
 | `n/a` | the check does not apply: at a tier above the one this project claims, at a stage this project has not reached, or to what this project declared, and the line under it says which |
 
-**A missing artifact fails once.** A project claiming `evaluated` with no evaluation gets one failure from FT-01 and five blocked checks. All twenty-six are printed either way, so the counts on the last line add up to twenty-six.
+**A missing artifact fails once.** A project claiming `evaluated` with no evaluation gets one failure from FT-01 and five blocked checks. All twenty-seven are printed either way, so the counts on the last line add up to twenty-seven.
 
 The failure text is read out of `docs/failure-taxonomy.md` and is the same string that document specifies, so acting on the report and acting on the document are the same thing.
 
@@ -485,6 +516,6 @@ Manifests record constants from format `0.33`. A project whose runs all predate 
 
 ## 5. What the suite does not do
 
-Twenty-six of the taxonomy's forty-three entries are checked here. The rest are the specification of correct practice and are not yet enforced, except the six the library enforces by construction: an output schema with no `unknown` branch (FT-09), a loop with no budget (FT-18), a tool with no side-effect class (FT-19), an evaluation over a tool that spends or cannot be undone (FT-20), a tool with no description (FT-23), and a node reading a type nothing reaching it can be (FT-28). Those refuse at author time rather than reporting at the end of a run.
+Twenty-seven of the taxonomy's forty-four entries are checked here. The rest are the specification of correct practice and are not yet enforced, except the six the library enforces by construction: an output schema with no `unknown` branch (FT-09), a loop with no budget (FT-18), a tool with no side-effect class (FT-19), an evaluation over a tool that spends or cannot be undone (FT-20), a tool with no description (FT-23), and a node reading a type nothing reaching it can be (FT-28). Those refuse at author time rather than reporting at the end of a run.
 
 **Every check verifies that a process was followed. Whether the result is correct cannot be verified by the library.** A project at full conformance measured something carefully. FT-24 establishes that the builder was asked what the right thing to measure is. Two checks read an answer's text and neither judges it: FT-25 reads whether the `consultation` answer opens on a negation, and FT-32 whether the `tool_effects` answer mentions each class of effect the run declares.

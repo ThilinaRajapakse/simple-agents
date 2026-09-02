@@ -455,7 +455,7 @@ rebuilt with `docs/shipping.md` in it.
 | A live run | `RunEnvelope(live=True)` and `env.with_live()`; `runs("runs/", live=True)`; `RunHandle.live`; `live` on the manifest; `role` other than `agent` with `live=True` refused |
 | The run's own channel on the manifest | `end_user: {"answered_by": ...}`, `null` where the run used the registered one ([`pipeline.py`, `_end_user_entry`](../../src/simple_agents/pipeline/recording.py#L115)) |
 | Four questions at `ship` | `someone_there`, `live_records`, `watching_live` required, `unevaluated_effects` optional; `how_far`'s scaffold separates the stage from the tier |
-| FT-31 | [`checks.py`, `ft_31`](../../src/simple_agents/conformance/checks.py#L796), reading a live run's consultations first and the manifest otherwise |
+| FT-31 | [`checks.py`, `ft_31`](../../src/simple_agents/conformance/checks.py#L797), reading a live run's consultations first and the manifest otherwise |
 | The stage gate | A taxonomy entry may carry `· Stage: ship`; [`run.py`, `_not_applicable`](../../src/simple_agents/conformance/run.py#L715) prints *"Fires at stage ship, and this project is at build."* |
 | Which run the checks read | [`artifacts.py`, `_latest_run`](../../src/simple_agents/conformance/artifacts.py#L423) prefers a run that is not live, falls back to one, and the report says when it did |
 | `docs/shipping.md` | New, and `docs/procedure.md` stage 5 points at it. Manifest `0.23` to `0.24` |

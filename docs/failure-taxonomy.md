@@ -632,6 +632,21 @@ A channel declares who it reaches, and the declaration is on every consultation 
 **Failure message.**
 > The MCP server `<server>` no longer offers what this project declared: `<list>`. A description and a schema are what the model is shown, and a side-effect class was confirmed against what one call did, so a server that moved is a change the builder agreed to nothing about. Read what changed, take it to the builder, and update the `effects=` declaration and the brief's `tool_effects` answer to match.
 
+### FT-44: A stamp the clock did not write
+
+*Surface: artifact · Tier: prototype*
+
+**What happens.** Every answered entry and every decision in the brief carries `recorded_at`, when what it says was written down. The coding agent writes the value itself, from what it takes the time to be, and what it takes the time to be is a guess: the first project built on the public package stamped twenty of thirty-three entries in local time with a UTC suffix, two hours ahead of every clock the run records.
+
+**Why it's wrong.** The stamp is what puts an answer in order against a run, a comment and another answer. A composed one puts it in the wrong order, so a question of whether the code moved after an answer was given, or whether a comment arrived before an entry was amended, is answered from a number nobody read. The file looks the same either way: a stamp is a stamp, and nothing about `2026-09-02T02:25:00Z` says which clock it came from.
+
+**What the library provides.** `simple-agents record answer` and `simple-agents record decision` write the entry and stamp it from the clock, in UTC (`docs/conformance.md` §2.3). `record_answer` and `record_decision` do the same from Python.
+
+**Check.** Every `recorded_at` on an entry and on a decision, against the clock on the machine the suite runs on, with five minutes' tolerance for two machines disagreeing. A stamp ahead of that was composed. It cannot read a stamp behind the clock, which is what a composed stamp looks like once enough time has passed, so the writer is what closes this and the check is what catches a hand-written stamp at the gate that follows it.
+
+**Failure message.**
+> `<count>` stamp(s) in the brief are ahead of the clock, which read `<now>` when this ran: `<list>`. A stamp is when what the entry says was written down, and one in the future was composed rather than read, so nothing that puts this answer in order against a run or a comment can trust it. Write entries through `simple-agents record answer` and `simple-agents record decision`, which stamp from the clock in UTC, and correct the ones listed.
+
 ### FT-31: Shipped on a development channel
 *Surface: artifact · Tier: prototype · Stage: ship*
 
@@ -828,8 +843,9 @@ Every check above verifies that a process was followed. None verifies that the r
 | FT-41 | A run stopped to ask, and nothing continued it | artifact | prototype |
 | FT-42 | A decision names something the project never built | artifact | prototype |
 | FT-43 | The MCP server changed under the project | artifact | prototype |
+| FT-44 | A stamp the clock did not write | artifact | prototype |
 
-**Counts.** 43 entries: 29 `prototype`, 13 `evaluated`, 1 `trained`. By surface: 32 artifact, 4 static, 2 static+artifact, 3 runtime, 2 runtime+static.
+**Counts.** 44 entries: 30 `prototype`, 13 `evaluated`, 1 `trained`. By surface: 33 artifact, 4 static, 2 static+artifact, 3 runtime, 2 runtime+static.
 
 Five entries name a stage as well as a tier. FT-31, FT-37 and FT-38 fire once a project has reached `ship`, FT-34 once it has reached `shape` and FT-36 once it has reached `research`, and each reports `n/a` before that. FT-37 and FT-38 read a change rather than an arrival, and a stage a project has reached it stays at, so those two go on firing on every later run of the suite.
 

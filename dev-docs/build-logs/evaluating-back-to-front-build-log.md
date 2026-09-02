@@ -29,7 +29,7 @@ Every claim the item rests on, checked against the code before anything was deci
   they do not collide, and a reader holding two results files cannot tell one is a rung of the
   other. That is what decided the manifest block rather than reusing the fingerprint.
 - **FT-08 has no check.** It is in `docs/failure-taxonomy.md` and not in
-  [`checks.py` `CHECKS`](../../src/simple_agents/conformance/checks.py#L2084), so there was
+  [`checks.py` `CHECKS`](../../src/simple_agents/conformance/checks.py#L2128), so there was
   nothing to weaken and the note is new.
 - **The per-node ratio's shape was settled by precedent.**
   [`outcomes.py` `RolloutOutcome`](../../src/simple_agents/evaluation/outcomes.py#L271) already

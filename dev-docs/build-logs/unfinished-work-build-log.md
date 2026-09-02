@@ -286,7 +286,7 @@ commit collects 2777, and this session's baseline was measured rather than carri
 **2817 tests to 2831. Manifest `0.30` to `0.31`, results file `0.21` to `0.22`.** `P3-26`.
 Eighteen checks now, and thirty-five taxonomy entries.
 
-- **FT-35**, in [`checks.py`](../../src/simple_agents/conformance/checks.py#L1147), `ft_35`,
+- **FT-35**, in [`checks.py`](../../src/simple_agents/conformance/checks.py#L1148), `ft_35`,
   over the counts [`spend.py` `unfinished_across`](../../src/simple_agents/conformance/spend.py#L186)
   reads out of each run's manifest. It opens no trajectory: the whole
   suite over dogfood #4's 3,293 runs takes 3.2s.

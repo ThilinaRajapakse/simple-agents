@@ -1,4 +1,4 @@
-"""The twenty-six checks, against project fixtures produced by replaying a real evaluation.
+"""The twenty-seven checks, against project fixtures produced by replaying a real evaluation.
 
 `scripts/build_conformance_fixtures.py` writes them. `conforming/` passes them all, and every
 other fixture is that one with a single mutation, so a test that fires a check names the one
@@ -82,7 +82,7 @@ class TestTheConformingProject:
         # FT-39 passes with no comments.toml on disk, FT-40 with no agent.py, since a
         # project that declares no pipeline in code has declared no step it has not built,
         # and FT-42 because every name under `produces` was recorded by a run.
-        assert [c.outcome for c in report.checks].count(Outcome.PASSED) == 23
+        assert [c.outcome for c in report.checks].count(Outcome.PASSED) == 24
         assert [c.entry_id for c in report.checks if c.outcome is Outcome.NOT_APPLICABLE] == [
             "FT-31",
             "FT-37",
@@ -632,7 +632,7 @@ class TestTheTierGate:
     def test_an_inapplicable_check_is_reported_rather_than_dropped(self) -> None:
         report = run_checks(project("prototype"))
 
-        assert len(report.checks) == 26
+        assert len(report.checks) == 27
         assert "Fires at tier evaluated, and this project claims prototype." in report.text()
 
     def test_a_project_with_no_evaluation_fails_once_and_blocks_the_rest(self) -> None:
@@ -805,7 +805,7 @@ class TestTheTaxonomyIsTheSourceOfTheMessages:
     def test_every_entry_parses_out_of_the_shipped_document(self) -> None:
         entries = taxonomy()
 
-        assert len(entries) == 43
+        assert len(entries) == 44
         assert all(entry.message for entry in entries)
 
     def test_an_entry_naming_a_stage_carries_it_and_the_rest_carry_none(self) -> None:
@@ -906,8 +906,8 @@ class TestTheEnumerationsInTheDocument:
             line for line in self.document().splitlines() if line.startswith("| `prototype` |")
         ]
 
-        assert len(runs) == 19
-        assert "nineteen of the twenty-six" in row
+        assert len(runs) == 20
+        assert "twenty of the twenty-seven" in row
 
     def test_the_checks_prototype_drops_are_the_ones_it_does_not_run(self) -> None:
         """The ids moved out of the table on 2026-08-19 and into the sentence under it, which
@@ -939,9 +939,9 @@ class TestTheEnumerationsInTheDocument:
         entries = taxonomy()
         surfaces = {entries[i].surface for i in self.registered()}
 
-        assert len(self.registered()) == 26, "the document counts them in four places"
+        assert len(self.registered()) == 27, "the document counts them in four places"
         assert surfaces == {"artifact"}
-        assert "All twenty-six are `artifact` surface" in self.document()
+        assert "All twenty-seven are `artifact` surface" in self.document()
 
     def test_the_table_of_what_each_check_reads_lists_every_check(self) -> None:
         """`docs/conformance.md` §3 is a row per check, and nothing compared it to the set."""
@@ -1104,8 +1104,8 @@ class TestTheSampleReportIsWhatTheSuitePrints:
 
         shown = re.findall(r"^\s*(?:pass|FAIL|blocked|n/a)  (FT-\d+)", self.documented(), re.M)
 
-        assert len(shown) == 26
-        assert len(set(shown)) == 26
+        assert len(shown) == 27
+        assert len(set(shown)) == 27
 
     def test_the_counts_on_the_last_line_add_up_to_the_rows_above_them(self) -> None:
         import re
@@ -1284,7 +1284,7 @@ class TestTheCommand:
             # which records no planned step, since the fixture declares no agent.py to read;
             # FT-41 reads nine manifests, none of which carries a suspension; FT-42 reads
             # every name under `produces` against them.
-            "passed": 17,
+            "passed": 18,
             "failed": 1,
             "blocked": 5,
             "not_applicable": 3,  # FT-31, FT-37 and FT-38, which fire at `ship`

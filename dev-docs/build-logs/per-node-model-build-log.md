@@ -27,7 +27,7 @@ _refuse_unstreamable.
 
 The pin is written from `model.identity().to_manifest()` into one field on
 [manifest.py `Manifest`](../../src/simple_agents/records/manifest.py#L56), read as one object by
-[checks.py `ft_14`](../../src/simple_agents/conformance/checks.py#L394), and compared against
+[checks.py `ft_14`](../../src/simple_agents/conformance/checks.py#L395), and compared against
 the resuming client on a resume.
 
 Each call already records `backend`, `request_model`, `model_revision` and `response_model`, on

@@ -45,6 +45,7 @@ from ..conformance import (
     stages_for,
 )
 from ..errors import SimpleAgentsError
+from .record import add_record_command, run_record
 
 __all__ = ["main"]
 
@@ -102,6 +103,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _view(args)
         if args.command == "comments":
             return _comments(args)
+        if args.command == "record":
+            return run_record(args, parser)
         return _check(args)
     except SimpleAgentsError as exc:
         print(str(exc), file=sys.stderr)
@@ -796,6 +799,7 @@ def _parser() -> argparse.ArgumentParser:
     comments.add_argument("path", nargs="?", default=".", help="the project directory")
     comments.add_argument("--all", action="store_true", help="addressed and withdrawn threads too")
     comments.add_argument("--json", action="store_true", help="every thread, as JSON")
+    add_record_command(subcommands)
     return parser
 
 

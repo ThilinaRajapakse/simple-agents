@@ -1586,7 +1586,7 @@ about the task"*, and the wheel force-includes only `docs/` and the skill, so th
 package-data path for a JSONL or a cassette in any case.
 
 **G4 is answered: no, a prebuilt cannot ship its own conformance check.** `CHECKS`
-([checks.py:2084](../../src/simple_agents/conformance/checks.py#L2084)) is a frozen module-level tuple,
+([checks.py:2128](../../src/simple_agents/conformance/checks.py#L2128)) is a frozen module-level tuple,
 `run_checks` iterates it and nothing else, there are no entry points and no dynamic import
 anywhere in the conformance package, and the check `Context` carries only artifacts, brief and
 taxonomy — it cannot read a pipeline object. Adding one touches six places, and because a failure

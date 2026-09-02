@@ -1,4 +1,4 @@
-"""The twenty-six checks the suite runs, each reading the artifacts the project produced.
+"""The twenty-seven checks the suite runs, each reading the artifacts the project produced.
 
 Every check here is `artifact` surface: it reads files and executes nothing. The order below
 is the order they run in, which puts the ones that need no evaluation first. All but FT-35,
@@ -33,6 +33,7 @@ and FT-41 and FT-42 every run under the directory whatever made it.
 | FT-41 | every run under the run directory, through their manifests | a run stopped to ask and is still waiting, and none was ever resumed |
 | FT-42 | the brief's `produces`, against the node ids, tools and constants of every agent run | a decision names something no run recorded: counted at every stage, a failure from `ship` |
 | FT-43 | the newest run's `mcp`, one entry per MCP server it declared tools from | a server offers something other than what the project declared |
+| FT-44 | every `recorded_at` in the brief, against the clock the suite runs on | a stamp is ahead of the clock, so it was composed rather than read |
 
 **FT-37 and FT-38 read a change rather than an arrival.** Every other check fires when a
 project reaches a point and passes forever after. These two compare what an artifact records
@@ -2081,6 +2082,49 @@ def ft_42(ctx: Context) -> CheckResult:
     )
 
 
+# -- FT-44: a stamp the clock did not write --------------------------------------------------
+
+# How far ahead of this machine's clock a stamp may sit before it is read as composed. Two
+# machines' clocks disagree by seconds; a stamp written from the wrong zone is hours out.
+STAMP_TOLERANCE_S = 300
+
+
+def ft_44(ctx: Context) -> CheckResult:
+    """No `recorded_at` in the brief is ahead of the clock the suite runs on."""
+    read = _read(ctx, ctx.brief.path)
+    now = datetime.now(timezone.utc)
+    stamped = [(f"entries.{e.name}", e.recorded_at) for e in ctx.brief.entries if e.recorded_at]
+    stamped += [
+        (f"decisions.{d.name}", d.recorded_at) for d in ctx.brief.decisions if d.recorded_at
+    ]
+    ahead = [
+        f"{where} ({stamp})"
+        for where, stamp in stamped
+        if (_stamped(stamp) - now).total_seconds() > STAMP_TOLERANCE_S
+    ]
+    if not ahead:
+        return _result(
+            ctx,
+            "FT-44",
+            Outcome.PASSED,
+            read=read,
+            detail=f"{len(stamped)} stamp(s), none ahead of the clock.",
+        )
+    return _failure(
+        ctx,
+        "FT-44",
+        read,
+        count=len(ahead),
+        list=", ".join(ahead),
+        now=now.isoformat(timespec="seconds").replace("+00:00", "Z"),
+    )
+
+
+def _stamped(value: str) -> datetime:
+    """A `recorded_at` as a datetime. The brief refused anything else when it was read."""
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
 CHECKS: tuple[tuple[str, Callable[[Context], CheckResult]], ...] = (
     ("FT-13", ft_13),
     ("FT-14", ft_14),
@@ -2108,4 +2152,5 @@ CHECKS: tuple[tuple[str, Callable[[Context], CheckResult]], ...] = (
     ("FT-41", ft_41),
     ("FT-42", ft_42),
     ("FT-43", ft_43),
+    ("FT-44", ft_44),
 )

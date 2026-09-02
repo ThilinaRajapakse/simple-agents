@@ -6,6 +6,16 @@ comparison) is recorded here.
 
 ## Unreleased
 
+### Added
+
+- `simple-agents record answer <key>` and `simple-agents record decision <name>` write an
+  entry into `brief.toml` stamped from the clock, replacing a table already there and leaving
+  the rest of the file as it was; `record_answer` and `record_decision` do the same from
+  Python. The first project on the public package wrote twenty of thirty-three stamps by hand
+  in local time with a UTC suffix.
+- FT-44, a stamp the clock did not write: a `recorded_at` ahead of the clock the suite runs
+  on fails. Twenty-seven checks.
+
 ### Fixed
 
 - A brief answer drawn beside the code was cut at 300 characters, mid-word and unmarked, in

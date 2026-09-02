@@ -149,8 +149,8 @@ is the identity join. `_the_pipeline_moved` now stops at `ship`, so the report c
 comparison once.
 
 **Two shared readings** lifted out of the note that had them:
-[`entries_about_the_pipeline`](../../src/simple_agents/conformance/checks.py#L1586) and
-[`current_fingerprint`](../../src/simple_agents/conformance/checks.py#L1604), both used by the
+[`entries_about_the_pipeline`](../../src/simple_agents/conformance/checks.py#L1587) and
+[`current_fingerprint`](../../src/simple_agents/conformance/checks.py#L1605), both used by the
 check and by the note.
 
 **`compare_variants` gives every arm but the baseline `role="variant"`**, exported as

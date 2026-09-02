@@ -756,7 +756,7 @@ older one is what every check reads.
 ## 12. What it does not do
 
 It never writes the brief: answers and amendments travel as threads, and the coding agent
-records them. The join between a step and the decision that produced it reads `produces` on a
+records them with `simple-agents record` (`docs/conformance.md` §2.3). The join between a step and the decision that produced it reads `produces` on a
 `shape` or `prompt_rule` decision, which names the step exactly (`docs/conformance.md` §2.2). A
 decision recording none is matched on the step's name in its wording instead, so a step agreed
 to in other words shows as unagreed, and the card says which join it used.

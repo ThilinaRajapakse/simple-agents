@@ -13,9 +13,9 @@ Read before anything was decided, and one of these is why the item took the shap
   pipeline is a fixed 190×64 box in a grid and every resource link is a 1.4px hairline. The run
   count is text at 10.5px inside the box, so a pipeline that ran 2,393 times and one that ran
   twice draw identically. Thread 1's whole complaint, confirmed at the source.
-- **[`checks.py`](../../src/simple_agents/conformance/checks.py#L1791) `ft_40`.** Reads
+- **[`checks.py`](../../src/simple_agents/conformance/checks.py#L1792) `ft_40`.** Reads
   `manifest.json` for `planned: true` and returns `Outcome.PASSED` where the run directory is
-  absent. [`ft_14`](../../src/simple_agents/conformance/checks.py#L394) returns
+  absent. [`ft_14`](../../src/simple_agents/conformance/checks.py#L395) returns
   `Outcome.BLOCKED` on the identical input, and so do `ft_15` and `ft_25`.
 - **[`elicitation.py`](../../src/simple_agents/conformance/elicitation.py#L34) `Question`.**
   Its own docstring: the name *"is not text to put to the builder"*. The page was printing it

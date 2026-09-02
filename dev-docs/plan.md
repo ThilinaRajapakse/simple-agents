@@ -24,7 +24,12 @@ record belongs in the record, and this section is the header above and the table
 
 | Id | Item | State | What it is, and the record |
 |---|---|---|---|
-| P3-31 | **Going public** | scheduled 2026-08-20; **waits on nothing, 2026-09-01**: `P3-65`, `P3-66` and `P3-67` are built. `P3-64`, the inside-the-files pass, is built. `P3-63` is built. `P3-32` is done and every one of dogfood #5's 40 candidates is disposed of. **The `dev-docs` scan pass ran 2026-09-01 and is clean**, gated by `tests/test_private_data.py`; **settled the same day**: a fresh public repository from the scanned tree, this one staying the private archive, and `claude-docs` renamed `dev-docs`. **Carries `DF5-I36`**, folded in at sitting 8, and `plan.md` §2.1's shipped-comment entry, whose rule is built | The library goes public. A LICENSE file, the version and tag, the `dev-docs` scan pass, the README pass, a CI workflow and the PyPI claim; `evals/examples.jsonl` and keeping `builder` were settled ahead of it. LICENSE, CI and packaging are committed at `2b774e8`. **The scan's shape was settled at sitting 8**: it reads `dev-docs/` alone, since nothing from a dogfood project goes public and the trajectories are in repositories of their own; rules hold what rules can hold, and what needs a judgement is the only part read by hand. [`items/going-public.md`](items/going-public.md#L1) |
+| P3-71 | **Working through dogfood #6's findings** | scheduled 2026-09-02; **the sitting was taken the same day** and scheduled `P3-72` to `P3-77`; 19 candidates, 0 open | `lost-the-plot`, a TV Time replacement with a Flutter app, built 2026-09-01 to 02 on PyPI `0.1.1` and `0.1.2`. [`runs/dogfood-6/findings.md`](runs/dogfood-6/findings.md#L1) is the evidence, [`inventory.md`](runs/dogfood-6/inventory.md#L1) §3 the queue. Done when the six are built |
+| P3-73 | **An index that grows, on the CPU or the GPU** | scheduled 2026-09-02 at `P3-71`'s sitting | `DocumentIndex.add`, numpy as the default store, FAISS with GPU as an optional extra, a binary save format, and the store on the record. [`items/an-index-that-grows.md`](items/an-index-that-grows.md#L1) |
+| P3-74 | **Dogfood #6's runtime fixes** | scheduled 2026-09-02 at `P3-71`'s sitting; the evaluation-isolation half ruled the same day, both halves | The slice terminal, run inputs on `NodeContext`, quota phrases per backend, a failed resume, `nearest_cross_split`, and an evaluation over a pipeline that reads back what it writes. [`items/dogfood-6-runtime-fixes.md`](items/dogfood-6-runtime-fixes.md#L1) |
+| P3-75 | **Which pipeline a run is** | scheduled 2026-09-02 at `P3-71`'s sitting | The registered name on the manifest and the results file, the three checks reading within it, FT-42 across roles, scripted runs marked, the view's constants. [`items/which-pipeline-a-run-is.md`](items/which-pipeline-a-run-is.md#L1) |
+| P3-76 | **What the procedure reaches** | scheduled 2026-09-02 at `P3-71`'s sitting | Adopted facilities read against the code, `rerun` where resumability is asked for, `not_applicable` re-asked, prompt text with a `prompt_rule`, and the product design section at `ship`. [`items/what-the-procedure-reaches.md`](items/what-the-procedure-reaches.md#L1) |
+| P3-77 | **A declared schedule** | scheduled 2026-09-02 out of §2.2 (deferred 2026-08-20), its decider met by dogfood #6; the tick-the-host-calls shape agreed by Thilina the same day, so §2.1 stands as read in the record | A `Schedule` declared beside the pipelines, a `tick()` the host calls, the last runs and fired triggers on disk, and the trigger on the manifest. [`items/a-declared-schedule.md`](items/a-declared-schedule.md#L1) |
 | P3-43 | **What an MCP server may ask of the client** | scheduled 2026-08-27 at `P3-38`, **after `P3-31`**: nothing here moves a format a project holds, so it does not have to precede the release. Nothing designed | Our client declares no `elicitation`, `sampling` or `roots` capability, so a server that gates tools on them hides those tools from us. **Measured 2026-08-27**: the reference server offers 13 tools to this library and 16 to a capable client. Each maps onto something the library already owns, and each carries a design question. [`items/what-a-server-may-ask.md`](items/what-a-server-may-ask.md#L1) |
 | P3-68 | **A per-edge value** | scheduled 2026-09-01 out of §2.2 (deferred 2026-08-09), behind the release. The deciding arithmetic is named in the record | A node saying what each out-edge carries, weighed against a narrowing `Deterministic` on the edge, on dogfood #2's measured numbers. [`items/per-edge-value.md`](items/per-edge-value.md#L1) |
 | P3-69 | **Adapters for OpenAI and Anthropic** | scheduled 2026-09-01 out of §2.2 (deferred 2026-08-05), behind the release. No key for either exists on this machine, and measuring is part of whichever lands first | OpenAI rides `_openai_wire.py`, and `base_url` makes one adapter serve every compatible endpoint; Anthropic needs a sibling wire module. The first exercise of a billed cache-write class. [`items/openai-and-anthropic-adapters.md`](items/openai-and-anthropic-adapters.md#L1) |
@@ -40,6 +45,7 @@ record belongs in the record, and this section is the header above and the table
 Worth doing, no slot yet. Each says what it waits on. An entry here has been agreed; it is not a
 candidate.
 
+- **A writer for the brief's top-level keys.** Accepted 2026-09-02, left open by `P3-72`. `simple-agents record` writes an entry or a decision; `stage`, the three `*_confirmed_at` keys, `confirmed_against` and `shape_confirmed` are still set by hand, and `confirmed_against` in particular is a fingerprint the coding agent copies. **What it would cost:** one more form of the command, `record stage <stage>` and `record confirmed --against <stamp>`, over the same splice. **Waits on:** nothing but a slot. [`build-logs/the-brief-writer-build-log.md`](build-logs/the-brief-writer-build-log.md#L1) §6.
 - **`progress_of` does not read the `progress.json` the runner now writes.** Found 2026-08-29
   building `P3-60`. `progress_of` takes `expected=` from the caller, and the evaluation now
   keeps the declared total, the outcomes scored so far and its own time estimate in
@@ -58,7 +64,7 @@ candidate.
 - **`simple-agents report --json` carries no floor.** Found 2026-08-28 in `P3-52`'s fourth
   reverification cycle. The text report prints, under every figure, what an agent that did
   nothing would have scored, and now also says where the project's own function never saw that
-  floor. [`_measurement`](../src/simple_agents/cli/main.py#L385) carries `metrics`, `criteria`,
+  floor. [`_measurement`](../src/simple_agents/cli/main.py#L391) carries `metrics`, `criteria`,
   `nodes`, `totals` and `outcomes`, and neither the floor nor `baseline_unscored`, so a gate
   reading the JSON cannot ask the question the report answers: whether the agent beat not
   trying. **The gap predates `P3-52`** and that item widened it by one field. Its docstring
@@ -166,6 +172,7 @@ candidate.
 Not decided whether to own at all. Each names what would decide it. **An entry carries the date it
 was deferred**, and `check_docs.py` reports one older than 21 days as due for re-decision.
 
+- *Deferred 2026-09-02.* **The view's answer flow writing the brief through the writer.** Left open by `P3-72`. An answer given on the served page lands as a thread in `comments.toml` and the coding agent records it into the brief afterwards, now through `simple-agents record`. **What it would be:** the page writing the entry itself, stamped, with the thread kept as the record of the exchange. **What would settle it:** whether the coding agent's reading of an answer before it is recorded is worth keeping, which is `docs/view.md` §5's stated reason for the thread; one project where a builder's inline answer was recorded unchanged every time is the evidence for dropping it.
 - *Deferred 2026-08-29.* **`research.md`'s section heading is "What this turns on, having
   looked".** Noted while applying [`design/view.md`](design/view.md#L412) decision 29, which struck
   the phrase from the page. The heading is what
@@ -269,19 +276,6 @@ was deferred**, and `check_docs.py` reports one older than 21 days as due for re
   decision 4 refused and which would move every stamp on an unrelated edit. **What decides whether
   it is worth owning:** Thilina's call between those two, or a third; a builder has not met this
   yet, and the measurement above is the whole of the evidence.
-- **A library-owned scheduler.** *Deferred 2026-08-20.* Raised by Thilina in the inbox on
-  2026-08-18 (*"scheduling in the sense of refreshing data, like pulling from an API on a
-  schedule, or watching something"*) and kept live on his call at dogfood #4's sitting 7, where
-  `P3-30` took the trigger question and the documented pattern and deliberately not the
-  mechanism. **What exists:** nothing in the library runs outside a call the caller made
-  (`simple-agents.md` §2.1's containment), so the documented pattern is a script the host's
-  scheduler calls, and the supervisor entry in this section is the adjacent shape for resuming
-  suspended runs. **What it would be:** the library owning "run this pipeline on a schedule, or
-  when something changes", which is execution outside a caller's call and defeats §2.1's
-  amendment in writing if built. **What decides whether it is worth owning:** a product whose
-  triggers the host's scheduler cannot express well, such as watching for change or
-  resume-when-answered at scale, met in a real project; dogfood #5's product is the first place
-  one can turn up. [`build-logs/the-product-build-log.md`](build-logs/the-product-build-log.md#L1).
 - **A starting plan that pre-answers elicitation.** *Deferred 2026-08-20.* Raised by Thilina in
   the inbox on 2026-08-18: providing a plan or document as a starting point for a build, which
   may contain all, most, or some of the answers to the questions that are elicited. **What
@@ -538,6 +532,8 @@ Not now. **This list means out for now rather than out forever**, on Thilina's r
 Newest first. **One line each: what shipped, what it cost, and a link to the build log**, and
 `check_docs.py` fails an entry over 450 characters, link targets aside. What an item found is its
 build log's job.
+- **The brief writer** (P3-72), 2026-09-02, out of `DF6-I09`. `simple-agents record answer` and `record decision` write one table of `brief.toml` stamped from the clock and leave the rest byte for byte; FT-44 fails a stamp ahead of the clock. Twenty-seven checks, 44 taxonomy entries; no format moved; 4,156 tests. [`build-logs/the-brief-writer-build-log.md`](build-logs/the-brief-writer-build-log.md#L1)
+- **Going public** (P3-31), 2026-09-02. `0.1.0` to `0.1.2` on PyPI as `simple-llm-agents` by trusted publishing off a `v*` tag, the public repository from the scanned tree with this one kept as the archive, the scan gated in CI, and dogfood #6 installed from it cold. No format moved; 4,134 tests. [`build-logs/going-public-build-log.md`](build-logs/going-public-build-log.md#L1)
 - **The undocumented APIs** (P3-67), 2026-09-01. `OpenAIReranker` and the fakes into `docs/retrieval.md`, re-pricing as `docs/run-envelope.md` §4.5, `answer_shelved`'s return in `docs/product.md`; the §4.5 example is executed by a test, which failed its first two drafts. 4,115 tests. [`build-logs/the-undocumented-apis-build-log.md`](build-logs/the-undocumented-apis-build-log.md#L1)
 - **The feature index** (P3-66), 2026-09-01. The skill, `docs/procedure.md`, gained thirteen lines naming every capability the library ships; `WORD_BUDGET` to 3,800. **Closes `P3-3`**: the post-review read found twenty-plus stale `runs/<eval_id>/` path shapes, all corrected. 4,114 tests. [`build-logs/the-feature-index-build-log.md`](build-logs/the-feature-index-build-log.md#L1)
 - **The builder quickstart** (P3-65), 2026-09-01. `README.md`'s Quick start became the builder's walkthrough: install, then a four-step map through the staged build, the first-agent example, `simple-agents view` and measuring, each step pointing at the README's own sections. Ruled mid-build to live in the README, so no twentieth document ships. No code changed; 4,114 tests. [`build-logs/the-builder-quickstart-build-log.md`](build-logs/the-builder-quickstart-build-log.md#L1)

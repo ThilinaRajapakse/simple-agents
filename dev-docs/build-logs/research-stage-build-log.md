@@ -106,7 +106,7 @@ as you are suggesting. You sometimes flip on these. Also, I think R3 should go b
 was measured and it is cheaper than the sitting had it, and one half of it does not survive:
 
 - **FT-32 already reads the manifest and deliberately does not read tool names.**
-  [`ft_32`](../../src/simple_agents/conformance/checks.py#L1000) compares side-effect classes, and
+  [`ft_32`](../../src/simple_agents/conformance/checks.py#L1001) compares side-effect classes, and
   the shipped rationale is that *"a builder describes a tool in their own words, and an answer
   naming a code identifier is not a better answer."* The forward direction contradicts that, and
   it is §6.
@@ -135,7 +135,7 @@ version moved: the trajectory, manifest, suspension, results file and variant co
 untouched. **The brief's shape moved and carries no version**, which is the break named in §6.
 
 **Stage 0 — the citations, applied at the sitting.** `DF4-D6` removed from
-[`_unseeded`](../../src/simple_agents/conformance/checks.py#L1551), which was the only internal id
+[`_unseeded`](../../src/simple_agents/conformance/checks.py#L1552), which was the only internal id
 in the wheel. The eight `tests/` citations repointed to `dev-docs/runs/dogfood-3/findings.md`,
 resolvable for the first time since the 2026-08-15 reorganisation. `INTERNAL_REF` widened to
 `DFn-Dn` and `P3-n` and scoped off `MAINTAINER_TREES`. Five fixtures in `tests/test_prose.py`,
@@ -215,7 +215,7 @@ entry. `docs/procedure.md` gained a stage and renumbered four.
   `test_naming_every_one_says_nothing` now reads the list off the question set.
 
 **Stage 3 — provenance.** `SOURCES`, `BriefEntry.source`, and
-[`_settled`](../../src/simple_agents/conformance/checks.py#L533) returning false for
+[`_settled`](../../src/simple_agents/conformance/checks.py#L534) returning false for
 `coding_agent`. FT-24's taxonomy entry, check paragraph and failure message all say so.
 
 **Stage 4 — the report line and the decision mirror.** `RunsReport.tools`, `_tool_reach`, the

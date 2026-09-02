@@ -84,7 +84,8 @@ against the code; `simple-agents check` names the ones due when the two differ, 
 on it from stage `ship`. Those entries describe the pipeline rather than what the builder wants,
 so each is agreement to something the code may no longer do.
 
-**Then, at every stage, record what was decided without asking.**
+**Then, at every stage, record what was decided without asking**, with
+`simple-agents record decision <name>`.
 
 ```
 simple-agents questions --decisions
@@ -196,8 +197,8 @@ simple-agents questions --stage shape
 
 Put each to the builder in the terms of their own work, follow the scaffold where it asks for
 more than one exchange, and never answer one for them (FT-24). Record it
-under its `brief.toml` key as `answered`, `deferred` naming the stage it moves to, or
-`unanswered`, which the gate refuses.
+with `simple-agents record answer <key>`, stamped from the clock, as `answered`,
+`deferred` naming the stage it moves to, or `unanswered`, which the gate refuses.
 
 **An answer naming a figure goes stale when the code needs a different one.** The new figure
 goes to the builder. **`answer_form` decides what an example's `expected` holds and

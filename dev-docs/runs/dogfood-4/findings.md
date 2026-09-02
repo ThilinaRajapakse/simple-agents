@@ -439,7 +439,7 @@ are in the file. `simple-agents check` read 11 of 11 through all of it.
 **Open. Reproduced against the current source**, and it is what produced `DF4-D5`.
 
 [`_emit_skip`](../../../src/simple_agents/pipeline/core.py#L1912) writes `seed=None` for a node every edge
-into which was absent. [`_unseeded`](../../../src/simple_agents/conformance/checks.py#L1551) exempts only
+into which was absent. [`_unseeded`](../../../src/simple_agents/conformance/checks.py#L1552) exempts only
 `deterministic` nodes, so a routed-around `LLMNode` or `AgentNode` reads to FT-07 as a node that
 sampled without recording its seed:
 

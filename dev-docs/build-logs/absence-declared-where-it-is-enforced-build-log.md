@@ -5,7 +5,7 @@
 ## 1. Before any design
 
 **What the waiver read, and what it could not.**
-[`_absence_waived`](../../src/simple_agents/conformance/checks.py#L1405) required
+[`_absence_waived`](../../src/simple_agents/conformance/checks.py#L1406) required
 `allow_unknown is False` on every `llm` or `agent` entry in the results file's `config.nodes`.
 The `no-absent-examples` fixture is the item's shape in two nodes: `hunt` is an `agent` pointing
 at `verify`, an `llm` pointing at nothing, and both carried `allow_unknown: true`.
@@ -39,7 +39,7 @@ the run manifest records and what a later reader can check.
 
 ## 3. Build
 
-[`_answering_nodes`](../../src/simple_agents/conformance/checks.py#L1419) and its three helpers
+[`_answering_nodes`](../../src/simple_agents/conformance/checks.py#L1420) and its three helpers
 do the walk; `_absence_waived` reads it. FT-04's message in
 [`docs/failure-taxonomy.md`](../../docs/failure-taxonomy.md#L112) gains two placeholders, `node`
 and `said`, which `ft_04` fills from the graph and from the brief. The message text lives in that

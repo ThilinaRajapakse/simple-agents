@@ -49,7 +49,7 @@ had the node's input in scope already and none of them passed it.
 `deferred_to` and `source`. `understanding_confirmed_at`, `design_confirmed_at` and
 `research_confirmed_at` are brief-level keys naming a stage, read by
 [`_account_reason`](../../src/simple_agents/conformance/checks.py#L601) and its two siblings;
-[`_settled`](../../src/simple_agents/conformance/checks.py#L533) is what FT-24 asks per
+[`_settled`](../../src/simple_agents/conformance/checks.py#L534) is what FT-24 asks per
 question and it read a name rather than a `Question`.
 
 ## 2. Design

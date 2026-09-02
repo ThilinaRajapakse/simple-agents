@@ -47,7 +47,7 @@ Shipped, in order: `NotBuilt` in [`nodes.py`](../../src/simple_agents/nodes/base
 `Deterministic`; manifest `0.31` → `0.32` (node entries gain `planned` and `touches`, tool
 entries gain `touches`); [`registry.py`](../../src/simple_agents/registry.py#L1)
 `pipeline_factory`; [`comments.py`](../../src/simple_agents/records/comments.py#L153) `read_comments`;
-FT-39 and FT-40 in [`checks.py`](../../src/simple_agents/conformance/checks.py#L1723) `ft_39`
+FT-39 and FT-40 in [`checks.py`](../../src/simple_agents/conformance/checks.py#L1724) `ft_39`
 with taxonomy entries, and `comments_block_gates` on
 [`brief.py` `Brief`](../../src/simple_agents/conformance/brief.py#L108); the view package
 ([`assemble.py`](../../src/simple_agents/view/assemble.py#L666) `assemble`,

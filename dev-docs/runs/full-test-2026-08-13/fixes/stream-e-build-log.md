@@ -74,7 +74,7 @@ is what it is for.
 
 | Where | Was | Now |
 |---|---|---|
-| [`checks.py` `_first_malformed`](../../../../src/simple_agents/conformance/checks.py#L309) | "and the four are" then five record types | "and the record types are", with no count |
+| [`checks.py` `_first_malformed`](../../../../src/simple_agents/conformance/checks.py#L310) | "and the four are" then five record types | "and the record types are", with no count |
 | [`brief.py` `_entry`](../../../../src/simple_agents/conformance/brief.py#L321) | "the three stages are" then four | "the four stages are" |
 | `docs/conformance.md` §3 | four `pass` rows, "3 passed", FT-30 absent | the real output of the suite over the `no-evaluation` fixture |
 | `docs/conformance.md` §4 | "the five the library enforces" | six, each named with its `FT-nn` |

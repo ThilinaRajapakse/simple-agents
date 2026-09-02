@@ -88,7 +88,7 @@ What shipped:
   the project, as rows the page draws.
 - [`discovery.py`](../../src/simple_agents/view/discovery.py#L23) `LoadedProject`: the product, the module that
   declares it, and that module's numbers, all read while it is still imported.
-- [`checks.py` `_surfaces_not_in`](../../src/simple_agents/conformance/checks.py#L667) and
+- [`checks.py` `_surfaces_not_in`](../../src/simple_agents/conformance/checks.py#L668) and
   `_section_of`, with `DeclaredPipelines.surfaces` and `PRODUCT_SECTION` behind them.
 - [`template.html`](../../src/simple_agents/view/template.html#L1): `checksRegion`,
   `productRegion`, `retentionRegion` and `briefBoardRegion`.

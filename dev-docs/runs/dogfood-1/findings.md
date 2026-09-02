@@ -251,7 +251,7 @@ from one paragraph landed on opposite sides. `contamination` flagged **22 `share
 
 The project learned this from the results file of a completed 150-rollout evaluation. FT-03 is not
 one of the seven conformance checks
-([`CHECKS`](../../../src/simple_agents/conformance/checks.py#L2084)), and `contamination` is computed
+([`CHECKS`](../../../src/simple_agents/conformance/checks.py#L2128)), and `contamination` is computed
 inside `EvalSuite.run` and written into the results file. `ExampleSet.contamination(threshold=...)`
 exists standalone and is shown in `docs/evaluation.md` §1.2, and nothing routes a coding agent to
 it before spending the rollouts.
@@ -303,7 +303,7 @@ deferred_to = "measure"
 The brief's `stage` is `"measure"`. The question was deferred to the stage the project is already
 at, and FT-24 counts it settled:
 `_settled` returns true for any entry whose status is `answered` or `deferred`
-([checks.py `_settled`](../../../src/simple_agents/conformance/checks.py#L533)), without comparing `deferred_to`
+([checks.py `_settled`](../../../src/simple_agents/conformance/checks.py#L534)), without comparing `deferred_to`
 against the stage reached.
 
 `prices` is optional, so nothing was skipped that a gate wanted. The shape is the problem: a

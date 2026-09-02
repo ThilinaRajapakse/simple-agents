@@ -27,6 +27,7 @@ from .run import run_checks
 from .spend import Scope, UnfinishedAcross, unfinished_across
 from .stages import FIRST_STAGE, STAGES, STAGES_BY_TIER, reached, stages_for, up_to
 from .taxonomy import Entry, Taxonomy, Tier, taxonomy
+from .writing import Recorded, clock_stamp, record_answer, record_decision
 
 __all__ = [
     "run_checks",
@@ -63,4 +64,8 @@ __all__ = [
     "Taxonomy",
     "Tier",
     "taxonomy",
+    "record_answer",
+    "record_decision",
+    "Recorded",
+    "clock_stamp",
 ]

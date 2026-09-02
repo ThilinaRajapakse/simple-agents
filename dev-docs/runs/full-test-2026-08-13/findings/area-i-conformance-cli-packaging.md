@@ -147,7 +147,7 @@ and print `result.cost`.
 
 **Claimed and actual.**
 
-- [`checks.py` `_first_malformed`](../../../../src/simple_agents/conformance/checks.py#L309) builds FT-13's
+- [`checks.py` `_first_malformed`](../../../../src/simple_agents/conformance/checks.py#L310) builds FT-13's
   reason as "declares record_type `x`, and the four are ..." and then joins `RECORD_TYPES`, which
   holds five: `node_execution`, `model_call`, `tool_call`, `consultation`, `delegation`.
   [`docs/conformance.md` §2.2](../../../../docs/conformance.md#L110) already says five.
