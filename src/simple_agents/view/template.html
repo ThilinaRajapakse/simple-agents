@@ -390,6 +390,9 @@ button.nm:hover{color:var(--accent)}
 .numrow .v{color:var(--ink);font-variant-numeric:tabular-nums}
 .numrow .conf{text-align:right;overflow-wrap:anywhere}
 .numrow .conf .badge{white-space:normal;display:inline-block}
+/* The note is one line in a row of controls and a cell in this table, where holding one line
+   put it 56px past the region's edge at 1200. */
+.numrow .conf .sentnote{white-space:normal;display:inline-block}
 .numrow.open .nm{color:var(--note)}
 .mregion .numrow:has(.rule){grid-template-columns:minmax(0,0.9fr) minmax(0,2.2fr) minmax(0,1.1fr)}
 .numrow .rule{color:var(--ink);line-height:1.45}
@@ -582,7 +585,9 @@ button.nm:hover{color:var(--accent)}
 .scrollnote:empty{display:none}
 #dials{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding-bottom:12px}
 #dials:empty{display:none}
-.dial{display:flex;gap:7px;align-items:center}
+/* Wrapping, because the run picker holds up to 24 chips: on a project with 50 runs the row
+   ran to 2,612px at a 1920 window and took the whole page sideways with it. */
+.dial{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 .dial>span{font-family:"JetBrains Mono",monospace;font-size:var(--s-1);color:var(--faint);
   text-transform:uppercase;letter-spacing:.07em}
 .dial button{font-family:"JetBrains Mono",monospace;font-size:var(--s-1);color:var(--muted);
@@ -1274,12 +1279,19 @@ function renderHeader() {
 /* A one-click sentence already sent and still open is with the coding agent. The button
    that sent it is replaced by that fact, so agreeing twice takes a second thread rather than
    a second click, and the builder can see that the act has been taken. */
+/* Sent in this session and not yet in a reading from the server. `/data` re-reads the whole
+   project, which takes a moment on one with runs, and until it returned the control sat
+   unchanged: the builder clicked and nothing happened. */
+const justSent = new Set();
+const sentKey = (at, said) => `${at}|${String(said || "").trim()}`;
+
 function sentAlready(at, said) {
   if (!said) return false;
+  if (justSent.has(sentKey(at, said))) return true;
   return (DATA.comments || []).some(c =>
     c.at === at && c.status === "open" && String(c.said || "").trim() === String(said).trim());
 }
-const SENT_NOTE = `<span class="sentnote">Sent · with your coding agent</span>`;
+const SENT_NOTE = `<span class="sentnote">Sent to your coding agent</span>`;
 /* The sentences the one-clicks send. Each is built here so the region that offers the click
    and the check that says it was already sent read the same words. */
 const SAY = {
@@ -3186,7 +3198,7 @@ function showStep(stepId, pulse) {
     return;
   }
   const address = `${p.name}/${n.id}`;
-  selected = {address, label: `${n.id}, a ${n.kind_word} in ${p.name}`, kind: "comment"};
+  selected = {address, label: `${n.id}, a ${n.kind_noun} in ${p.name}`, kind: "comment"};
   const rows = [];
   const kv = (k, v) => v !== null && v !== undefined && v !== "" &&
     rows.push(`<div class="kv"><span>${esc(k)}</span><span>${v}</span></div>`);
@@ -3431,7 +3443,7 @@ function showStep(stepId, pulse) {
   });
   wireThreads(card);
   card.querySelectorAll("[data-talk]").forEach(button => {
-    button.onclick = () => { select(button.dataset.talk, `${n.id}, a ${n.kind_word} in ${p.name}`, "comment"); focusComposer(); };
+    button.onclick = () => { select(button.dataset.talk, `${n.id}, a ${n.kind_noun} in ${p.name}`, "comment"); focusComposer(); };
   });
   drawGraph();
   if (pulse) {
@@ -4463,8 +4475,8 @@ function questionsRegion(stage) {
     ? `<div class="qstate sent">
     <span class="mark" data-tip="Answer sent">◐</span>
     <span class="qn">${esc(r.title)}</span>
-    <span class="qa">“${esc(pending[r.name].said)}”<br><span class="pending">Answer sent · with your
-      coding agent to record</span></span>
+    <span class="qa">“${esc(pending[r.name].said)}”<br><span class="pending">Answer sent to
+      your coding agent</span></span>
     <span class="qgo"></span></div>`
     : `<div class="qstate ${esc(r.state)}">
     <span class="mark" data-tip="${esc(QUESTION_STATE[r.state] || r.state)}">${
@@ -5155,7 +5167,7 @@ function departuresRegion() {
         <div class="sn">${esc(c.title)}</div>
         <p class="bad">The answer says ${names(wrong)} ${
           esc(wrong.length === 1 ? c.one : c.many)}. In the code, ${esc(told)}.</p>
-        <p class="said">${esc(c.answer)}</p>
+        <p class="said">${longText(`claim:${c.entry}`, c.answer)}</p>
         <span class="acts">
           ${sentOr(SAY.answerWrong(c), `<button class="btn" data-answerwrong="${esc(c.entry)}">The answer is wrong</button>`)}
           ${sentOr(SAY.codeWrong(c), `<button class="btn" data-codewrong="${esc(c.entry)}">The code is wrong</button>`)}
@@ -5285,7 +5297,11 @@ async function oneClick(action) {
   if (action.said && live()) {
     try {
       await post("/api/comment", {at: action.at, said: action.said, kind});
+      // Shown from what this page already holds, so the control answers the click at once.
+      // The reading that follows replaces it with the server's own account.
+      justSent.add(sentKey(action.at, action.said));
       flash = "sent";
+      renderAll();
       await refresh();
     } catch (err) {
       flash = String(err.message);
@@ -5325,7 +5341,7 @@ function seamsRegion() {
       part.words === r.title ? "In the code" : esc(part.words)}</span><span>${
       steps(part)}</span></div>`).join("")}
     ${r.status === "answered"
-      ? `<p class="said">${esc(r.answer)}</p>`
+      ? `<p class="said">${longText(`seam:${r.entry}`, r.answer)}</p>`
       : `<p class="thin">Unanswered: ${esc(r.asked)}.</p>`}
     ${r.named_but_not.length
       ? `<p class="bad">The answer names ${names(r.named_but_not)}, and the code says
@@ -5625,7 +5641,7 @@ function renderSections() {
         <span class="qname">${esc(q.title || q.name)}</span>
         <p class="asks">${esc(q.asks)}</p>
         ${pending ? `<p class="answer">“${esc(pending.said)}”</p>
-           <p class="pending">Answer sent · with your coding agent to record</p>` : ""}
+           <p class="pending">Answer sent to your coding agent</p>` : ""}
         ${!pending ? `<div class="actions"><button class="btn" data-answer="${esc(q.name)}">Answer it here</button></div>` : ""}
       </div>`;
     };

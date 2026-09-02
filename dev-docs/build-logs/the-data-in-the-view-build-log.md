@@ -14,8 +14,8 @@ here now; the subsystem's design of record stays in
 - [`graph.py`](../../src/simple_agents/graph.py#L692) `_invert` publishes `predecessors`, and
   `_edges_of` counts an `on_error` target as an edge, so what reaches a step is derivable
   without a new mechanism. `back_edges` is the set the drawing needed and did not have.
-- [`runs_overlay.py`](../../src/simple_agents/view/runs_overlay.py#L37)
-  `_stream_node_executions` filtered lines on the head and then parsed every match in full, so
+- [`runs_overlay.py` `_stream_node_executions`](../../src/simple_agents/view/runs_overlay.py#L60)
+  filtered lines on the head and then parsed every match in full, so
   the item record's "parses only small records" was not true of the code.
 - [`artifacts.py`](../../src/simple_agents/conformance/artifacts.py#L489) `_latest_results`
   and `_declared_results` are the rule the gates use to pick a results file, so the page could

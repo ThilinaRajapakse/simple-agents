@@ -20,7 +20,7 @@ Read before anything was decided, and one of these is why the item took the shap
 - **[`elicitation.py`](../../src/simple_agents/conformance/elicitation.py#L34) `Question`.**
   Its own docstring: the name *"is not text to put to the builder"*. The page was printing it
   as a heading in four places.
-- **[`claims.py`](../../src/simple_agents/view/claims.py#L60) `_scored_on_their_own`.**
+- **[`claims.py`](../../src/simple_agents/view/claims.py#L57) `_scored_on_their_own`.**
   `judged_steps` resolves its code side through `coverage["scored"]`, which comes from the
   evaluation results file. The other five rows read the pipeline.
 - **`scripts/view_at_stage.py`.** Its own docstring already said the derived `shape` stage is

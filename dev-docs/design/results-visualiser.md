@@ -86,7 +86,7 @@ it, so the page's counts are checked against a report on the same data.
   manifests written before `0.35`, and the view's tests take that fallback every time. The field is
   exercised nowhere.
 - **`measured`**, the cost floor, read by
-  [`runs_overlay.py` `_cost_of`](../../src/simple_agents/view/runs_overlay.py#L384). No fixture
+  [`runs_overlay.py` `_cost_of`](../../src/simple_agents/view/runs_overlay.py#L385). No fixture
   manifest carries it, so the only coverage is a test that injects the value into assembled data
   rather than reading it off a manifest.
 

@@ -21,6 +21,11 @@ _KIND_WORDS = {
     "pipeline": "pipeline",
 }
 
+# The same four as a noun, for a sentence that puts one after "a" or between "from" and "to".
+# `decides for itself` is a label and reads as one on a card; written into a sentence it gave
+# "resolve_show is a decides for itself", which shipped on two pages and in a comment thread.
+_KIND_NOUNS = {**_KIND_WORDS, "agent": "step that decides for itself"}
+
 
 def _redactor() -> Any:
     """The library's own rules, applied to source text before it reaches the page.
@@ -160,6 +165,7 @@ def _node_card(node_id: str, node: Any, graph: Any, scrub: Any = None) -> dict[s
         "prefix": prefix,
         "kind": node.node_kind,
         "kind_word": _KIND_WORDS.get(node.node_kind, node.node_kind),
+        "kind_noun": _KIND_NOUNS.get(node.node_kind, node.node_kind),
         "class_name": type(node).__name__,
         "planned": planned,
         "does": _intent_of(node) if planned else None,
@@ -340,6 +346,7 @@ def _data_path(name: str, nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "id": node["id"],
                 "at": f"{name}/{node['id']}",
                 "kind_word": node["kind_word"],
+                "kind_noun": node["kind_noun"],
                 "intent": _step_intent(node),
                 "seams": _seams_of(node, sides),
                 "takes_in": node["takes_in"]["says"],

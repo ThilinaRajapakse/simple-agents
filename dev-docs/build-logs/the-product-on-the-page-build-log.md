@@ -124,7 +124,8 @@ Found while building:
   box's own second line; it carries the channel an answer travels through, and is bare where
   there is none.
 - **`conformance` and `manifest` are library words.**
-  [`test_view.py`](../../tests/test_view.py#L285) holds the page to the builder's vocabulary,
+  [`test_view.py` `test_a_question_is_named_for_the_builder_in_every_sentence`](../../tests/test_view.py#L832)
+  holds the page to the builder's vocabulary,
   and both had reached it in a region's prose.
 - **A brief key reached the page.** The brief board printed each entry's key beside its title,
   which [`design/view.md`](../design/view.md#L288) decision 18 rules out.

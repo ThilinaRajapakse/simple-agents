@@ -214,6 +214,60 @@ class TestManyPipelines:
         knowing = [f for f in data["findings"] if not f.get("waits")]
         assert knowing[0]["head"] == "ingest has changed since it last ran."
 
+    def test_a_step_that_decides_for_itself_reads_as_a_noun_in_a_sentence(self) -> None:
+        """`decides for itself` is a label and reads as one on a card. Put into a sentence it
+        gave "resolve_show is a decides for itself", which shipped on the build page, in the
+        attention cards, and into a comment thread's recorded label. Dogfood #6, 2026-09-02.
+
+        The kind words stay as they are, since a card is where they read correctly; what a
+        sentence takes is `kind_noun`.
+        """
+        from simple_agents.view.cards import _KIND_NOUNS, _KIND_WORDS
+        from simple_agents.view.findings import _the_brief_disagrees
+
+        assert _KIND_WORDS["agent"] == "decides for itself", "the card label is unchanged"
+        for kind, noun in _KIND_NOUNS.items():
+            # What follows "a" is a noun. A first word ending in `s` is the third-person verb
+            # this went wrong on, and is a plural, which "a" does not take either.
+            assert not noun.split()[0].endswith("s"), f"a {noun} does not read as a noun ({kind})"
+
+        found = _the_brief_disagrees(
+            {
+                "claims": [
+                    {
+                        "title": "Steps with their own right answer",
+                        "named_but_not": ["resolve_show"],
+                        "kinds": {"resolve_show": _KIND_NOUNS["agent"]},
+                        "one": "carries a right answer of its own",
+                        "many": "carry a right answer of their own",
+                        "in_code": [],
+                    }
+                ]
+            }
+        )
+        assert "resolve_show is a step that decides for itself" in found[0]["body"]
+
+    def test_a_step_changing_kind_reads_as_a_sentence(self) -> None:
+        """The ledger's other half of the same bug: "changed from fixed step to decides for
+        itself"."""
+        from simple_agents.view.findings import _ledger
+
+        said = _ledger(
+            {
+                "runs": {"newest": {"nodes": {"resolve_show": {"kind": "deterministic"}}}},
+                "nodes": [
+                    {
+                        "id": "resolve_show",
+                        "kind": "agent",
+                        "kind_word": "decides for itself",
+                        "kind_noun": "step that decides for itself",
+                        "planned": False,
+                    }
+                ],
+            }
+        )
+        assert said == ["resolve_show changed from a fixed step to a step that decides for itself."]
+
     def test_money_is_reported_capped_because_the_budget_caps_it(self) -> None:
         data = shape("many-pipelines")
         money = next(f for f in data["findings"] if f["head"] == "Where money can leave.")

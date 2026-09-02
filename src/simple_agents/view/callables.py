@@ -16,6 +16,7 @@ import inspect
 import typing
 from pathlib import Path
 from typing import Any
+from .words import _clip
 
 __all__ = ["read_callable", "signature_line", "MAX_SOURCE_LINES"]
 
@@ -140,7 +141,7 @@ def read_callable(fn: Any, name_of: Any, *, redact: Any = None) -> dict[str, Any
         "returns": name_of(returns) if returns is not None else None,
         "return_fields": _fields_of(returns, name_of) if returns is not None else None,
         "says": _one_line(fn),
-        "doc": " ".join((fn.__doc__ or "").split())[:MAX_DOC_CHARS] or None,
+        "doc": _clip(" ".join((fn.__doc__ or "").split()), MAX_DOC_CHARS) or None,
         "where": where,
         "source": source,
     }

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .cards import _KIND_WORDS
+from .cards import _KIND_NOUNS
 from .measured import _measure_findings
 from .words import _clip, _rate, fmt_runs
 
@@ -33,8 +33,9 @@ def _ledger(pipeline: dict[str, Any]) -> list[str]:
             lines.append(f"{node_id} was a placeholder and is now built.")
         elif was.get("kind") != isnow["kind"]:
             lines.append(
-                f"{node_id} changed from {_KIND_WORDS.get(was.get('kind'), was.get('kind'))} "
-                f"to {isnow['kind_word']}."
+                f"{node_id} changed from a "
+                f"{_KIND_NOUNS.get(was.get('kind'), was.get('kind'))} "
+                f"to a {isnow['kind_noun']}."
             )
     return lines
 

@@ -512,7 +512,7 @@ started"*.
 
     A failed import is now said where it is seen. The empty frame names the error rather than
     reading "Registered pipelines: none", which blamed the project for declaring nothing, and
-    [`findings.py` `_the_code_would_not_import`](../../src/simple_agents/view/findings.py#L157)
+    [`findings.py` `_the_code_would_not_import`](../../src/simple_agents/view/findings.py#L158)
     puts it first among the findings.
     [`discovery.py`](../../src/simple_agents/view/discovery.py#L123) `_would_not_import`
     records the two forms: the error alone for the frame and the card, and the sentence saying
@@ -567,7 +567,7 @@ point that the family loop does not carry.
 |---|---|---|
 | [`words.py`](../../src/simple_agents/view/words.py#L14) | The formatters used by more than one family | `_clip` |
 | [`measured.py`](../../src/simple_agents/view/measured.py#L295) | Everything over an evaluation's results file | `_measure_findings` |
-| [`findings.py`](../../src/simple_agents/view/findings.py#L832) | Every other family, and the assembly | `_findings` |
+| [`findings.py`](../../src/simple_agents/view/findings.py#L833) | Every other family, and the assembly | `_findings` |
 
 One direction throughout: `words` then `measured` then `findings`. The baseline did not move.
 

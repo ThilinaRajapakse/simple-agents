@@ -96,7 +96,7 @@ What shipped:
 3,999 tests, from 3,990. No format moves.
 
 **One defect found and fixed, and it is a shipped statement that stopped being true.**
-[`claims.py` `_spends_or_cannot_be_undone`](../../src/simple_agents/view/claims.py#L56) counted
+[`claims.py` `_spends_or_cannot_be_undone`](../../src/simple_agents/view/claims.py#L53) counted
 a step as reaching outside the run only where it held a `SPENDS_MONEY` or `IRREVERSIBLE` tool.
 The question it compares against asks *"what may this agent do that reaches outside the run:
 spend money, write somewhere permanent, or take an action that cannot be undone?"*, and a

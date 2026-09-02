@@ -126,7 +126,7 @@ def _snapshot(data: dict[str, Any], address: str) -> dict[str, str | None]:
                 else:
                     node = next((n for n in pipeline["nodes"] if n["id"] == step_id), None)
                     about = (
-                        f"{step_id}, a {node['kind_word']} in {pipe_name}"
+                        f"{step_id}, a {node['kind_noun']} in {pipe_name}"
                         if node
                         else f"{step_id} in {pipe_name}"
                     )

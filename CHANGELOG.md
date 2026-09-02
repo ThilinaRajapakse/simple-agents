@@ -4,6 +4,25 @@ Notable changes to Simple Agents, newest first. A change to any on-disk format a
 holds (trajectory, manifest, suspension, shelf, conversation, results file, variant
 comparison) is recorded here.
 
+## Unreleased
+
+### Fixed
+
+- A brief answer drawn beside the code was cut at 300 characters, mid-word and unmarked, in
+  the seams and in the rows where the brief and the code disagree. The cap was a named
+  constant and survived the sweep that removed the rest. A step's docstring and a
+  consultation question now cut at a word.
+- A step that decides for itself read as "resolve_show is a decides for itself" wherever the
+  page put its kind into a sentence: the rows where the brief and the code disagree, the
+  findings, a step's comment label, and the line saying a step changed kind. The card label
+  is unchanged; a sentence takes the noun.
+- The note marking a message as sent ran past the right edge of the constants table at every
+  window width. The run picker, up to 24 chips in a row that could not wrap, took the whole
+  build page sideways.
+- A one-click action waited for the server to re-read the whole project before it showed
+  anything, which is over two seconds on a project with runs. It answers the click at once
+  and reconciles behind that.
+
 ## 0.1.2 (2026-09-01)
 
 ### Fixed

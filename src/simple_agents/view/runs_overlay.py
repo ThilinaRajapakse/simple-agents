@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from ..envelope import manifest_paths
+from .words import _clip
 
 _NODE_EXECUTION_MARKS = ('"record_type": "node_execution"', '"record_type":"node_execution"')
 _CONSULTATION_MARKS = ('"record_type": "consultation"', '"record_type":"consultation"')
@@ -128,7 +129,7 @@ def _clipped(value: Any) -> str | None:
     if value is None:
         return None
     written = " ".join(str(value).split())
-    return written[:MAX_QUESTION_CHARS] or None
+    return _clip(written, MAX_QUESTION_CHARS) or None
 
 
 def _compact(value: Any) -> tuple[str, int]:

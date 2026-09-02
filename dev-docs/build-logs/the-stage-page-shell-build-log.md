@@ -14,7 +14,7 @@ live-watch surfaces the record can honestly fill, and the comments loop verified
   and reached the view nowhere; the assembled data carried `stage` and `tier` and no page
   set. Brief entries carried no stage; the elicitation `Question` declares one, and
   `asked_at` covers an entry the library never asked. Decisions already carried `kind`.
-- [`runs_overlay.py` `live_run`](../../src/simple_agents/view/runs_overlay.py#L475) already
+- [`runs_overlay.py` `live_run`](../../src/simple_agents/view/runs_overlay.py#L476) already
   followed a run's trajectory (steps done, calls in flight); nothing named the evaluation a
   live rollout belongs to.
 - **A rollout's outcome exists only in the runner's memory until the results file is

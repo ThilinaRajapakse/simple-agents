@@ -18,9 +18,6 @@ from typing import Any
 
 __all__ = ["read_claims", "read_seams", "ask_of", "title_of"]
 
-MAX_ANSWER_CHARS = 300
-"""How much of an answer travels with a claim, for the page to quote."""
-
 
 def _named_in(text: str, candidates: list[str]) -> list[str]:
     """Every candidate whose name appears in the text as a whole word."""
@@ -189,13 +186,13 @@ def _one_claim(
     ]
     named = sorted(set(named))
     agreed = sorted(set(named) & set(in_code))
-    kinds = {n["id"]: n["kind_word"] for n in every}
+    kinds = {n["id"]: n["kind_noun"] for n in every}
     return {
         "entry": entry["name"],
         "title": title_of(entry["name"]),
         "kinds": {name: kinds[name] for name in named if name in kinds},
         "asks": ask_of(entry["name"]),
-        "answer": answer[:MAX_ANSWER_CHARS],
+        "answer": answer,
         "one": one,
         "many": many,
         "should_one": _SHOULD.get(entry["name"], (one, many))[0],
@@ -349,9 +346,7 @@ def read_seams(
                 "title": title,
                 "asked": title_of(name),
                 "status": status,
-                "answer": str(getattr(entry, "answer", "") or "")[:MAX_ANSWER_CHARS]
-                if status == "answered"
-                else "",
+                "answer": str(getattr(entry, "answer", "") or "") if status == "answered" else "",
                 "reads_code": bool(kinds),
                 "parts": [
                     {

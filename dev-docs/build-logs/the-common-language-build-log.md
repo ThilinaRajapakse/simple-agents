@@ -52,7 +52,7 @@ with taxonomy entries, and `comments_block_gates` on
 [`brief.py` `Brief`](../../src/simple_agents/conformance/brief.py#L108); the view package
 ([`assemble.py`](../../src/simple_agents/view/assemble.py#L666) `assemble`,
 [`discovery.py`](../../src/simple_agents/view/discovery.py#L49) `load_project`,
-[`runs_overlay.py`](../../src/simple_agents/view/runs_overlay.py#L723) `read_runs`,
+[`runs_overlay.py`](../../src/simple_agents/view/runs_overlay.py#L724) `read_runs`,
 `render.py`, `template.html`); the `view` subcommand, with `check` rewriting the page at
 every gate. Five fixture projects under `tests/fixtures/view_projects/`, one per shape.
 3,171 tests.
