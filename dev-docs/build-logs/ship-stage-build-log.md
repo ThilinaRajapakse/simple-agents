@@ -80,7 +80,7 @@ about it.
 ### 1.4 `docs/procedure.md` has three words of room
 
 1,352 words against `WORD_BUDGET = 1355` in
-[`tests/test_procedure.py` `test_the_six_are_ordered`](../../tests/test_procedure.py#L114). A fifth stage does not fit inside
+[`tests/test_procedure.py` `test_the_six_are_ordered`](../../tests/test_procedure.py#L118). A fifth stage does not fit inside
 it, so the budget is part of the decision rather than a detail of the build (§2.5).
 
 ### 1.5 What could not be verified

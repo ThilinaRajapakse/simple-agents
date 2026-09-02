@@ -47,15 +47,13 @@ runs/                   one directory per run, written by the run envelope
 ```
 
 `idea.md`, `research.md`, `design.md`, `brief.toml`, `runs/` and `evals/results/` are what
-`simple-agents check` looks at. A run written somewhere else is reported as a run that does not
-exist.
+`simple-agents check` looks at. A run written somewhere else is invisible.
 
 Keep a `BUILD-LOG.md` alongside them, recording each exchange with the builder as it happens.
 
 **A project writes more than this, and the rest has three homes.** Code the pipeline imports
 sits beside `agent.py`, anything run once goes in `scripts/`, and anything the project reads
-goes in `data/`. A genre this does not name takes a directory of its own. Nothing checks it, and
-a project that puts every file at the root is unreadable later.
+goes in `data/`. A genre this does not name takes a directory of its own and the library doesn't run checks on it.
 
 ---
 
@@ -78,8 +76,8 @@ when. Both govern every exchange after them.
 
 `ask` is the question and `scaffold` is what makes it answerable. Use the `scaffold` to formulate a clear, answerable question.
 
-**Record what the entries were read against.** `confirmed_against` holds
-`pipeline.behaviour_fingerprint(model=client)` from when the pipeline answers were last read
+**Record what the entries were read against.** `simple-agents record read-against` writes
+`confirmed_against`, the newest run's `behaviour_fingerprint`, when the pipeline answers were last read
 against the code; `simple-agents check` names the ones due when the two differ, and FT-38 fails
 on it from stage `ship`. Those entries describe the pipeline rather than what the builder wants,
 so each is agreement to something the code may no longer do.
@@ -145,11 +143,11 @@ the end user opens, and what makes a run happen (`docs/product.md`). Then `how_f
 
 Then write `idea.md`, the project's own account of itself, in five sections: what this is, who
 it is for, what it works on, where this is going and where it is not, and what is still open.
-Record `understanding_confirmed_at = "brainstorm"`, and set it to the new stage at each later
+Run `simple-agents record confirmed idea --at brainstorm`, and again at each later
 gate after reading the file again (FT-29).
 
 **Gate.** Ask `anything_else` and record it. `simple-agents check` passes every check this
-stage runs. Set `stage = "research"` and go to stage 2.
+stage runs. `simple-agents record set stage research` and go to stage 2.
 
 ---
 
@@ -176,14 +174,14 @@ Then write `research.md` in four sections: the parts, and what each has to do; w
 against each part; what this turns on, having looked; and what the builder said about it. **The
 second is a table, one row per candidate, whose `Outcome` column is never blank**: `adopted`,
 `rejected, because ...` or `not investigated, because ...` (FT-36). Put the survey to the builder,
-record their words verbatim under the fourth, and record `research_confirmed_at = "research"`, set
+record their words verbatim under the fourth, and `simple-agents record confirmed research --at research`, set
 at each later gate after re-reading.
 
 A `dependency` decision at any later stage names the research it rests on:
 `from = ["approaches", "available_material"]`.
 
 **Gate.** Ask `anything_else` and record it. `simple-agents check` passes every check this
-stage runs. Set `stage = "shape"` and go to stage 3.
+stage runs. `simple-agents record set stage shape` and go to stage 3.
 
 ---
 
@@ -220,7 +218,7 @@ classifies every interaction the end user can take: starts a run, answers a wait
 reads the artifact, or records a judgement** (`docs/product.md`), and, where an artifact
 outlives the run, what writes, refreshes and triggers it. **Put the first three to the
 builder before writing code, record their words verbatim under the fourth, and iterate until
-they agree** (FT-34). Record `design_confirmed_at = "shape"` and `shape_confirmed`
+they agree** (FT-34). `simple-agents record confirmed design --at shape` and `record shape <pipeline>`
 (`docs/conformance.md` §3), re-set at each later gate. A
 `shape` or `presentation` decision names the answers it rests on: `from = ["finished_version"]`.
 
@@ -229,7 +227,7 @@ Declare the tier `how_far` settled. Declaring a lower one is the only way to tur
 
 **Gate.** Ask `anything_else` and record it. Every check this stage runs passes; those
 reading a run cannot yet. Set
-`stage = "build"` in `brief.toml` and continue to stage 4.
+`simple-agents record set stage build` and continue to stage 4.
 
 ---
 
@@ -303,7 +301,7 @@ simple-agents check
 ```
 
 Ask `anything_else` and record it. Every check this tier runs before `ship` passes. Set
-`stage = "measure"` and continue to stage 5, or go to stage 6 at a tier with no `measure`.
+`simple-agents record set stage measure` and continue to stage 5, or go to stage 6 at a tier with no `measure`.
 
 **A green suite here says only that the run was recorded.**
 
@@ -342,7 +340,7 @@ rate reports; the gate fails one that never called a tool (FT-35). **The gate re
 the report**: it covers the runs one pipeline made, and its pass line says what that left out.
 
 **Gate.** Ask `anything_else` and record it. `simple-agents check` reports every check this
-tier runs passing, and exits 0. Set `stage = "ship"` if anyone else is going to use it, and continue to stage 6.
+tier runs passing, and exits 0. `simple-agents record set stage ship` if anyone else is going to use it, and continue to stage 6.
 
 ---
 

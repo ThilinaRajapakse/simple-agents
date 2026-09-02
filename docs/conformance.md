@@ -164,6 +164,17 @@ record_decision("brief.toml", "pool_size", kind="constant", status="agreed", cho
 
 `rests_on` is written as `from`. Both return what was written: the table, the stamp, and whether an earlier table was replaced.
 
+The keys above the tables go through the same command, so the file has one writer:
+
+```
+simple-agents record set stage build                  # tier, stage, results, comments_block_gates
+simple-agents record confirmed design --at shape      # idea, research or design, the *_confirmed_at keys
+simple-agents record read-against                     # confirmed_against, off the newest run's manifest
+simple-agents record shape recommend                  # shape_confirmed, off the pipeline agent.py registers
+```
+
+`read-against` writes the `behaviour_fingerprint` of the newest agent run, which is the value FT-38 compares to; `shape` writes the registered pipeline's `graph_fingerprint`; `--stamp` on either writes a value given instead. `record_key`, `record_shape` and `newest_run_fingerprints` are the same from Python. These carry no `recorded_at`.
+
 ## 3. What each check reads
 
 All twenty-seven are `artifact` surface: they read files and run nothing.

@@ -414,3 +414,121 @@ class TestFT44:
         [result] = [c for c in run_checks(root).checks if c.entry_id == "FT-44"]
 
         assert result.outcome is Outcome.PASSED
+
+
+class TestTheKeysAboveTheTables:
+    def test_a_key_already_there_is_replaced_in_place(self, tmp_path) -> None:
+        from simple_agents.conformance import record_key
+
+        brief = conforming(tmp_path) / "brief.toml"
+        before = brief.read_text(encoding="utf-8")
+
+        written = record_key(brief, "stage", "ship")
+
+        after = brief.read_text(encoding="utf-8")
+        assert written.replaced and written.table == "stage" and written.recorded_at == ""
+        assert after.replace('stage = "ship"', 'stage = "measure"', 1) == before
+        assert Brief.read(brief).stage == "ship"
+
+    def test_a_key_not_there_lands_after_the_last_top_level_key(self, tmp_path) -> None:
+        from simple_agents.conformance import record_key
+
+        brief = minimal(tmp_path)
+
+        record_key(brief, "design_confirmed_at", "shape")
+        record_key(brief, "comments_block_gates", True)
+
+        text = brief.read_text(encoding="utf-8")
+        assert text == (
+            'tier = "evaluated"\nstage = "measure"\ndesign_confirmed_at = "shape"\n'
+            "comments_block_gates = true\n"
+        )
+        read = Brief.read(brief)
+        assert read.design_confirmed_at == "shape" and read.comments_block_gates is True
+
+    def test_what_the_brief_refuses_is_refused_and_nothing_written(self, tmp_path) -> None:
+        from simple_agents.conformance import record_key
+
+        brief = minimal(tmp_path)
+        before = brief.read_text(encoding="utf-8")
+        with pytest.raises(ConfigurationError, match="is not a key"):
+            record_key(brief, "answer", "x")
+        with pytest.raises(ConfigurationError, match="nothing was written"):
+            record_key(brief, "stage", "later")
+        with pytest.raises(ConfigurationError, match="names no file"):
+            record_key(brief, "results", "evals/results/missing.json")
+        with pytest.raises(ConfigurationError, match="not a fingerprint"):
+            record_key(brief, "confirmed_against", "abc")
+        with pytest.raises(ConfigurationError, match="true or false"):
+            record_key(brief, "comments_block_gates", "yes")
+        assert brief.read_text(encoding="utf-8") == before
+
+    def test_a_shape_is_merged_into_the_table(self, tmp_path) -> None:
+        from simple_agents.conformance import record_shape
+
+        brief = minimal(tmp_path)
+        record_shape(brief, "triage", "sha256:aaaa")
+        record_shape(brief, "recommend", "sha256:bbbb")
+        record_shape(brief, "triage", "sha256:cccc")
+
+        read = Brief.read(brief)
+        assert read.confirmed_shape("triage") == "sha256:cccc"
+        assert read.confirmed_shape("recommend") == "sha256:bbbb"
+        with pytest.raises(ConfigurationError, match="not a fingerprint"):
+            record_shape(brief, "triage", "cccc")
+
+    def test_the_newest_run_gives_the_stamps_the_checks_compare_to(self, tmp_path) -> None:
+        from simple_agents.conformance import newest_run_fingerprints
+        from simple_agents.conformance.checks import current_fingerprint
+        from simple_agents.conformance.artifacts import Artifacts
+
+        root = conforming(tmp_path)
+        stamp, shape, run = newest_run_fingerprints(root)
+
+        assert stamp == current_fingerprint(Artifacts.discover(root))[0]
+        assert shape.startswith("sha256:") and run.is_dir()
+        with pytest.raises(ConfigurationError, match="No run"):
+            newest_run_fingerprints(tmp_path)
+
+    def test_the_command_forms(self, tmp_path, capsys) -> None:
+        root = conforming(tmp_path)
+        brief = str(root / "brief.toml")
+
+        assert main(["record", "set", "stage", "ship", "--brief", brief]) == 0
+        assert main(["record", "confirmed", "design", "--at", "ship", "--brief", brief]) == 0
+        assert main(["record", "read-against", "--brief", brief]) == 0
+        assert main(["record", "shape", "triage", "--stamp", "sha256:dddd", "--brief", brief]) == 0
+        assert main(["record", "set", "comments_block_gates", "true", "--brief", brief]) == 0
+        assert main(["record", "set", "comments_block_gates", "yes", "--brief", brief]) == 2
+
+        read = Brief.read(root / "brief.toml")
+        assert read.stage == "ship" and read.design_confirmed_at == "ship"
+        assert read.confirmed_against.startswith("sha256:")
+        assert read.confirmed_shape("triage") == "sha256:dddd"
+        assert read.comments_block_gates is True
+        out = capsys.readouterr()
+        assert "replaced [stage]" in out.out and "recorded_at" not in out.out
+        assert "true or false" in out.err
+
+    def test_shape_off_the_registered_pipeline(self, tmp_path, capsys) -> None:
+        from simple_agents import Deterministic, Pipeline
+
+        brief = minimal(tmp_path)
+        (tmp_path / "agent.py").write_text(
+            "from simple_agents import Deterministic, Pipeline, pipeline_factory\n"
+            "\n"
+            "def step(inputs, ctx):\n"
+            "    return inputs\n"
+            "\n"
+            "@pipeline_factory('triage')\n"
+            "def triage():\n"
+            "    return Pipeline([Deterministic(step, node_id='step')])\n",
+            encoding="utf-8",
+        )
+        expected = Pipeline([Deterministic(lambda i, c: i, node_id="step")]).graph_fingerprint()
+
+        assert main(["record", "shape", "triage", "--brief", str(brief)]) == 0
+        assert main(["record", "shape", "nonsense", "--brief", str(brief)]) == 2
+
+        assert Brief.read(brief).confirmed_shape("triage") == expected
+        assert "Registered: triage" in capsys.readouterr().err

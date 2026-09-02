@@ -74,14 +74,24 @@ anchors "has the code moved since this answer" on that stamp anchors on a guess.
   gate.
 - **Not taken**: a stamp checked against comment threads or runs. The relations are fragile
   and the writer removes the cause.
+- **The keys above the tables, pulled in on Thilina's call the same day** so the file has one
+  writer: `record set <key> <value>` for `tier`, `stage`, `results` and
+  `comments_block_gates`; `record confirmed <idea|research|design> --at <stage>` for the
+  three `*_confirmed_at` keys; `record read-against`, which writes `confirmed_against` off
+  the newest agent run's `behaviour_fingerprint`, the value FT-38 compares to, so the coding
+  agent copies no hash; and `record shape <pipeline>` off the registered pipeline's
+  `graph_fingerprint`. `--stamp` overrides either. None carries `recorded_at`. A top-level
+  key is replaced on its own line or inserted after the last one above the first table.
+  **Not pulled in**: the view's answer flow writing the brief, which is a design question
+  about the conversation P3-35 and P3-37 settled and stays in §2.2.
 
 ## 3. Build
 
-`conformance/writing.py` (new), the `record` command in `cli/main.py`, `ft_44` in
-`conformance/checks.py`, `tests/test_record.py` (22 tests: the stamp, one table moving and
-nothing else, the refusals, the command, FT-44 both ways). Twenty-seven checks; the
+`conformance/writing.py` (new), the `record` command in `cli/record.py` (new), `ft_44` in
+`conformance/checks.py`, `tests/test_record.py` (31 tests: the stamp, one table moving and
+nothing else, the refusals, the command's seven forms, FT-44 both ways). Twenty-seven checks; the
 taxonomy's 44 entries; every count the documents and tests carry moved with them. No format
-moved. 4,156 tests.
+moved. 4,165 tests.
 
 ## 4. Verification
 
@@ -106,7 +116,18 @@ full suite and the live exercise above:
    `dev-docs/`, re-resolved with `check_citations.py --fix`. Two view tests counted the checks
    by hand. A table header carrying a trailing comment was read as absent, so a second copy
    would have been appended and refused; accepted, with a test.
-3. Read, unit tests, the full suite and the live exercise: nothing found. 4,156 tests.
+3. Read, unit tests, the full suite and the live exercise: nothing found. 4,165 tests.
+
+**The key forms, added afterwards, went through the same cycles.** The first found the
+procedure seven words over its budget once eight gate edits became commands, raised with the
+reason in `tests/test_procedure.py`, and the conforming fixture registering no pipeline, so
+the `record shape` path off `agent.py` had no test until one builds a project that does.
+The second found nothing. Live, on dogfood #6's brief with its 585 runs linked in:
+`read-against` wrote the newest finished run's stamp, which FT-38 then passed on; `set stage`,
+`confirmed idea --at` and a `--stamp` override changed three lines of the file's head and
+nothing else; `record shape recommend` with no `agent.py` beside the brief refused naming the
+registered pipelines, and with `--stamp` wrote the table; `set stage nowhere` was refused with
+the brief's own message and nothing written.
 
 ## 5. Doc consequences
 
@@ -114,13 +135,12 @@ full suite and the live exercise above:
 `docs/failure-taxonomy.md` gains FT-44 and its counts; `docs/procedure.md` records through
 the command at the two places it said to write the brief; `docs/view.md` §12 names it;
 `README.md` shows the command and the new counts; `CHANGELOG.md` under Unreleased. The
+procedure's eight gate edits of the brief by hand became the command, and `tests/test_procedure.py`'s
+word budget rose from 3,840 to 3,860 for it, the reason in the file. The
 sentence "Nothing in the library writes a brief" stopped being true.
 
 ## 6. Left open
 
-- **A writer for the top-level keys** (`stage`, the three `*_confirmed_at`, `confirmed_against`,
-  `shape_confirmed`), which the procedure still has the coding agent set by hand. Destination:
-  [`plan.md` §2.1](../plan.md#L38), accepted, waits on a slot.
 - **The view's amendment flow writing through the same code**, so an answer given on the page
   lands in the brief stamped rather than travelling as a thread first. Destination:
   [`plan.md` §2.2](../plan.md#L164), deferred; what decides it is whether the coding agent's

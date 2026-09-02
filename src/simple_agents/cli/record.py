@@ -19,6 +19,7 @@ from ..conformance.brief import SOURCES
 from ..conformance.brief import STATUSES as ENTRY_STATUSES
 from ..conformance.decisions import STATUSES as DECISION_STATUSES
 from ..conformance.decisions import kind_names
+from ..conformance.writing import CONFIRMED_DOCUMENTS, TOP_LEVEL_KEYS
 from ..errors import ConfigurationError
 
 __all__ = ["add_record_command", "run_record"]
@@ -33,6 +34,7 @@ def add_record_command(subcommands: argparse._SubParsersAction) -> None:
     what = record.add_subparsers(dest="what")
     _answer_form(what)
     _decision_form(what)
+    _key_forms(what)
 
 
 def _answer_form(what: argparse._SubParsersAction) -> None:
@@ -95,6 +97,40 @@ def _decision_form(what: argparse._SubParsersAction) -> None:
     decision.add_argument("--stage", default=None, help="the stage it was decided at")
 
 
+def _key_forms(what: argparse._SubParsersAction) -> None:
+    """The forms for the keys above the tables: `set`, `confirmed`, `read-against`, `shape`."""
+    setter = what.add_parser(
+        "set", help="a top-level key: stage, tier, results, comments_block_gates"
+    )
+    setter.add_argument("key", choices=TOP_LEVEL_KEYS, help="the key")
+    setter.add_argument("value", help="its value; true or false for comments_block_gates")
+    setter.add_argument("--brief", default="brief.toml", help="the brief, instead of ./brief.toml")
+    confirmed = what.add_parser(
+        "confirmed", help="a document re-read and confirmed at a stage: idea, research or design"
+    )
+    confirmed.add_argument("document", choices=tuple(CONFIRMED_DOCUMENTS), help="which document")
+    confirmed.add_argument("--at", required=True, help="the stage it was confirmed at")
+    confirmed.add_argument(
+        "--brief", default="brief.toml", help="the brief, instead of ./brief.toml"
+    )
+    against = what.add_parser(
+        "read-against",
+        help="confirmed_against: the pipeline the entries were read against, off the newest run",
+    )
+    against.add_argument(
+        "--stamp", default=None, help="a behaviour_fingerprint, instead of the newest run's"
+    )
+    against.add_argument("--brief", default="brief.toml", help="the brief, instead of ./brief.toml")
+    shape = what.add_parser(
+        "shape", help="shape_confirmed for one pipeline: the picture the builder agreed to"
+    )
+    shape.add_argument("pipeline", help="the name its factory registers")
+    shape.add_argument(
+        "--stamp", default=None, help="a graph_fingerprint, instead of the registered pipeline's"
+    )
+    shape.add_argument("--brief", default="brief.toml", help="the brief, instead of ./brief.toml")
+
+
 def run_record(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
     """Write an answer or a decision into the brief, stamped by the clock."""
     from ..conformance.writing import record_answer, record_decision
@@ -102,7 +138,9 @@ def run_record(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int
     if args.what is None:
         parser.parse_args(["record", "--help"])
         return 2
-    if args.what == "answer":
+    if args.what in ("set", "confirmed", "read-against", "shape"):
+        recorded = _record_key(args)
+    elif args.what == "answer":
         recorded = record_answer(
             args.brief,
             args.name,
@@ -126,8 +164,46 @@ def run_record(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int
             stage=args.stage,
         )
     what = "replaced" if recorded.replaced else "added"
-    print(f"{what} [{recorded.table}] in {recorded.path}, recorded_at {recorded.recorded_at}")
+    stamped = f", recorded_at {recorded.recorded_at}" if recorded.recorded_at else ""
+    print(f"{what} [{recorded.table}] in {recorded.path}{stamped}")
     return 0
+
+
+def _record_key(args: argparse.Namespace):
+    """The four forms over the keys above the tables."""
+    from ..conformance.writing import newest_run_fingerprints, record_key, record_shape
+
+    root = Path(args.brief).resolve().parent
+    if args.what == "set":
+        value: str | bool = args.value
+        if args.key == "comments_block_gates":
+            if args.value not in ("true", "false"):
+                raise ConfigurationError("comments_block_gates takes true or false.")
+            value = args.value == "true"
+        return record_key(args.brief, args.key, value)
+    if args.what == "confirmed":
+        return record_key(args.brief, CONFIRMED_DOCUMENTS[args.document], args.at)
+    if args.what == "read-against":
+        stamp = args.stamp or newest_run_fingerprints(root)[0]
+        return record_key(args.brief, "confirmed_against", stamp)
+    return record_shape(
+        args.brief, args.pipeline, args.stamp or _registered_shape(root, args.pipeline)
+    )
+
+
+def _registered_shape(root: Path, pipeline: str) -> str:
+    """The graph fingerprint of the pipeline `agent.py` registers under ``pipeline``."""
+    from ..view.discovery import load_project
+
+    loaded = load_project(root)
+    if pipeline not in loaded.pipelines:
+        held = ", ".join(sorted(loaded.pipelines)) or "none"
+        why = f" {loaded.could_not_import}" if loaded.could_not_import else ""
+        raise ConfigurationError(
+            f"No pipeline registered as {pipeline!r} in {root}. Registered: {held}.{why} "
+            f"Pass --stamp with the graph_fingerprint instead."
+        )
+    return loaded.pipelines[pipeline].graph_fingerprint()
 
 
 def _text_argument(text: str | None, file: str | None) -> str | None:

@@ -12,7 +12,9 @@ comparison) is recorded here.
   entry into `brief.toml` stamped from the clock, replacing a table already there and leaving
   the rest of the file as it was; `record_answer` and `record_decision` do the same from
   Python. The first project on the public package wrote twenty of thirty-three stamps by hand
-  in local time with a UTC suffix.
+  in local time with a UTC suffix. The keys above the tables go through the same command:
+  `record set`, `record confirmed <idea|research|design> --at`, `record read-against` off the
+  newest run's stamp, and `record shape <pipeline>` off the registered pipeline's.
 - FT-44, a stamp the clock did not write: a `recorded_at` ahead of the clock the suite runs
   on fails. Twenty-seven checks.
 

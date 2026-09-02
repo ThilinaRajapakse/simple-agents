@@ -71,7 +71,10 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # first installed-package session ran `find /` hunting for the docs: the file now says
 # `docs_path()` prints the directory its 39 `docs/*.md` names live in. New content rather
 # than a restatement of another document, which is what the budget is against.
-WORD_BUDGET = 3840
+WORD_BUDGET = 3860
+# Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
+# three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
+# `simple-agents record` command, seven words over the ceiling across eight sentences.
 # Raised from 3000 on 2026-08-28, on Thilina's call at `P3-53`. Stage 5 stood at 2999 of 3000,
 # so the paragraph naming per-step reporting could not go in without cutting prose that was
 # carrying its own instruction. What the budget is against is restatement, and the ceiling is

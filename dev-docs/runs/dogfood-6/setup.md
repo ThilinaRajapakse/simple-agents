@@ -10,7 +10,7 @@ departed from it.
 
 | | |
 |---|---|
-| Project | `/home/thilina/Projects/lost-the-plot`, frozen for this record at `/home/thilina/Projects/lost-the-plot-frozen` from commit `1d92f0b` (2026-09-02 12:33 local, 12 commits) with two uncommitted files, `data/lost-the-plot.db` and `view.html`, copied as they stood. `.venv`, `evals/scratch/` (4.2GB of per-example database copies), `data/cache/` and the Flutter build directories are left out of the copy |
+| Project | `~/Projects/lost-the-plot`, frozen for this record at `~/Projects/lost-the-plot-frozen` from commit `1d92f0b` (2026-09-02 12:33 local, 12 commits) with two uncommitted files, `data/lost-the-plot.db` and `view.html`, copied as they stood. `.venv`, `evals/scratch/` (4.2GB of per-example database copies), `data/cache/` and the Flutter build directories are left out of the copy |
 | Python | `.venv`, 3.13, created by `uv` |
 | The library | **`simple-llm-agents` from PyPI**, `0.1.1` at brainstorm and `0.1.2` from the `build` stage on (`BUILD-LOG.md:343`). The first project on a released wheel; no `wheels/` directory and no path source |
 | The procedure | `simple-agents init` ran: `.claude/skills/simple-agents` links into the installed package and `AGENTS.md` names it. The linked `SKILL.md` is byte-identical to `docs/procedure.md` at `main` on 2026-09-02, so no document moved between the wheel and this tree |

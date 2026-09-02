@@ -44,16 +44,48 @@ from .elicitation import names as question_names
 from .elicitation import question
 from .stages import STAGES, is_stage
 
-__all__ = ["Recorded", "record_answer", "record_decision", "clock_stamp"]
+__all__ = [
+    "Recorded",
+    "TOP_LEVEL_KEYS",
+    "CONFIRMED_DOCUMENTS",
+    "clock_stamp",
+    "newest_run_fingerprints",
+    "record_answer",
+    "record_decision",
+    "record_key",
+    "record_shape",
+]
 
 # A name a decision may be recorded under: what a TOML bare key holds.
 _A_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
 _A_HEADER = re.compile(r"^\[[A-Za-z_]")
+_A_KEY_LINE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*=")
+
+# The keys above the first table, each a scalar the checks read.
+TOP_LEVEL_KEYS = (
+    "tier",
+    "stage",
+    "results",
+    "comments_block_gates",
+    "understanding_confirmed_at",
+    "research_confirmed_at",
+    "design_confirmed_at",
+    "confirmed_against",
+)
+# The document each `*_confirmed_at` key dates, by the name a person calls it.
+CONFIRMED_DOCUMENTS = {
+    "idea": "understanding_confirmed_at",
+    "research": "research_confirmed_at",
+    "design": "design_confirmed_at",
+}
 
 
 @dataclass(frozen=True, slots=True)
 class Recorded:
-    """What one call wrote: the file, the table, the stamp, and whether a table was replaced."""
+    """What one call wrote: the file, the table or key, the stamp, and whether it replaced one.
+
+    ``recorded_at`` is empty for a top-level key or a shape, which carry no stamp.
+    """
 
     path: Path
     table: str
@@ -147,6 +179,141 @@ def record_decision(
     fields["recorded_at"] = stamp
     block = _block(f"decisions.{name}", fields, _DECISION_ORDER, ("because",))
     return _splice(target, text, f"decisions.{name}", block, stamp)
+
+
+def record_key(path: str | os.PathLike[str], key: str, value: str | bool) -> Recorded:
+    """Write one of the brief's top-level keys, above the first table.
+
+    ``key`` is one of :data:`TOP_LEVEL_KEYS`. ``comments_block_gates`` takes a bool and the
+    rest a string; ``results`` names a file under the project, ``confirmed_against`` a
+    ``sha256:`` stamp, and a stage the tier never reaches is refused as the brief refuses it::
+
+        record_key("brief.toml", "stage", "build")
+        record_key("brief.toml", "design_confirmed_at", "shape")
+        record_key("brief.toml", "confirmed_against", newest_run_fingerprints(".")[0])
+    """
+    target = Path(path)
+    text, _raw = _read(target)
+    _check_key(target, key, value)
+    line = f"{key} = {_value(value, key, 'the brief')}\n"
+    lines = text.splitlines(keepends=True)
+    region = _top_level_end(lines)
+    for index in range(region):
+        found = _A_KEY_LINE.match(lines[index])
+        if found and found.group(1) == key:
+            new_text = "".join(lines[:index]) + line + "".join(lines[index + 1 :])
+            return _write(target, new_text, key, replaced=True)
+    last_key = max((i for i in range(region) if _A_KEY_LINE.match(lines[i])), default=None)
+    at = last_key + 1 if last_key is not None else 0
+    new_text = "".join(lines[:at]) + line + "".join(lines[at:])
+    return _write(target, new_text, key, replaced=False)
+
+
+def record_shape(path: str | os.PathLike[str], pipeline: str, fingerprint: str) -> Recorded:
+    """Write one pipeline's entry under ``[shape_confirmed]``, keeping the others.
+
+    ``fingerprint`` is ``Pipeline.graph_fingerprint()`` of the picture the builder agreed to::
+
+        record_shape("brief.toml", "recommend", pipeline.graph_fingerprint())
+    """
+    target = Path(path)
+    text, raw = _read(target)
+    if not _A_NAME.match(pipeline):
+        raise ConfigurationError(
+            f"{pipeline!r} cannot name a pipeline. A name is letters, digits, `_` and `-`, the "
+            f"name its factory registers."
+        )
+    _check_stamp(fingerprint, f"shape_confirmed.{pipeline}")
+    fields = dict(raw.get("shape_confirmed") or {})
+    fields[pipeline] = fingerprint
+    block = _block("shape_confirmed", fields, (), ())
+    return _splice(target, text, "shape_confirmed", block, "")
+
+
+def newest_run_fingerprints(root: str | os.PathLike[str]) -> tuple[str, str, Path]:
+    """The newest agent run's ``behaviour_fingerprint`` and ``graph_fingerprint``, and its path.
+
+    What FT-38 compares ``confirmed_against`` to, read the way the checks read it::
+
+        stamp, shape, run = newest_run_fingerprints(".")
+
+    Raises :class:`~simple_agents.errors.ConfigurationError` where no agent run is on disk
+    or the newest carries no stamp.
+    """
+    from .artifacts import Artifacts, read_json
+
+    found = Artifacts.discover(Path(root))
+    if found.run_dir is None:
+        raise ConfigurationError(
+            f"No run of the project's agent under {Path(root) / 'runs'}, so nothing records "
+            f"what the code is. Run the pipeline once, and the stamp is on its manifest."
+        )
+    manifest, reason = read_json(found.run_dir / "manifest.json")
+    stamp = (manifest or {}).get("behaviour_fingerprint") if isinstance(manifest, dict) else None
+    shape = (manifest or {}).get("graph_fingerprint") if isinstance(manifest, dict) else None
+    if reason is not None or not isinstance(stamp, str) or not isinstance(shape, str):
+        raise ConfigurationError(
+            f"The newest run, {found.run_dir}, carries no readable behaviour_fingerprint, so "
+            f"it was written before the field existed. Run the pipeline once more."
+        )
+    return stamp, shape, found.run_dir
+
+
+def _check_key(target: Path, key: str, value: Any) -> None:
+    if key not in TOP_LEVEL_KEYS:
+        raise ConfigurationError(
+            f"{key!r} is not a key the brief carries above its tables. The keys are "
+            f"{', '.join(TOP_LEVEL_KEYS)}; an answer goes under [entries.<name>] through "
+            f"record_answer, and a decision under [decisions.<name>] through record_decision."
+        )
+    if key == "comments_block_gates":
+        if not isinstance(value, bool):
+            raise ConfigurationError(
+                "comments_block_gates is true or false: whether an open comment fails a gate."
+            )
+        return
+    if not isinstance(value, str) or not value.strip():
+        raise ConfigurationError(f"{key} takes a string, and was given {value!r}.")
+    if key == "results" and not (target.parent / value).is_file():
+        raise ConfigurationError(
+            f"results = {value!r} names no file under {target.parent}. It names the results "
+            f"file this project reports, relative to the brief: evals/results/<name>.json."
+        )
+    if key == "confirmed_against":
+        _check_stamp(value, key)
+
+
+def _check_stamp(value: str, key: str) -> None:
+    if not isinstance(value, str) or not value.startswith("sha256:"):
+        raise ConfigurationError(
+            f"{key} = {value!r} is not a fingerprint. It holds what the library stamps, "
+            f"sha256:<digest>: Pipeline.behaviour_fingerprint(model=client) for "
+            f"confirmed_against, Pipeline.graph_fingerprint() for shape_confirmed, or the value "
+            f"a run's manifest records."
+        )
+
+
+def _top_level_end(lines: list[str]) -> int:
+    """The index of the first table header, which ends the region the top-level keys live in."""
+    for index, line in enumerate(lines):
+        if _A_HEADER.match(line):
+            return index
+    return len(lines)
+
+
+def _write(target: Path, new_text: str, what: str, *, replaced: bool) -> Recorded:
+    """Validate ``new_text`` as a brief and replace the file atomically."""
+    try:
+        Brief.from_data(tomllib.loads(new_text), path=target)
+    except (ConfigurationError, tomllib.TOMLDecodeError) as exc:
+        raise ConfigurationError(
+            f"Recording {what} would leave {target} unreadable as a brief, so nothing was "
+            f"written: {exc}"
+        ) from exc
+    scratch = target.with_name(target.name + ".writing")
+    scratch.write_text(new_text, encoding="utf-8")
+    os.replace(scratch, target)
+    return Recorded(path=target, table=what, recorded_at="", replaced=replaced)
 
 
 # -- what a call may say ------------------------------------------------------------------
@@ -304,17 +471,8 @@ def _splice(target: Path, text: str, header: str, block: str, stamp: str) -> Rec
         rest = "".join(lines[end:])
         new_text = "".join(lines[:start]) + block + ("\n\n" + rest if rest else "\n")
         replaced = True
-    try:
-        Brief.from_data(tomllib.loads(new_text), path=target)
-    except (ConfigurationError, tomllib.TOMLDecodeError) as exc:
-        raise ConfigurationError(
-            f"Recording [{header}] would leave {target} unreadable as a brief, so nothing was "
-            f"written: {exc}"
-        ) from exc
-    scratch = target.with_name(target.name + ".writing")
-    scratch.write_text(new_text, encoding="utf-8")
-    os.replace(scratch, target)
-    return Recorded(path=target, table=header, recorded_at=stamp, replaced=replaced)
+    written = _write(target, new_text, f"[{header}]", replaced=replaced)
+    return Recorded(path=target, table=header, recorded_at=stamp, replaced=written.replaced)
 
 
 def _header_line(lines: list[str], header: str) -> int | None:

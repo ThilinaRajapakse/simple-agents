@@ -23,8 +23,8 @@ lines.
 
 ## Where the build stands
 
-**v0.1 in progress.** 4,102 tests. Trajectory format `0.29`, manifest `0.39`, results file `0.29`,
-suspension `0.5`, shelf `0.1`, conversation `0.2`. Six dogfoods have run; [`runs/dogfood-protocol.md`](runs/dogfood-protocol.md#L1) is the protocol. **Dogfood #6 is `lost-the-plot`, Thilina's own build against the public package, 2026-09-01 to 02**, recorded 2026-09-02 after the fact: [`runs/dogfood-6/findings.md`](runs/dogfood-6/findings.md#L1), 19 candidates, 0 open: the sitting was taken 2026-09-02 and scheduled `P3-72` to `P3-77`. **`P3-72` is built, 2026-09-02** ([build log](build-logs/the-brief-writer-build-log.md#L1)): `simple-agents record` and FT-44.
+**v0.1 released as `0.1.0` to `0.1.2`, and `P3-31` closed 2026-09-02.** 4,165 tests. Trajectory format `0.29`, manifest `0.39`, results file `0.29`,
+suspension `0.5`, shelf `0.1`, conversation `0.2`. Six dogfoods have run; [`runs/dogfood-protocol.md`](runs/dogfood-protocol.md#L1) is the protocol. **Dogfood #6 is `lost-the-plot`, Thilina's own build against the public package, 2026-09-01 to 02**, recorded 2026-09-02 after the fact: [`runs/dogfood-6/findings.md`](runs/dogfood-6/findings.md#L1), 19 candidates, 0 open: the sitting was taken 2026-09-02 and scheduled `P3-72` to `P3-77`. **`P3-72` is built, 2026-09-02** ([build log](build-logs/the-brief-writer-build-log.md#L1)): `simple-agents record` writes every part of the brief, stamped, and FT-44 fails a stamp ahead of the clock. **`P3-73`, the index, is next.**
 
 **A project built against an older version of the library breaks**, and `CHANGELOG.md` is the
 record of every change that does it. It comes up on a frozen dogfood copy under

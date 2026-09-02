@@ -7,11 +7,11 @@ Findings numbered `DF6-Dn` are this run's; `DF5-` prefixed ones are dogfood #5's
 not restated.
 
 **The run ran 2026-09-01 12:23Z to 2026-09-02 10:33Z and this record was written 2026-09-02**,
-against a frozen copy at `/home/thilina/Projects/lost-the-plot-frozen`, taken from commit
+against a frozen copy at `~/Projects/lost-the-plot-frozen`, taken from commit
 `1d92f0b` with two uncommitted files copied as they stood. Nothing in this document was written
 into the project.
 
-**Project:** `/home/thilina/Projects/lost-the-plot`. Not a fresh cold start in the protocol's
+**Project:** `~/Projects/lost-the-plot`. Not a fresh cold start in the protocol's
 sense: the builder steered, and the coding agent carried eight rules of his between sessions in
 its memory file. What that changes is said in §1.
 
