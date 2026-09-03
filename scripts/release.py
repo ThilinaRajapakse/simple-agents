@@ -60,9 +60,19 @@ GATES = (
     ("the shape ratchet", ["uv", "run", "python", "scripts/shape_check.py", "src/simple_agents"]),
     ("the linter", ["uv", "run", "ruff", "check", "src", "tests"]),
     ("the formatter", ["uv", "run", "ruff", "format", "--check", "src", "tests"]),
-    ("the dev-docs rules", ["uv", "run", "python", "dev-docs/check_docs.py"]),
     ("the wheel", ["uv", "build"]),
 )
+
+# `dev-docs/` holds the maintainer's design of record and is not tracked here, so a clone has
+# no copy of it. The gate runs where the directory is present and is skipped where it is not.
+_DEV_DOCS_GATE = ("the dev-docs rules", ["uv", "run", "python", "dev-docs/check_docs.py"])
+
+
+def gates() -> tuple[tuple[str, list[str]], ...]:
+    """The gates a release runs, in order."""
+    if (REPO / "dev-docs" / "check_docs.py").exists():
+        return (*GATES[:-1], _DEV_DOCS_GATE, GATES[-1])
+    return GATES
 
 
 def _run(command: list[str]) -> subprocess.CompletedProcess:
@@ -194,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     failed = []
-    for name, command in GATES:
+    for name, command in gates():
         done = _run(command)
         print(f"  {'ok  ' if done.returncode == 0 else 'FAIL'} {name}")
         if done.returncode != 0:

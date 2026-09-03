@@ -242,3 +242,9 @@ tests/fixtures/view_projects/*/view.html
 
 # `scripts/view_at_stage.py` writes its copies and pages here by default.
 _stages/
+
+# The design of record and the maintainer's conventions. They live on disk beside the code and
+# are read every session; they are not published, so they are not tracked here. `dev-docs/`
+# went public with 0.1.0 and was untracked on 2026-09-03.
+dev-docs/
+CLAUDE.md

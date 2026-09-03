@@ -68,42 +68,6 @@ ALLOWED: dict[str, str | dict[str, str]] = {
     "docs/memory.md": {
         "credential": "the document states the credential formats redaction detects"
     },
-    "dev-docs/build-logs/memory-build-log.md": {
-        "credential": "the fake key is the redaction behaviour the log records"
-    },
-    "dev-docs/handoff.md": {
-        "home path": "operational facts about this machine; a session here needs the literal path"
-    },
-    "dev-docs/items/example-projects.md": {
-        "personal file": "the export's shape sized the design; ruled kept 2026-09-01"
-    },
-    "dev-docs/archive/dogfood-absorption.md": {"home path": _HISTORY},
-    "dev-docs/archive/plan-history.md": {"home path": _HISTORY},
-    "dev-docs/build-logs/answer-key-build-log.md": {"home path": _HISTORY},
-    "dev-docs/build-logs/concurrency-build-log.md": {"home path": _HISTORY},
-    "dev-docs/build-logs/refining-the-view-build-log.md": {"home path": _HISTORY},
-    "dev-docs/build-logs/typed-consultation-build-log.md": {"home path": _HISTORY},
-    "dev-docs/build-logs/unfinished-work-build-log.md": {"home path": _HISTORY},
-    "dev-docs/build-logs/what-a-decision-produced-build-log.md": {"home path": _HISTORY},
-    "dev-docs/build-logs/what-the-checks-read-build-log.md": {"home path": _HISTORY},
-    "dev-docs/design/answer-shapes.md": {"home path": _HISTORY},
-    "dev-docs/design/spend-that-produced-nothing.md": {"home path": _HISTORY},
-    "dev-docs/design/view.md": {"home path": _HISTORY},
-    "dev-docs/runs/checkpoint-item7/setup.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-1/findings.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-1/run2-findings.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-2/findings.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-3/findings.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-3/setup.md": {
-        "home path": _HISTORY,
-        "personal file": "the export's shape is what the run record measured; ruled kept 2026-09-01",
-    },
-    "dev-docs/runs/dogfood-4/findings.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-4/setup.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-5/findings.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-5/inventory.md": {"home path": _HISTORY},
-    "dev-docs/runs/dogfood-5/setup.md": {"home path": _HISTORY},
-    "dev-docs/runs/full-test-2026-08-13/NEXT-SESSION.md": {"home path": _HISTORY},
 }
 
 # Suffixes worth reading. A binary file is skipped: nothing here can read it.
