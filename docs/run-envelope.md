@@ -67,7 +67,7 @@ An evaluation reuses one envelope across every rollout and varies the seed, whic
 
 The manifest is written when the run starts and rewritten when it ends. A run that crashed still has one, carrying `outcome: "error"` and the records that were written before the failure.
 
-**Current version: `0.40`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
+**Current version: `0.41`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
 
 ### 2.1 Fields
 
@@ -77,7 +77,9 @@ The manifest is written when the run starts and rewritten when it ends. A run th
 | `trajectory_format_version` | string | Which version of `docs/trajectory-format.md` the sibling trajectory is written in. |
 | `library_version` | string | The version of Simple Agents that produced the run. |
 | `run_id` | string | Joins to every record in the trajectory. |
+| `pipeline` | string \| null | Which registered pipeline this run is, from the name its `@pipeline_factory` gave it (`docs/pipeline.md` §1.15). `null` where the pipeline was built outside a factory. A run of a slice records the name of the pipeline it was sliced from, and `slice` says which nodes it held, so the two together identify what ran. The checks that read one pipeline's runs read this, and `runs("runs/", pipeline="freshen")` does. |
 | `role` | string | What the run was for, from `RunEnvelope(role=...)`. `agent` unless the envelope said otherwise, and the only value the conformance checks read. |
+| `scripted` | boolean | Whether the model this run called answered from a script rather than a backend, from the client's own `scripted` (`docs/model-clients.md` §7). True for a run made with `FakeModelClient`. These are left out of `runs()`, of `simple-agents report` and of the checks unless asked for, since a scripted run spent nothing and its answers were written rather than produced. |
 | `live` | boolean | Whether an end user was on the other end, from `RunEnvelope(live=True)`. False on a run made while building, which is what the conformance checks read (`docs/shipping.md` §1). |
 | `end_user` | object \| null | `answered_by` for the channel this run was given through `RunEnvelope(end_user=...)`, and `null` where the run used the one the pipeline registered. A run given one channel per answerer carries `reaches` instead, an `answered_by` per name, with `answered_by` itself `null`. The `tools` entries carry the registered declaration; this carries the run's. |
 | `evaluation` | object \| null | Which rollout of which evaluation this run is: `eval_id`, `example`, `rollout` and `turn`. `turn` is which turn of the rollout's conversation this run was, and 1 for a rollout that is one run. `null` on a run of the agent. A rollout says what it is here, so a reader tells one from a run of the agent without knowing where the directory sits (§1.1). |
@@ -125,8 +127,10 @@ labelling = env.with_role("labelling")
 ```
 
 The value is any non-empty string the project chooses. Every conformance check that reads a run
-reads the newest run whose role is `agent`, so these can be written into `runs/` beside the
-agent's own and none of them is read as one. The report's header names the run those checks
+reads one whose role is `agent`, and the newest of the pipeline the results file measured
+(`docs/conformance.md` §3.8), so these can be written into `runs/` beside the agent's own and
+none of them is read as one. FT-42 is the exception: it looks a name up across every run
+whatever its role, since a decision can be about a pipeline the project runs for itself. The report's header names the run those checks
 read by its nodes, so a pass that was left undeclared shows there (`docs/conformance.md` §4).
 A project whose only runs declare another role fails FT-13, and the reason says what was found.
 `runs("runs/", role="labelling")` reads them back, and a run written before this field existed
@@ -358,7 +362,7 @@ An `AgentNode` produces its output from a `finish` call, so an execution that st
 
 **It is read off this run's own trajectory when the run ends**, so a reader aggregating many runs opens one small manifest each rather than every record they wrote. A run whose payloads were dropped by sampling has already lost them by then, so the manifest says what a reader of that trajectory can see and no more.
 
-`node_metrics(run_dir)` reads the same figures out of the trajectories, with everything else a node did beside them (`docs/evaluation.md` §5). `simple-agents check` reads this block from every run one pipeline made, which is the one check that reads more than the newest run (`docs/conformance.md` §3.7).
+`node_metrics(run_dir)` reads the same figures out of the trajectories, with everything else a node did beside them (`docs/evaluation.md` §5). `simple-agents check` reads this block from every run one pipeline made, which is one of four checks that read more than one run (`docs/conformance.md` §3.7).
 
 
 ### 2.9 `constants`
@@ -757,6 +761,8 @@ for run in runs("runs/"):
 | `finished` | Whether the run reached an end: `completed` or `stopped_early` |
 | `role` | What the run was for (§2.1), `agent` on a run whose manifest does not say |
 | `live` | Whether an end user was on the other end (§2.1), false on a run whose manifest does not say |
+| `pipeline` | Which registered pipeline the run is (§2.1), `None` on a run whose manifest does not say |
+| `scripted` | Whether its model answered from a script (§2.1), false on a run whose manifest does not say |
 | `node_ids` | Every node that executed, in the order each first ran |
 | `outputs_of(node_id)` | What that node produced, on its last execution |
 
@@ -767,7 +773,7 @@ for run in runs("runs/"):
 **An evaluation's rollouts are not listed beside the runs a project launched.** Each rollout is a run directory of its own under one for the evaluation, at `runs/eval/<eval_id>/<example>-<rollout>/`. Pass `nested=True` for every run at any depth, or read one evaluation's rollouts by pointing at its directory:
 
 ```python
-rollouts = runs("runs/eval/eval_e5a1bbef5a22")
+rollouts = runs("runs/eval/eval_e5a1bbef5a22", nested=True)
 ```
 
 **`role=` reads back one kind of run.** A project that ran a labelling pass or a judge through
@@ -784,6 +790,22 @@ shipped reads what people actually did through it (`docs/shipping.md` §2):
 ```python
 real = runs("runs/", live=True)
 development = runs("runs/", live=False)
+```
+
+**`pipeline=` reads back one registered pipeline.** A project with several runs whichever it
+was asked for, and this is how a reader asks about one of them (`docs/pipeline.md` §1.15):
+
+```python
+mornings = runs("runs/", pipeline="freshen")
+```
+
+**A run whose model answered from a script is left out**, since it spent nothing and its
+answers were written rather than produced (§2.1). `scripted=None` includes them and
+`scripted=True` returns only those:
+
+```python
+every = runs("runs/", scripted=None)
+stand_ins = runs("runs/", scripted=True)
 ```
 
 **`since=` and `last=` narrow it to a period.** `since` keeps the runs that started at or after

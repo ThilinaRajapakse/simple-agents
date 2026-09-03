@@ -694,10 +694,56 @@ An evaluation leaves that rollout out of every figure and reports the count besi
 `slice_of` says what the result is a slice of, and every run it makes records the same under
 `slice` in its manifest (`docs/run-envelope.md` §2.1).
 
-A slice keeps the pipeline's budget, tools and fetch policy, and its `node_id` is `None`. It is
-refused for a node id the pipeline does not hold, for a set whose nodes are not all reachable
-from the earliest of them, and for a set with more than one node that ends it. A dotted id names
-a node inside a pipeline used as a node, which is a different graph: slice that one.
+A slice keeps the pipeline's budget, tools, fetch policy and `name`, and its `node_id` is
+`None`. It is refused for a node id the pipeline does not hold, for a set whose nodes are not
+all reachable from the earliest of them, and for a set with more than one node that ends it. A
+dotted id names a node inside a pipeline used as a node, which is a different graph: slice that
+one.
+
+---
+
+### 1.15 Naming a pipeline
+
+`@pipeline_factory` registers the function that builds a pipeline, under the name a person
+calls it. The name travels onto what the factory returns:
+
+```python
+from simple_agents import Budget, Deterministic, Pipeline, pipeline_factory
+
+
+def gather(inputs, ctx):
+    return inputs["candidates"]
+
+
+@pipeline_factory("recommend")
+def recommend() -> Pipeline:
+    return Pipeline([Deterministic(gather, node_id="gather")], budget=Budget.unbounded())
+
+recommend().name           # 'recommend'
+```
+
+The project calls the function exactly as before. Registering two factories under one name is
+refused, since the name is an identity.
+
+**Every run records which pipeline it is**, under `pipeline` in its manifest, and an evaluation
+records it in the results file's `config` (`docs/run-envelope.md` §2.1). That is what lets a
+reader ask about one pipeline on a project that has several:
+
+```python
+mornings = runs("runs/", pipeline="freshen")
+```
+
+A pipeline built outside a registered factory records `null`, and a project reporting a number
+measured over one fails FT-45. A run of a slice records the name of the pipeline it came from,
+and `slice` says which nodes it held, so evaluating one rung at a time passes.
+
+**Every conformance check that reads one run reads that pipeline's**
+(`docs/conformance.md` §3.8). FT-25 looks for a consultation tool on the newest run of each
+pipeline instead, since whether the agent can ask a person is a question about the project.
+Before the name existed, a project whose background pass ran every morning had FT-25, FT-37
+and FT-38 fire on every morning, and FT-14 pass because that pass calls no model.
+
+Registering is also how `simple-agents view` finds a pipeline to draw (`docs/view.md` §2).
 
 ---
 
@@ -1240,11 +1286,20 @@ receiving what the one before it produced, the output schema validating, a budge
 route choosing, and the tools actually being called. A crash on an absent value, a `Join` read
 wrongly and a budget sized for an earlier shape are all found here rather than on a paid run.
 
+**A run made this way is marked, and read back only when asked for.** Its manifest records
+`scripted`, and `runs()`, `simple-agents report`, `simple-agents check` and `node_metrics`
+leave it out: it spent nothing and its answers were written rather than produced. A project
+whose only runs are scripted therefore reads as a project with no run, which is what the
+report says. `scripted=None` includes them, `--scripted` does on the commands, and
+`FakeModelClient(scripted=False)` says a run is meant to be read back as an ordinary one
+(`docs/run-envelope.md` §2.1).
+
 **A node that declares its own model is not reached by this.** `model=` on a node beats the
 client passed to `run`, so `LLMNode(build_prompt, model=cheap)` calls `cheap` while the rest of
 the pipeline is scripted, and a pipeline whose every node declares one goes nowhere near
 `FakeModelClient`. A run meant to cost nothing checks that, since the failure is a full-price
-run reported as free. `docs/model-clients.md` §1 covers declaring a model per node.
+run reported as free; such a run is not marked `scripted` either, because it called a backend.
+`docs/model-clients.md` §1 covers declaring a model per node.
 
 **The tools are called for real, including the ones that reach a person.** A `consult` channel
 that reads a terminal blocks a run that was supposed to take milliseconds, and one that reaches

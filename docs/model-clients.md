@@ -235,6 +235,18 @@ asks for that: reasoning that was paid for is recorded.
 
 Implement the two methods, fill every field of `ModelResponse` from what the backend reported, and take backend-specific configuration in the constructor.
 
+**A client that answers from a script declares `scripted = True`.** `FakeModelClient` does, so a run made with it records `scripted` on its manifest and is left out of `runs()`, of `simple-agents report` and of the conformance checks unless they are asked for it. A project's own stand-in declares the same attribute and is treated the same way:
+
+```python
+class FromTheFixtures:
+    scripted = True
+
+    def identity(self) -> ModelIdentity: ...
+    def complete(self, request: ModelRequest) -> ModelResponse: ...
+```
+
+One project wrote 1,846 calls through a stand-in into the same `runs/` directory as its real ones. Its report counted them as spend and read 318 of their fan-out items as work that produced nothing, beside the real import. A run is marked where every model it could call is scripted; one that could reach a stand-in and a backend called a backend, so it spent what it spent and is not marked. `FakeModelClient(scripted=False)` says a run is meant to be read back as an ordinary one, which is what a test of a project's own reporting wants.
+
 **A third method is optional.** `stream(request, on_chunk) -> ModelResponse` delivers content as it arrives and returns the same assembled response `complete` returns, so nothing downstream reads a different shape. The pieces passed to `on_chunk` must join to the response's `content` exactly, which the library checks; anything else produces a recording whose chunk boundaries index into text a replay does not have. An adapter without the method is a complete model client, and a node asking to stream against it is refused by name rather than quietly served.
 
 **A keyword on that method is optional too.** `stream(request, on_chunk, *, on_reasoning=None)` takes the chain of thought on its own sink, whose pieces must join to `response.reasoning.text` on the same rule. The library passes it only to a `stream` whose signature accepts it, so an adapter written with two parameters keeps working and is refused by name only when a run asks for `on_reasoning=`.

@@ -153,7 +153,7 @@ simple-agents record answer <key>       # your answer, into the brief, stamped b
 simple-agents check                     # the gate
 ```
 
-The questions are the ones only you can answer: what the agent is for, what a right answer looks like, what it must never do. The answers go into a brief, and the gate refuses to advance while one that stage needs is missing. `simple-agents check` runs the conformance suite over the project and reports what is not yet true of it. Behind it is a catalogue of 44 characteristic failures of agent building, and the twenty-seven checks that ship today read the project's own brief, runs and results. `docs/procedure.md` is the procedure itself, readable without installing anything.
+The questions are the ones only you can answer: what the agent is for, what a right answer looks like, what it must never do. The answers go into a brief, and the gate refuses to advance while one that stage needs is missing. `simple-agents check` runs the conformance suite over the project and reports what is not yet true of it. Behind it is a catalogue of 45 characteristic failures of agent building, and the twenty-eight checks that ship today read the project's own brief, runs and results. `docs/procedure.md` is the procedure itself, readable without installing anything.
 
 ## Full documentation
 

@@ -77,7 +77,7 @@ when. Both govern every exchange after them.
 `ask` is the question and `scaffold` is what makes it answerable. Use the `scaffold` to formulate a clear, answerable question.
 
 **Record what the entries were read against.** `simple-agents record read-against` writes
-`confirmed_against`, the newest run's `behaviour_fingerprint`, when the pipeline answers were last read
+`confirmed_against`, the measured pipeline's newest `behaviour_fingerprint`, when its answers were last read
 against the code; `simple-agents check` names the ones due when the two differ, and FT-38 fails
 on it from stage `ship`. Those entries describe the pipeline rather than what the builder wants,
 so each is agreement to something the code may no longer do.
@@ -114,6 +114,10 @@ page (`docs/view.md`): the builder comments on any element, answers open questio
 amends recorded answers in place, each landing as a thread in `comments.toml`. Read them
 with `simple-agents comments` before each session and at every gate, do what each asks, reply in the thread,
 and record an `answer` or `amendment` into the brief before addressing it (FT-39).
+
+**A decision the builder settled with one click carries the click alone.**
+`simple-agents record decision <name> --kind <kind> --from-comment <id>` copies what they said
+into `considered` and agrees it. Leave `because` unset: the click is the reason.
 
 **And at every stage, ask `anything_else`.** After that stage's own questions and before the
 gate. Every other question is the library's; this one is the builder's, and what comes back is
@@ -258,8 +262,8 @@ Before designing any capability, check the feature index at the end of this file
 names, the library ships.
 
 **A pass the project runs for itself declares its own role.** A corpus build, labelling pass,
-judge or one-off probe writes into `runs/` beside the agent's runs, and every check that
-reads a run reads the newest whose role is `agent`. `RunEnvelope(role="corpus")` keeps it out
+judge or one-off probe writes into `runs/` beside the agent's runs, and every check that reads
+a run reads a run whose role is `agent`. `RunEnvelope(role="corpus")` keeps it out
 (`docs/run-envelope.md` §2.1). The report's `reading` line names the pipeline the checks read.
 
 **Import the module that builds the pipeline before the gate**, which fires the library's
@@ -408,7 +412,7 @@ project reports no number.
 
 What this list names, the library ships. Check it before designing or building any capability, and open the named section before implementing around it. Each line is one document.
 
-- **Pipeline** (`docs/pipeline.md`): the three node kinds §2 · a model per node §2.4 · delegate a subtask to a pipeline the model chooses §2.5 · branch, join and loop §1.2–1.4 · retries and `on_error` §1.5 · a pipeline as a node in another §1.6 · draw the graph and watch a run §1.7 · suspend a run and resume it §1.8 · stream a node's output §1.9 · fan out over a list, run nodes, items and tools concurrently, and what a failure inside one item does §1.10 · rerun what a dead run was given §1.13 · slice part of the graph §1.14 · what a node receives §3 · the output schema and `unknown` §4 · budgets per node and per run §5 · run with no backend §6.
+- **Pipeline** (`docs/pipeline.md`): the three node kinds §2 · a model per node §2.4 · delegate a subtask to a pipeline the model chooses §2.5 · branch, join and loop §1.2–1.4 · retries and `on_error` §1.5 · a pipeline as a node in another §1.6 · draw the graph and watch a run §1.7 · suspend a run and resume it §1.8 · stream a node's output §1.9 · fan out over a list, run nodes, items and tools concurrently, and what a failure inside one item does §1.10 · rerun what a dead run was given §1.13 · slice part of the graph §1.14 · name a pipeline §1.15 · what a node receives §3 · the output schema and `unknown` §4 · budgets per node and per run §5 · run with no backend §6.
 - **Tools** (`docs/tools.md`): the contract and the four side-effect classes §1 · a tool's declared cost and spend ceiling §1.5 · replay and tool versions §3 · the fourteen built-ins §4: document search, page fetch with a host policy and a cache, web search, workspace I/O, a clock, typed extraction, a question to the end user, memory, conversation compaction · the finish check §5 · tools from an MCP server §7.
 - **Retrieval** (`docs/retrieval.md`): search by meaning as well as by words §1 · what an index costs, and adding to one that grows §2 · the embedding model, pinned §3 · fusion §4.1 · where the vectors live, on the CPU or the GPU §4.2 · reranking §5 · a custom embedding client §8.
 - **Memory** (`docs/memory.md`): a store the agent reads and writes across runs §1–2 · memory in an evaluation §3 · what redaction reaches §4.

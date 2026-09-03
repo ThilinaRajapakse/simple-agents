@@ -258,7 +258,7 @@ per candidate instead makes each candidate its own run with its own budget, and 
 `1.00` over 60 candidates then permits `$60`.
 
 **`role="labelling"` keeps the pass out of the checks that read the agent.** Every conformance
-check that reads a run reads the newest run whose role is `agent`, so a labelling pass written
+check that reads a run reads one whose role is `agent`, so a labelling pass written
 into `runs/` alongside them is found by `runs()` and is never mistaken for one
 (`docs/run-envelope.md` §2.1). Without it, FT-13 and FT-14 report on the labelling run.
 
@@ -2226,7 +2226,7 @@ stops an evaluation recording rollouts it would then delete.
 
 ## 8. The results file
 
-JSON, `eval_format_version` `0.30`. Each figure carries `population`, the sentence naming which rollouts it covers, and `over`, the same fact as the value that decided it, so a reader comparing two files does not parse a sentence. It carries what the number was and what produced it, so a
+JSON, `eval_format_version` `0.31`. Each figure carries `population`, the sentence naming which rollouts it covers, and `over`, the same fact as the value that decided it, so a reader comparing two files does not parse a sentence. It carries what the number was and what produced it, so a
 reader can tell what was measured without the code that measured it.
 
 **`EvalResults.read` reads a file written at `0.28` or later.** The format is additive by
@@ -2248,7 +2248,8 @@ results.carries("node_ratios")          # False: written before per-node ratios 
 
 The names are `node_ratios`, a `ProjectRatio` reported per node (§11.5), and `slice`, what the
 evaluated pipeline is a slice of (§5.6), both of which arrived in `0.29`; and `stores`, what
-each store the pipeline reaches did during the rollouts (§6.9), which arrived in `0.30`.
+each store the pipeline reaches did during the rollouts (§6.9), which arrived in `0.30`;
+and `pipeline`, the registered name of the pipeline that was measured, which arrived in `0.31`.
 
 | Field | Holds |
 |---|---|

@@ -92,6 +92,16 @@ effects: no model call, no network, no file the project keeps. Importing `agent.
 module-level code, so clients and pipelines are built inside functions, never at import. A
 module-level `Pipeline` is picked up too, under the name it is bound to.
 
+**The name travels onto every run and into every results file**, which is what lets the checks
+read within one pipeline and what a project with a background pass needs
+(`docs/pipeline.md` §1.15). A module-level `Pipeline` draws on this page and records no name,
+so a project reporting a number registers the pipeline the number is about.
+
+**The page is a census of what ran**, so a run whose model answered from a script is on it
+like any other, and the numbers it carries are counted with the rest. The conformance checks
+leave those out, because they report figures about the agent rather than saying what happened
+(`docs/run-envelope.md` §2.1).
+
 A project with runs and no registered pipeline still gets a page: the run record renders,
 and the page says that registering the pipelines is what lights the rest.
 

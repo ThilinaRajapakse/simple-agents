@@ -16,11 +16,11 @@ The command reads the files the project has already produced. It executes nothin
 
 | Tier | The project it describes | Its stages | Checks |
 |---|---|---|---|
-| `prototype` | built to find out whether the idea works, and reports no number about how well it does | every stage but `measure` | twenty of the twenty-seven |
-| `evaluated` | reports a measured number about how well it works | all six | all twenty-seven |
-| `trained` | an `evaluated` project that will also be trained on its own runs | all six | all twenty-seven |
+| `prototype` | built to find out whether the idea works, and reports no number about how well it does | every stage but `measure` | twenty of the twenty-eight |
+| `evaluated` | reports a measured number about how well it works | all six | all twenty-eight |
+| `trained` | an `evaluated` project that will also be trained on its own runs | all six | all twenty-eight |
 
-**`prototype` drops seven of the twenty-seven checks, the ones that read a results file**, as it does not produce one. They are FT-01, FT-02, FT-03, FT-04, FT-06, FT-07 and FT-37 (§3).
+**`prototype` drops eight of the twenty-eight checks, the ones that read a results file**, as it does not produce one. They are FT-01, FT-02, FT-03, FT-04, FT-06, FT-07, FT-37 and FT-45 (§3).
 
 **`prototype` has no `measure` stage**, because it reports no number. Its `measure` questions are not required. A `prototype` project that produced a results file anyway gets a note suggesting `tier = "evaluated"`.
 
@@ -132,7 +132,7 @@ because = "the four sources the builder asked for are not in any catalogue this 
 
 **One decision covers as many names as it settled.** A decision agreeing the rate limits every source asks for names all of them.
 
-FT-42 reads these against the node ids, tool names and constants of every run under `runs/` whose role is `agent`, and fails from stage `ship` on a name no run recorded. It reads across every run rather than the newest: a project with more than one pipeline runs whichever it was asked for, so the newest run describes one of them. The report prints the other direction, what the runs hold that no decision names (§4.4).
+FT-42 reads these against the node ids, tool names and constants of every run under `runs/`, whatever its role, and fails from stage `ship` on a name no run recorded. A decision the builder agreed to can be about a pipeline the project runs for itself, and a name that pipeline recorded is a name the project built; the report says which roles recorded each. It reads across every run rather than the newest: a project with more than one pipeline runs whichever it was asked for, so the newest run describes one of them. The report prints the other direction, what the runs hold that no decision names (§4.4).
 
 ---
 
@@ -164,20 +164,28 @@ record_decision("brief.toml", "pool_size", kind="constant", status="agreed", cho
 
 `rests_on` is written as `from`. Both return what was written: the table, the stamp, and whether an earlier table was replaced.
 
+**A decision the builder settled with one click on the view has one thing weighed and one reason: what they said.** `--from-comment` copies it out of `comments.toml`, sets the status to `agreed` and stamps the entry:
+
+```
+simple-agents record decision rerank_depth --kind constant --from-comment c6 --produces RERANK_DEPTH
+```
+
+`considered` is then the sentence the builder sent, once, and `because` is left unset, since the click is the reason. `--considered` and `--status` write what they name instead. A comment id the file does not hold is refused, naming the ids it does, and nothing is written. Eight one-click agreements on one project produced eight decisions whose `because` opened with the same two lines.
+
 The keys above the tables go through the same command, so the file has one writer:
 
 ```
 simple-agents record set stage build                  # tier, stage, results, comments_block_gates
 simple-agents record confirmed design --at shape      # idea, research or design, the *_confirmed_at keys
-simple-agents record read-against                     # confirmed_against, off the newest run's manifest
+simple-agents record read-against                     # confirmed_against, off the measured pipeline's newest run
 simple-agents record shape recommend                  # shape_confirmed, off the pipeline agent.py registers
 ```
 
-`read-against` writes the `behaviour_fingerprint` of the newest agent run, which is the value FT-38 compares to; `shape` writes the registered pipeline's `graph_fingerprint`; `--stamp` on either writes a value given instead. `record_key`, `record_shape` and `newest_run_fingerprints` are the same from Python. These carry no `recorded_at`.
+`read-against` writes the `behaviour_fingerprint` of the newest run of the pipeline the results file measured, which is the value FT-38 compares to (§3.8); `shape` writes the registered pipeline's `graph_fingerprint`; `--stamp` on either writes a value given instead. `record_key`, `record_shape` and `newest_run_fingerprints` are the same from Python. These carry no `recorded_at`.
 
 ## 3. What each check reads
 
-All twenty-seven are `artifact` surface: they read files and run nothing.
+All twenty-eight are `artifact` surface: they read files and run nothing.
 
 | Entry | Reads | Fires when |
 |---|---|---|
@@ -190,11 +198,12 @@ All twenty-seven are `artifact` surface: they read files and run nothing.
 | FT-31 | `tools` in the run's manifest, and a live run's `consultation` records | at stage `ship`, a consultation channel reaching a stand-in |
 | FT-25 | the brief's `consultation` answer, `tools` in the run's manifest, and `nodes` in `evals/results/<latest>.json` | the answer names something to ask and no consultation tool reaches a node; a pass notes where neither the run nor any rollout asked through it |
 | FT-32 | the brief's `tool_effects` answer, and `tools` in the run's manifest | the run declares a side-effect class the answer never mentions |
-| FT-33 | `BUILD-LOG.md`, and the newest run's `started_at` | the log was last written before that run started |
+| FT-33 | `BUILD-LOG.md`, and when the run the checks read ended | the log was last written before that run |
 | FT-34 | `design.md`, and `design_confirmed_at` in `brief.toml` | at stage `shape`, a section is empty, the builder is not quoted, or it was confirmed earlier |
 | FT-35 | `unfinished` in the manifest of every run this pipeline made | a node spent a whole allowance without calling a tool, consulting or delegating |
 | FT-36 | `research.md`, and `research_confirmed_at` in `brief.toml` | at stage `research`, a section is empty, a candidate row has no outcome, or it was confirmed earlier |
 | FT-01 | `evals/results/<latest>.json` | no evaluation, at tier `evaluated` |
+| FT-45 | `config.pipeline` in the same file | the number was measured over a pipeline no `@pipeline_factory` registers |
 | FT-02 | the same file | one split, or a held-out split that is missing or empty |
 | FT-03 | the same file | the contamination report holds a pair spanning two splits |
 | FT-04 | the same file | no held-out example expects absence, in its answer or in a condition of its answer key |
@@ -215,7 +224,13 @@ The report names the run and the results file it read, so a passing report can b
 
 A project accumulates runs, and an evaluation writes one directory per rollout. Every check but FT-35, FT-41 and FT-42 reads the most recent of each, by the manifest's own `started_at` and the results file's own `created_at`. An older run made before a model was pinned does not fail the project.
 
-**Three read more than one run.** FT-35 reads every run the pipeline as it now stands has made (§3.7), since one run does not show what it looks for. FT-41 reads every run under the directory whatever made it. FT-42 reads every run whose role is `agent`, because a project with more than one pipeline runs whichever it was asked for and the newest run describes one of them.
+**The run is the newest run of the pipeline the results file measured** (§3.8), so a project running a background pass every morning is not read by that pass. Where nothing names a pipeline, the newest run of any is read, which is what a project's runs give before manifest format `0.41`. The report's header names the pipeline whose run it read.
+
+**Three read more than one run.** FT-35 reads every run the pipeline as it now stands has made (§3.7), since one run does not show what it looks for. FT-41 reads every run under the directory whatever made it. FT-42 reads every run whatever its role and whatever answered its model, because a decision the builder agreed to can be about a pipeline the project runs for itself, and a name a run recorded is a name the project built.
+
+**FT-25 reads more than the one run**: the newest run of each registered pipeline, passing where any of them registers a consultation tool (§3.8). Whether the project built a way to ask a person is a question about the project rather than about one pipeline.
+
+**A run whose model answered from a script is left out of every check that measures the agent.** It spent nothing and its answers were written rather than produced, so counting it would put a stand-in's work in the same figures as the agent's (`docs/run-envelope.md` §2.1). `--scripted` includes them where a flag reaches. FT-41 and FT-42 read them: a run that stopped to ask a person stopped whatever answered its model, and a name a run recorded is a name the project built. A project whose every run is scripted is told that by each check rather than told it has no runs.
 
 ```
 simple-agents check                                   # the working directory
@@ -226,7 +241,7 @@ simple-agents check --brief config/brief.toml
 simple-agents check --since 2026-08-14 --last 500     # narrows what FT-35 reads
 ```
 
-`--since`, `--last`, `--role` and `--live` narrow the runs FT-35 reads and reach no other check. `--run` names the run the other checks read and does not narrow FT-35.
+`--since`, `--last`, `--role`, `--live`, `--pipeline` and `--scripted` narrow the runs FT-35 reads and reach no other check. `--run` names the run the other checks read and does not narrow FT-35.
 
 **The run and the results file are found separately, and nothing requires them to be the same measurement.** FT-13 and FT-14 read a run; FT-01 through FT-07 read a results file. A project that measured, changed the pipeline, and measured again can have the run checks describing one evaluation and the results checks describing another, especially where the brief's `results` key names a file and stays pointing at it. The report says so when it happens, as a note under the checks:
 
@@ -238,17 +253,17 @@ evals/results/held-out-v2.json was scored from runs/eval/eval_4b02.
 
 Point `results` in the brief at the measurement the project reports, or pass `--run` and `--results` naming one. A run outside any evaluation, which is what a project has after running its agent once by hand, is not reported.
 
-**FT-37 is the one check that reads both**, and it asks a narrower question than this note: whether the pipeline that produced the reported number is the one the newest run was made by. Two files describing different measurements is ordinary; a reported number produced by a pipeline the project has replaced is not.
+**FT-37 is the one check that reads both**, and it asks a narrower question than this note: whether the pipeline that produced the reported number is the one its own newest run was made by (§3.8). Two files describing different measurements is ordinary; a reported number produced by a pipeline the project has replaced is not.
 
 ### 3.2 FT-13 and what counts as a trajectory
 
-FT-13 passes when the newest run holds a readable trajectory. Every line parses, every record carries the common fields of `docs/trajectory-format.md` §2 and one of the seven record types, and at least one is a `node_execution`. A file that exists and holds something else fails.
+FT-13 passes when the run the checks read holds a readable trajectory (§3.8). Every line parses, every record carries the common fields of `docs/trajectory-format.md` §2 and one of the seven record types, and at least one is a `node_execution`. A file that exists and holds something else fails.
 
 The check reads `runs/`. Where a project's envelope writes somewhere else, the failure names the run directory it found and the `--run` that reads it.
 
 **`<latest>` is the most recent run that finished**, by the manifest's own `started_at`, where finished means an `outcome` of `completed` or `stopped_early`. Where no run finished, the newest is read anyway and the checks report what is wrong with it. `--run` names one directly.
 
-**Only runs of the agent are read.** A project's labelling pass, judge or ablation goes through the same envelope and writes into the same directory, and declares itself with `RunEnvelope(role=...)` (`docs/run-envelope.md` §2.1). The checks read the newest run whose role is `agent`, which is every run unless the envelope said otherwise. A project whose only runs declare another role fails FT-13, and the reason counts what it found by role.
+**Only runs of the agent are read**, except by FT-41 and FT-42, which look across every role (§3.8). A project's labelling pass, judge or ablation goes through the same envelope and writes into the same directory, and declares itself with `RunEnvelope(role=...)` (`docs/run-envelope.md` §2.1). The checks read the newest run whose role is `agent`, which is every run unless the envelope said otherwise. A project whose only runs declare another role fails FT-13, and the reason counts what it found by role.
 
 ### 3.3 FT-14 and what counts as a pin
 
@@ -274,7 +289,7 @@ Recall over a split where every answer is absent has no denominator. The library
 
 ### 3.7 FT-35 and which runs it reads
 
-**FT-35 reads every run the pipeline as it now stands has made**, and it is the only check that reads more than one. A project spending a quarter of its model calls on executions that produce nothing can have nine runs in ten come back clean, so a figure over the newest run says nothing about the project.
+**FT-35 reads every run the pipeline as it now stands has made**, and it is one of four that read more than one (§3.8). A project spending a quarter of its model calls on executions that produce nothing can have nine runs in ten come back clean, so a figure over the newest run says nothing about the project.
 
 **Which runs those are is decided by `behaviour_fingerprint`**, which every run records in its manifest (`docs/run-envelope.md` §2.1): the newest finished run of the agent names the pipeline, and the runs carrying the same fingerprint are the pool. A prompt, a tool, a budget or a model that changed moves it, so the runs made before a fix are outside the pool the moment the fix has run once. Nothing has to be deleted for the gate to pass.
 
@@ -282,18 +297,41 @@ Recall over a split where every answer is absent has no denominator. The library
 
 **The counts come from each run's manifest**, under `unfinished` (`docs/run-envelope.md` §2.8), so the check opens no trajectory and its cost grows with the number of runs rather than with their size. A run whose manifest is older than those counts is reported as unread rather than counted as clean, and a project upgrading to this version has them once it has run the agent again.
 
-**What was read is named**, on the report and in the failure message: how many runs of how many, each reason above with its count, and what `--since`, `--last`, `--role` or `--live` left out.
+**What was read is named**, on the report and in the failure message: how many runs of how many, each reason above with its count, and what `--since`, `--last`, `--role`, `--live`, `--pipeline` or `--scripted` left out.
 
 ```
      pass  FT-35  Steps spent without a tool call                          runs/, 195 manifest(s)
         Read 195 of the 3,293 run(s) under runs/, 32 under another role, 3,066 made by a
         pipeline this one has changed since. No node spent an allowance without acting.
-        `simple-agents report runs/` reads every run under it, including those.
+        `simple-agents report runs/` reads those, and `--scripted` adds the runs whose
+        model answered from a script.
 ```
 
 **`AgentNode(..., allow_unfinished=True)` waives it for one node**, and the manifest records the waiver, so the gate reads what the run declared rather than what the source says now. A node whose loop is expected to spend its budget without acting declares it; every other node stays gated.
 
 **An execution that acted and then ran out is not this.** A cap that binds after real work is the cap doing its job, and whether the remedy is the cap or the task is a judgement about the project. Those are reported under the checks as a note, and `simple-agents report runs/` prints them per node.
+
+### 3.8 Which pipeline a check reads, on a project with several
+
+A project runs whichever pipeline it was asked for. Where a scheduler runs a background pass every morning, the newest run is that pass, and a check reading it is reading something the project reports no number about. One project ran `freshen` daily, `rank` after every corpus change and `recommend` on demand; FT-25, FT-37 and FT-38 fired on most mornings, and the way to clear them was a paid `recommend` run before every gate. The quieter half is a check that **passes** on that pass: a background pipeline calls no model, so FT-14 reports that the run names no model to pin, and a project whose agent floats its model is told nothing.
+
+Each run records which registered pipeline it is (`docs/pipeline.md` §1.15), and an evaluation records the same in the results file's `config`, so the checks read within one pipeline:
+
+| Check | Reads |
+|---|---|
+| FT-13, FT-14, FT-15, FT-32, FT-33, FT-43 | the newest run of the pipeline the results file measured |
+| FT-07, FT-31, FT-40 | the same run, where the artifact each prefers does not answer |
+| FT-25 | the newest run of each pipeline, and passes where any of them registers a consultation tool that reaches a node |
+| FT-37 | the newest run of the pipeline the results file measured, over the same nodes |
+| FT-38 | the newest whole run of that pipeline |
+
+`--run` names a run directly and wins over all of it. The report's header names the pipeline the run it read belongs to.
+
+**FT-37 matches the nodes as well as the name.** A rung taken with `Pipeline.slice` records the name of the pipeline it came from, so an evaluation of a rung and a run of the whole pipeline carry one name and two stamps. FT-38 reads the whole pipeline instead, because the brief's entries describe the agent rather than one step of it; where the project has only ever run rungs, the newest of those is read and the detail says so.
+
+**Where the pipeline is named and no run of it is on disk, FT-37 and FT-38 report blocked** and name the pipelines the runs do record. Comparing a stamp against another pipeline's would report a number as stale that is not. The checks that read the run itself have no stamp to compare and read the newest run of any pipeline instead, since any run answers what they ask.
+
+**A project whose runs predate the field reads as it did before**: the newest run of any pipeline, with the detail saying that is what happened. Runs record the name from manifest format `0.41` and results files from `0.31`.
 
 ---
 
@@ -307,29 +345,30 @@ the newest of them is what those checks read (`docs/run-envelope.md` §2.1).
 ```
 simple-agents check: ~/projects/inseam-agent
 tier evaluated, declared in brief.toml
-reading runs/run_7f2a, 2 node(s): hunt → verify. A pass the project makes for itself
-declares RunEnvelope(role=...) so it is not read as the agent (docs/run-envelope.md §2.1).
+reading runs/run_7f2a, the newest run of 'answer', 2 node(s): hunt → verify. A pass the
+project makes for itself declares RunEnvelope(role=...) so it is not read as the agent
+(docs/run-envelope.md §2.1).
 
-     pass  FT-13  No trajectory logging                                               runs/run_7f2a/trajectory.jsonl
-     pass  FT-14  Model version unpinned                                              runs/run_7f2a/manifest.json
-     pass  FT-15  Prompts unversioned                                                 runs/run_7f2a/manifest.json
+     pass  FT-13  No trajectory logging                                                 runs/run_7f2a/trajectory.jsonl
+     pass  FT-14  Model version unpinned                                                runs/run_7f2a/manifest.json
+     pass  FT-15  Prompts unversioned                                                   runs/run_7f2a/manifest.json
         2 prompt(s), each with a version recorded.
-     pass  FT-24  Elicitation skipped                                                 brief.toml
-     pass  FT-29  The project has no current account of itself                        brief.toml, idea.md
-     pass  FT-30  Design decisions the builder never saw                              brief.toml
+     pass  FT-24  Elicitation skipped                                                   brief.toml
+     pass  FT-29  The project has no current account of itself                          brief.toml, idea.md
+     pass  FT-30  Design decisions the builder never saw                                brief.toml
       n/a  FT-31  Shipped on a development channel
         Fires at stage ship, and this project is at measure.
-     pass  FT-25  Consultation treated as a fault path                                brief.toml
+     pass  FT-25  Consultation treated as a fault path                                  brief.toml
         The `consultation` answer records that there is nothing to ask.
-     pass  FT-32  The brief describes a pipeline that no longer exists                brief.toml, runs/run_7f2a/manifest.json
+     pass  FT-32  The brief describes a pipeline that no longer exists                  brief.toml, runs/run_7f2a/manifest.json
      pass  FT-33  The build log stopped before the work did
         This project keeps no BUILD-LOG.md. docs/procedure.md asks for one, recording each
         exchange with the builder as it happens, and whether to keep one is the builder's
         decision.
-     pass  FT-34  The design the builder agreed to was never written down             brief.toml, design.md
-     pass  FT-35  Steps spent without a tool call                                     runs/, 9 manifest(s)
+     pass  FT-34  The design the builder agreed to was never written down               brief.toml, design.md
+     pass  FT-35  Steps spent without a tool call                                       runs/, 9 manifest(s)
         Read 9 run(s) under runs/. No node spent an allowance without acting.
-     pass  FT-36  The ground was never checked                                        brief.toml, research.md
+     pass  FT-36  The ground was never checked                                          brief.toml, research.md
      FAIL  FT-01  No evaluation at all
 
         No evaluation results found, but this project claims tier `evaluated`. A demo run is
@@ -338,6 +377,8 @@ declares RunEnvelope(role=...) so it is not read as the agent (docs/run-envelope
         function over it, and run the evaluation. If this project is a throwaway, declare
         tier `prototype` in the brief and this gate will not fire.
 
+  blocked  FT-45  The number was measured over a pipeline the project does not declare
+        No readable evaluation results, which FT-01 reports.
   blocked  FT-02  No held-out split
         No readable evaluation results, which FT-01 reports.
   blocked  FT-03  Development examples leaked into the held-out set
@@ -352,20 +393,20 @@ declares RunEnvelope(role=...) so it is not read as the agent (docs/run-envelope
         Fires at stage ship, and this project is at measure.
       n/a  FT-38  The brief was never read against the code again
         Fires at stage ship, and this project is at measure.
-     pass  FT-39  An unanswered comment                                               brief.toml
+     pass  FT-39  An unanswered comment                                                 brief.toml
         No comments.toml; the builder has not commented on anything.
-     pass  FT-40  A step that was declared and never built                            runs/run_7f2a/manifest.json
-     pass  FT-41  A run stopped to ask, and nothing continued it                      runs/
+     pass  FT-40  A step that was declared and never built                              runs/run_7f2a/manifest.json
+     pass  FT-41  A run stopped to ask, and nothing continued it                        runs/
         None of the 9 run(s) under runs/ stopped to ask anything. A channel returning
         `Shelved` or `Unavailable` never stops one.
-     pass  FT-42  A decision names something the project never built                  brief.toml, runs/
+     pass  FT-42  A decision names something the project never built                    brief.toml, runs/
         6 name(s) under `produces` were all recorded by runs under runs/.
-     pass  FT-43  The MCP server changed under the project                            runs/run_7f2a/manifest.json
+     pass  FT-43  The MCP server changed under the project                              runs/run_7f2a/manifest.json
         This run declared tools from no MCP server.
-     pass  FT-44  A stamp the clock did not write                                     brief.toml
+     pass  FT-44  A stamp the clock did not write                                       brief.toml
         39 stamp(s), none ahead of the clock.
 
-1 failed, 18 passed, 5 blocked, 3 not applicable
+1 failed, 18 passed, 6 blocked, 3 not applicable
 ```
 
 | | Means |
@@ -375,7 +416,7 @@ declares RunEnvelope(role=...) so it is not read as the agent (docs/run-envelope
 | `blocked` | the artifact this check reads is missing, and another check reports why |
 | `n/a` | the check does not apply: at a tier above the one this project claims, at a stage this project has not reached, or to what this project declared, and the line under it says which |
 
-**A missing artifact fails once.** A project claiming `evaluated` with no evaluation gets one failure from FT-01 and five blocked checks. All twenty-seven are printed either way, so the counts on the last line add up to twenty-seven.
+**A missing artifact fails once.** A project claiming `evaluated` with no evaluation gets one failure from FT-01 and five blocked checks. All twenty-eight are printed either way, so the counts on the last line add up to twenty-eight.
 
 The failure text is read out of `docs/failure-taxonomy.md` and is the same string that document specifies, so acting on the report and acting on the document are the same thing.
 
@@ -412,23 +453,25 @@ A note is a fact about what the report read, printed under the checks. It never 
 
 **The run and the results file are different measurements**, which happens where the project measured, changed the pipeline and measured again (§3.1).
 
-**The newest run is a live one**, so the checks that read a run are reading what an end user did (`docs/shipping.md` §1).
+**The pipeline the checks read has nothing but live runs**, so they are reading what an end user did (`docs/shipping.md` §1).
 
 **The tier drops stages the artifacts show**, which is a project with a results file claiming `prototype` (§1.1).
 
 **The pipeline has moved since the brief was confirmed.** Every gate fires when a project reaches a point, and what makes a brief entry wrong is a change, so the answer is still `answered` and the code beneath it is not what it describes. The brief records `confirmed_against`, the `behaviour_fingerprint` of the pipeline its entries were last read against (`docs/run-envelope.md` §2.1), and the note fires where the newest run recorded a different one:
 
 ```
-The pipeline has moved since the brief was confirmed at sha256:213998182146fc28, and
-the run at runs/run_7f2a recorded sha256:94e59c769d747f81. These entries describe the
-pipeline and are due for re-reading against the code; correct what has gone stale,
+The pipeline has moved since the brief was confirmed at
+sha256:213998182146fc28, and the run at runs/run_7f2a recorded
+sha256:94e59c769d747f81. These entries describe the pipeline and are due for
+re-reading against the code, and so is design.md; correct what has gone stale,
 then record confirmed_against = "sha256:94e59c769d747f81": agency_boundary,
-consultation, presentation, backend, budget, tool_effects.
+consultation, presentation, backend, budget, tool_effects. `simple-agents
+record read-against` writes that value.
 ```
 
 It names entries whose answers describe something the fingerprint covers: the shape, the prompts, the sampling, the tools, the declared model, `allow_unknown` and the budgets.
 
-It reads the fingerprint the newest run recorded, so a pipeline edited and not run leaves it silent until the project runs again. `tool_effects` is checked against the manifest directly and needs no fingerprint (FT-32).
+It reads the fingerprint the run it read recorded, so a pipeline edited and not run leaves it silent until the project runs again. `tool_effects` is checked against the manifest directly and needs no fingerprint (FT-32).
 
 **The note stops at stage `ship`, where FT-38 fails on the same comparison.** A pipeline moves several times an hour while a project is being built, which is why the gate waits; a project about to be used by somebody else has read its own claims against the code at least once since the code last moved.
 
@@ -436,9 +479,9 @@ It reads the fingerprint the newest run recorded, so a pipeline edited and not r
 
 ```
 The number in evals/results/held-out.json was measured over sha256:213998182146fc28,
-and the newest run under runs/ was made by sha256:94e59c769d747f81. A prompt, a
-node's version, a sampling parameter, a tool, the model or a budget has moved since
-that file was written. FT-37 fails on this from stage ship; until then it is
+and the newest run of that pipeline was made by sha256:94e59c769d747f81. A prompt,
+a node's version, a sampling parameter, a tool, the model or a budget has moved
+since that file was written. FT-37 fails on this from stage ship; until then it is
 reported, because what clears it is another evaluation.
 ```
 
@@ -454,7 +497,7 @@ are of the earlier rollouts. Re-score against what is there, or point the brief'
 `results` key at the file that describes it.
 ```
 
-**What the live runs did.** From stage `ship`. Every check but FT-31 reads a run that is not live, so what a shipped project does now is reported rather than certified. A live run carries the end user's material and can be sampled down to no payloads, which is why it is not what the suite reads.
+**What the live runs did.** From stage `ship`. Every check but FT-31 prefers a run that is not live, so what a shipped project does now is reported rather than certified. A live run carries the end user's material and can be sampled down to no payloads, which is why it is not what the suite reads.
 
 ```
 The newest run an end user made is runs/live/2026-08-24/run_9e12, started 2026-08-24T21:51:59.618Z,
@@ -527,6 +570,6 @@ Manifests record constants from format `0.33`. A project whose runs all predate 
 
 ## 5. What the suite does not do
 
-Twenty-seven of the taxonomy's forty-four entries are checked here. The rest are the specification of correct practice and are not yet enforced, except the six the library enforces by construction: an output schema with no `unknown` branch (FT-09), a loop with no budget (FT-18), a tool with no side-effect class (FT-19), an evaluation over a tool that spends or cannot be undone (FT-20), a tool with no description (FT-23), and a node reading a type nothing reaching it can be (FT-28). Those refuse at author time rather than reporting at the end of a run.
+Twenty-eight of the taxonomy's forty-five entries are checked here. The rest are the specification of correct practice and are not yet enforced, except the six the library enforces by construction: an output schema with no `unknown` branch (FT-09), a loop with no budget (FT-18), a tool with no side-effect class (FT-19), an evaluation over a tool that spends or cannot be undone (FT-20), a tool with no description (FT-23), and a node reading a type nothing reaching it can be (FT-28). Those refuse at author time rather than reporting at the end of a run.
 
 **Every check verifies that a process was followed. Whether the result is correct cannot be verified by the library.** A project at full conformance measured something carefully. FT-24 establishes that the builder was asked what the right thing to measure is. Two checks read an answer's text and neither judges it: FT-25 reads whether the `consultation` answer opens on a negation, and FT-32 whether the `tool_effects` answer mentions each class of effect the run declares.

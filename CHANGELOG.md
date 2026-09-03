@@ -21,16 +21,60 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `record confirmed`, `record read-against` and `record shape`: each writes one entry of
   `brief.toml` stamped from the clock. `record_answer` and `record_decision` do the same from
   Python.
-- FT-44: a `recorded_at` ahead of the clock the suite runs on fails. Twenty-seven checks.
+- FT-44: a `recorded_at` ahead of the clock the suite runs on fails.
 - `ctx.run_inputs` on every node context: what `Pipeline.run(inputs)` was given.
 - `EvalSuite.run(stores=...)`, with `CopyPerRollout` and `Shared`. `compare_variants` takes it
   too. `docs/evaluation.md` §6.9.
 - `contamination(similarity=...)` and `nearest_cross_split(similarity=...)`, for a similarity
   measure the project supplies.
 - `Retry(spent_quota_phrases=...)`, for 429 wordings beyond the ones the library ships.
+- `Pipeline.name`, set by `@pipeline_factory` on the pipeline the factory builds. A slice keeps
+  the name of the pipeline it came from.
+- `runs(pipeline=...)` and `RunHandle.pipeline`, which read the runs of one registered
+  pipeline. `simple-agents report --pipeline` and `simple-agents check --pipeline` do the same.
+- `RunHandle.scripted`, and `scripted` on a model client: `FakeModelClient` declares it and a
+  project's own stand-in can.
+- FT-45, an evaluation over a pipeline the project registers nowhere. Twenty-eight checks now
+  ship, of forty-five taxonomy entries.
+- `simple-agents record decision --from-comment <id>`, which copies what the builder said on
+  the view into `considered`, agrees the decision and stamps it.
 
 ### Changed
 
+- Manifest format `0.41`. A run records `pipeline`, the registered name of the pipeline it is,
+  and `scripted`, whether its model answered from a script. `pipeline` is `null` for a pipeline
+  built outside a `@pipeline_factory`, and a run of a slice records the name of the pipeline it
+  came from.
+- Results file format `0.31`. `config.pipeline` records which registered pipeline was measured.
+  `EvalResults.carries("pipeline")` is false on a file written before it.
+- `runs("runs/eval/<eval_id>")` needed `nested=True` to list an evaluation's rollouts, which
+  `docs/run-envelope.md` §8 now shows. Without it the call returned nothing.
+- **`runs()` leaves out runs whose model answered from a script**, and so do
+  `simple-agents report`, `simple-agents check` and `node_metrics`. `scripted=None` includes
+  them, and `--scripted` does on the commands. A project that wrote `FakeModelClient` runs into
+  `runs/` sees its totals change, and one whose every run is scripted is told that rather than
+  that it has no run.
+- **Every check that reads one run reads the newest run of the pipeline the results file
+  measured**, rather than whichever pipeline ran last. FT-13, FT-14, FT-15, FT-32, FT-33 and
+  FT-43 all read it. A background pipeline calls no model, so FT-14 used to report that the
+  run named no model to pin and a project whose agent floated its model was told nothing.
+  `--run` still names a run directly, and the report's header names the pipeline whose
+  newest run it read.
+- FT-25 reads the newest run of each pipeline rather than the newest run, and passes where any
+  of them registers a consultation tool that reaches a node.
+- FT-37 and FT-38 read the newest run of the pipeline the results file measured. On a project
+  running a background pass every morning, both used to fire on every morning. Where the
+  pipeline is named and no run of it is on disk, both report blocked; where the runs predate
+  manifest `0.41`, both read the newest run of any pipeline and say so.
+- FT-42 and FT-41 read every run whatever its role and whatever answered its model: a name a
+  run recorded is a name the project built, and a run that stopped to ask a person stopped.
+  FT-42 names the roles that recorded each name. A
+  decision about a corpus names the nodes of the pipeline that builds it, and those were
+  reported as names the project never built.
+- The view's constants marks a number the newest run of every pipeline no longer records as
+  gone, dates it, and offers no agreement on it.
+- `simple-agents view` counts a run whose model answered from a script like any other: the page
+  is a census of what ran rather than a figure about the agent.
 - Results file format `0.30`. `config.stores` records each store's isolation.
   `EvalResults.carries("stores")` is false on a file written before it, and a file scored with
   `rescore` records `null`.
