@@ -16,6 +16,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Deterministic,
@@ -68,7 +69,9 @@ def _branch(arms: int) -> Pipeline:
         )
     ]
     nodes += [
-        LLMNode(lambda i, c: "go", output_schema=Word, node_id=name, successors=["end"])
+        LLMNode(
+            lambda i, c: Prompt.user("go"), output_schema=Word, node_id=name, successors=["end"]
+        )
         for name in names
     ]
     nodes.append(Deterministic(lambda i, c: "end", node_id="end", successors=[]))
@@ -113,7 +116,7 @@ class TestBranchArms:
 class TestTheOtherPaths:
     def test_a_chain_is_still_exact(self, envelope):
         nodes = [
-            LLMNode(lambda i, c: "go", output_schema=Word, node_id=f"n{index}")
+            LLMNode(lambda i, c: Prompt.user("go"), output_schema=Word, node_id=f"n{index}")
             for index in range(6)
         ]
         client, made = _counting_client()
@@ -128,7 +131,7 @@ class TestTheOtherPaths:
     @pytest.mark.parametrize("concurrency", [1, 4])
     def test_a_fan_out_is_still_exact(self, envelope, concurrency):
         node = LLMNode(
-            lambda i, c: "go",
+            lambda i, c: Prompt.user("go"),
             output_schema=Word,
             over="items",
             concurrent_items=4,
@@ -157,7 +160,7 @@ class TestTheOtherPaths:
             ]
         )
         node = AgentNode(
-            lambda i, c: "go",
+            lambda i, c: Prompt.user("go"),
             tools=[],
             output_schema=Word,
             budget=_steps(4),
@@ -185,8 +188,8 @@ class TestASearchInsideANode:
 
     def test_a_node_that_searches_is_bounded(self, envelope, tmp_path):
         def go(inputs, ctx):
-            for _ in range(4):
-                ctx.call_tool("document_search", query="ashford depot")
+            ctx.call_tool("document_search", query="ashford depot")
+            ctx.call_tool("document_search", query="depot hours")
             return "done"
 
         pipeline = Pipeline(

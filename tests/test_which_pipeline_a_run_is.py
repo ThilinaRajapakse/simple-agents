@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Deterministic,
     FakeModelClient,
@@ -184,7 +185,7 @@ class TestAScriptedRun:
         from simple_agents import LLMNode
 
         pipeline = Pipeline(
-            [LLMNode(lambda inputs, ctx: "q", output_schema=Answer, node_id="ask")],
+            [LLMNode(lambda inputs, ctx: Prompt.user("q"), output_schema=Answer, node_id="ask")],
             budget=Budget(max_steps=2, max_tokens=1000, max_cost=None, max_wall_clock_ms=10_000),
         )
         return Path(

@@ -16,6 +16,7 @@ from typing import Any
 import pytest
 
 from simple_agents import (
+    Prompt,
     runs,
     AgentNode,
     Budget,
@@ -47,7 +48,7 @@ EXACT = lambda s: s.answer == s.expected
 
 
 def build_prompt(inputs, ctx):
-    return f"Answer the question: {inputs['question']}"
+    return Prompt.user("Answer the question: {question}", question=inputs["question"])
 
 
 def one_node_pipeline() -> Pipeline:
@@ -1069,7 +1070,7 @@ class TestPerNodeReachAndAccuracy:
             return "report" if isinstance(output.answer, Unknown) else "verify"
 
         def verify(inputs, ctx):
-            return f"Confirm this answer: {inputs.answer}"
+            return Prompt.user("Confirm this answer: {answer}", answer=inputs.answer)
 
         def report(inputs, ctx):
             if isinstance(inputs, dict) or hasattr(inputs, "fired"):

@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Deterministic,
@@ -108,7 +109,7 @@ class TestTheModelIsStillToldOnce:
         return Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "go",
+                    lambda inputs, ctx: Prompt.user("go"),
                     tools=ToolRegistry([consult(channel, answered_by="end_user")]),
                     output_schema=Answer,
                     budget=_budget(),

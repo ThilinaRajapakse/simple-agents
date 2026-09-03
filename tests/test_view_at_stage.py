@@ -104,7 +104,7 @@ class TestWhatTheDrawingSaysWithNothingToOverlay:
             "handbook_lookup",
             "store_passage",
         ]
-        assert handbook["through"][0]["code"]["where"]["at"] == "agent.py:49"
+        assert handbook["through"][0]["code"]["where"]["at"] == "agent.py:50"
 
     def test_a_direction_no_run_has_settled_stays_undeclared(self, stages) -> None:
         """`inbox` reads as directed at `measure` because a run recorded it, and not before."""

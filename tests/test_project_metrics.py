@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     ConfigurationError,
@@ -54,7 +55,7 @@ EXACT = lambda s: s.answer == s.expected
 
 
 def build_prompt(inputs, ctx):
-    return f"Answer the question: {inputs['question']}"
+    return Prompt.user("Answer the question: {question}", question=inputs["question"])
 
 
 ANSWERS = {

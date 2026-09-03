@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     ComputeBasis,
@@ -59,7 +60,7 @@ def look_up(name: str) -> str:
 
 
 def _prompt(inputs, ctx):
-    return "answer the question"
+    return Prompt.user("answer the question")
 
 
 def _after(inputs, ctx):
@@ -504,7 +505,7 @@ class TestWhichRunsTheGateReads:
 
 def _other_prompt(inputs, ctx):
     """A prompt whose source differs, which is what a project changes to fix this."""
-    return "answer the question, and call look_up first"
+    return Prompt.user("answer the question, and call look_up first")
 
 
 class TestTheGate:
@@ -645,7 +646,7 @@ class TestAFanOutWhoseItemsProducedNothing:
 
     def _fan_out(self, tmp_path: Path, *, waived: bool = False) -> None:
         def judge_one(inputs, ctx):
-            return f"judge {inputs['book']}"
+            return Prompt.user("judge {book}", book=inputs["book"])
 
         built = Pipeline(
             [

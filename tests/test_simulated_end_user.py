@@ -13,6 +13,7 @@ import json
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     FakeModelClient,
@@ -78,7 +79,7 @@ class Unparseable(ScriptedReader):
 
 
 def _prompt(inputs, ctx):
-    return "go"
+    return Prompt.user("go")
 
 
 def _ask(

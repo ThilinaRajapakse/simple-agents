@@ -14,6 +14,7 @@ import threading
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     FakeEmbeddingClient,
@@ -1008,7 +1009,7 @@ class TestWhatOneRunWrites:
         return Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "find the depot",
+                    lambda inputs, ctx: Prompt.user("find the depot"),
                     tools=[document_search(index)],
                     output_schema=Answer,
                     budget=Budget.unbounded(),
@@ -1123,7 +1124,7 @@ class TestWhatOneRunWrites:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "answer",
+                    lambda inputs, ctx: Prompt.user("answer"),
                     tools=[],
                     output_schema=Answer,
                     budget=Budget.unbounded(),

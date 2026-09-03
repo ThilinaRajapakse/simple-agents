@@ -20,6 +20,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -86,12 +87,12 @@ def emailing_tool():
 
 
 def prompt(inputs, ctx) -> str:
-    return f"research {inputs['topic']}"
+    return Prompt.user("research {topic}", topic=inputs["topic"])
 
 
 def subtask_prompt(inputs: Subtask, ctx) -> str:
     """The entry node of a delegated pipeline, which has to declare what it reads."""
-    return f"work on {inputs.task}"
+    return Prompt.user("work on {task}", task=inputs.task)
 
 
 def buy_then_finish() -> FakeModelClient:

@@ -17,6 +17,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     BudgetExceeded,
@@ -78,7 +79,11 @@ def _research(**axes) -> Pipeline:
     return Pipeline(
         [
             Deterministic(_widen, node_id="widen"),
-            LLMNode(lambda inputs, ctx: str(inputs), output_schema=Notes, node_id="hunt"),
+            LLMNode(
+                lambda inputs, ctx: Prompt.user("{given}", given=inputs),
+                output_schema=Notes,
+                node_id="hunt",
+            ),
         ],
         budget=_budget(**axes),
         node_id="research",
@@ -87,7 +92,9 @@ def _research(**axes) -> Pipeline:
 
 def _orchestrator(delegate: Delegation, **kwargs) -> Pipeline:
     node = AgentNode(
-        lambda inputs, ctx: f"Plan the work. Available: {ctx.describe_tools()}",
+        lambda inputs, ctx: Prompt.user(
+            "Plan the work. Available: {describe_tools}", describe_tools=ctx.describe_tools()
+        ),
         tools=kwargs.pop("tools", []),
         delegates=[delegate],
         output_schema=Report,
@@ -164,7 +171,7 @@ class TestWhatTheDeclarationRefuses:
     def test_something_that_is_not_a_delegation_is_refused(self):
         with pytest.raises(ConfigurationError, match="Each entry is a Delegation"):
             AgentNode(
-                lambda inputs, ctx: "plan",
+                lambda inputs, ctx: Prompt.user("plan"),
                 tools=[],
                 delegates=[_research()],
                 output_schema=Report,
@@ -175,7 +182,7 @@ class TestWhatTheDeclarationRefuses:
     def test_two_delegations_sharing_a_name_are_refused(self):
         with pytest.raises(ConfigurationError, match="more than one delegation named"):
             AgentNode(
-                lambda inputs, ctx: "plan",
+                lambda inputs, ctx: Prompt.user("plan"),
                 tools=[],
                 delegates=[
                     Delegation(_research(), description="Research one."),
@@ -196,7 +203,11 @@ class TestWhatTheDeclarationRefuses:
         worker = Pipeline(
             [
                 Deterministic(_widen, node_id="widen"),
-                LLMNode(lambda i, c: str(i), output_schema=Notes, node_id="hunt"),
+                LLMNode(
+                    lambda i, c: Prompt.user("{given}", given=i),
+                    output_schema=Notes,
+                    node_id="hunt",
+                ),
             ],
             budget=_budget(),
             node_id="research",
@@ -214,7 +225,7 @@ class TestWhatTheDeclarationRefuses:
 
         with pytest.raises(ConfigurationError) as caught:
             AgentNode(
-                lambda i, c: "go",
+                lambda i, c: Prompt.user("go"),
                 tools=[clash],
                 delegates=[Delegation(_research(), description="Research one.")],
                 output_schema=Report,
@@ -226,7 +237,7 @@ class TestWhatTheDeclarationRefuses:
 
     def test_a_pipeline_that_delegates_to_itself_is_refused(self):
         def plan(inputs: Subtask, ctx) -> str:
-            return "go"
+            return Prompt.user("go")
 
         node = AgentNode(
             plan,
@@ -300,7 +311,11 @@ class TestTheEvalRunnerSeesInsideADelegate:
         worker = Pipeline(
             [
                 Deterministic(_widen, node_id="widen"),
-                LLMNode(lambda i, c: str(i), output_schema=Notes, node_id="hunt"),
+                LLMNode(
+                    lambda i, c: Prompt.user("{given}", given=i),
+                    output_schema=Notes,
+                    node_id="hunt",
+                ),
             ],
             budget=_budget(),
             node_id="research",
@@ -438,7 +453,11 @@ class TestAFailedNodeStaysInsideItsDelegation:
         worker = Pipeline(
             [
                 Deterministic(breaks, node_id="widen"),
-                LLMNode(lambda inputs, ctx: str(inputs), output_schema=Notes, node_id="hunt"),
+                LLMNode(
+                    lambda inputs, ctx: Prompt.user("{given}", given=inputs),
+                    output_schema=Notes,
+                    node_id="hunt",
+                ),
             ],
             budget=_budget(),
             node_id="research",
@@ -559,7 +578,7 @@ class TestWhatBoundsIt:
         """The run's budget is not the model's to work around."""
         client = FakeModelClient(responses=_delegating("a", "b"))
         node = AgentNode(
-            lambda inputs, ctx: "Plan.",
+            lambda inputs, ctx: Prompt.user("Plan."),
             tools=[],
             delegates=[Delegation(_research(), description="Research one.")],
             output_schema=Report,
@@ -581,7 +600,7 @@ class TestSuspensionInsideADelegate:
             [
                 Deterministic(_widen, node_id="widen"),
                 AgentNode(
-                    lambda inputs, ctx: "Find it.",
+                    lambda inputs, ctx: Prompt.user("Find it."),
                     tools=registry,
                     output_schema=Notes,
                     budget=_budget(max_steps=6),
@@ -742,7 +761,7 @@ class TestWhatTheManifestSays:
     def test_moving_the_delegate_to_another_node_does(self):
         one = _orchestrator(Delegation(_research(), description="Research one."))
         node = AgentNode(
-            lambda inputs, ctx: "Plan.",
+            lambda inputs, ctx: Prompt.user("Plan."),
             tools=[],
             delegates=[Delegation(_research(), description="Research one.")],
             output_schema=Report,

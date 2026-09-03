@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     ConfigurationError,
@@ -85,7 +86,9 @@ def evaluate(tmp_path: Path, client: Any, *, baseline: Any, labels: dict[str, st
         Pipeline(
             [
                 LLMNode(
-                    lambda i, c: f"Answer: {i['question']}", output_schema=Answer, node_id="extract"
+                    lambda i, c: Prompt.user("Answer: {question}", question=i["question"]),
+                    output_schema=Answer,
+                    node_id="extract",
                 )
             ],
             budget=BUDGET,
@@ -124,7 +127,8 @@ class TestTheFloorIsComputedOverTheSplitThatRan:
     def test_no_baseline_means_no_figures_rather_than_zero(self, tmp_path: Path) -> None:
         suite = EvalSuite(
             Pipeline(
-                [LLMNode(lambda i, c: "x", output_schema=Answer, node_id="extract")], budget=BUDGET
+                [LLMNode(lambda i, c: Prompt.user("x"), output_schema=Answer, node_id="extract")],
+                budget=BUDGET,
             ),
             a_set(),
             answer="answer",
@@ -160,7 +164,7 @@ class TestTheFloorIsComputedOverTheSplitThatRan:
             Pipeline(
                 [
                     LLMNode(
-                        lambda i, c: f"Answer: {i['question']}",
+                        lambda i, c: Prompt.user("Answer: {question}", question=i["question"]),
                         output_schema=Answer,
                         node_id="extract",
                     )
@@ -251,7 +255,8 @@ class TestTheFloorIsComputedOverTheSplitThatRan:
         with pytest.raises(ConfigurationError) as raised:
             EvalSuite(
                 Pipeline(
-                    [LLMNode(lambda i, c: "x", output_schema=Answer, node_id="e")], budget=BUDGET
+                    [LLMNode(lambda i, c: Prompt.user("x"), output_schema=Answer, node_id="e")],
+                    budget=BUDGET,
                 ),
                 a_set(),
                 answer="answer",
@@ -353,7 +358,9 @@ def _suite_with(over: Any, baseline: Any) -> EvalSuite:
         Pipeline(
             [
                 LLMNode(
-                    lambda i, c: f"Answer: {i['question']}", output_schema=Answer, node_id="extract"
+                    lambda i, c: Prompt.user("Answer: {question}", question=i["question"]),
+                    output_schema=Answer,
+                    node_id="extract",
                 )
             ],
             budget=BUDGET,
@@ -462,7 +469,7 @@ class TestARatioAgainstTheFloor:
             Pipeline(
                 [
                     LLMNode(
-                        lambda i, c: f"Answer: {i['question']}",
+                        lambda i, c: Prompt.user("Answer: {question}", question=i["question"]),
                         output_schema=Answer,
                         node_id="extract",
                     )

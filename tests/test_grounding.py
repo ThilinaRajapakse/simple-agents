@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentContext,
     AgentNode,
     Budget,
@@ -224,7 +225,7 @@ def test_a_finish_citing_a_page_the_node_never_read_is_refused(tmp_path: Path) -
     result = Pipeline(
         [
             AgentNode(
-                lambda inputs, ctx: "Find the chest measurement.",
+                lambda inputs, ctx: Prompt.user("Find the chest measurement."),
                 tools=[read_page],
                 output_schema=Answer,
                 finish_check=cites_a_page_it_read,

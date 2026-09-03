@@ -17,6 +17,7 @@ import json
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Deterministic,
@@ -84,7 +85,7 @@ class TestLLMNodeMakesExactlyOneCall:
 
         def prompt(inputs, ctx):
             seen.append(ctx)
-            return "hello"
+            return Prompt.user("hello")
 
         client = FakeModelClient(responses=[fake_response(json.dumps({"answer": "hi"}))])
         Pipeline([LLMNode(prompt, output_schema=Answer)], budget=Budget.unbounded()).run(
@@ -96,7 +97,7 @@ class TestLLMNodeMakesExactlyOneCall:
 
     def test_exactly_one_model_call_is_emitted(self, envelope, trajectory):
         def prompt(inputs, ctx):
-            return "hello"
+            return Prompt.user("hello")
 
         client = FakeModelClient(responses=[fake_response(json.dumps({"answer": "hi"}))])
         Pipeline([LLMNode(prompt, output_schema=Answer)], budget=Budget.unbounded()).run(
@@ -116,7 +117,7 @@ class TestAgentNodeIsTheOnlyLoop:
 
         def prompt(inputs, ctx):
             seen.append(ctx)
-            return "go"
+            return Prompt.user("go")
 
         client = FakeModelClient(
             responses=[
@@ -147,7 +148,7 @@ class TestAgencyBoundaryIsCountable:
         """What FT-11 reads: an all-agent pipeline skipped the question rather than answering it."""
 
         def prompt(inputs, ctx):
-            return "x"
+            return Prompt.user("x")
 
         def plain(inputs, ctx):
             return inputs

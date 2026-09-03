@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from simple_agents import Budget, Deterministic, LLMNode, Loop, Pipeline, RetryPolicy
+from simple_agents import Budget, Deterministic, LLMNode, Loop, Pipeline, Prompt, RetryPolicy
 from simple_agents.graph import Graph, Join
 
 from schemas import Answer
@@ -20,7 +20,7 @@ def _plain(inputs, ctx):
 
 
 def _prompt(inputs, ctx):
-    return "irrelevant"
+    return Prompt.user("irrelevant")
 
 
 def _node(node_id: str, **edges) -> Deterministic:

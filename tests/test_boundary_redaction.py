@@ -17,6 +17,7 @@ import json
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -167,7 +168,7 @@ class TestARecordedRunReplays:
         return Pipeline(
             [
                 AgentNode(
-                    lambda i, c: "fetch the page, then answer",
+                    lambda i, c: Prompt.user("fetch the page, then answer"),
                     output_schema=Answer,
                     tools=[which],
                     budget=UNBOUNDED,

@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Deterministic,
@@ -40,7 +41,7 @@ from conftest import run_path, RUN_ID
 
 
 def _prompt(inputs, ctx):
-    return "go"
+    return Prompt.user("go")
 
 
 def _finish(answer: str = "done", source: str | None = None) -> ToolCallRequest:
@@ -423,7 +424,10 @@ class TestModelHandle:
         @tool(side_effect_class=SideEffectClass.READ_ONLY)
         def extract(model: ModelHandle, text: str) -> str:
             """Pull the headline figure out of a passage."""
-            return model.complete(f"Extract the figure from: {text}").content or ""
+            return (
+                model.complete(Prompt.user("Extract the figure from: {text}", text=text)).content
+                or ""
+            )
 
         return extract
 

@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     ConfigurationError,
@@ -38,7 +39,7 @@ BUDGET = Budget(max_steps=None, max_tokens=100_000, max_cost=None, max_wall_cloc
 
 
 def build_prompt(inputs: Any, ctx: Any) -> str:
-    return f"Answer the question: {inputs['question']}"
+    return Prompt.user("Answer the question: {question}", question=inputs["question"])
 
 
 class ScriptedClient:

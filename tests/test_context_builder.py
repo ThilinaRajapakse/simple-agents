@@ -14,6 +14,7 @@ import httpx
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     AppendAll,
     Budget,
@@ -45,11 +46,11 @@ DONE = json.dumps({"retailer": "Kirkwall", "returns_policy": "free within 30 day
 
 
 def build_prompt(inputs, ctx):
-    return f"answer: {inputs.get('question', '')}"
+    return Prompt.user("answer: {value}", value=inputs.get("question", ""))
 
 
 def summarise(inputs, ctx):
-    return f"summarise: {inputs['documents']}"
+    return Prompt.user("summarise: {documents}", documents=inputs["documents"])
 
 
 def load(inputs, ctx):
@@ -57,7 +58,7 @@ def load(inputs, ctx):
 
 
 def hunt(inputs, ctx):
-    return "find the trouser"
+    return Prompt.user("find the trouser")
 
 
 @tool(side_effect_class=SideEffectClass.READ_ONLY)

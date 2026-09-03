@@ -215,7 +215,7 @@ class TestWhatTheCodeSays:
         held = next(t for t in tools if t["name"] == "handbook_lookup")
 
         assert signature_line(held["code"]) == "handbook_lookup(question: str) -> list"
-        assert held["code"]["where"]["at"] == "agent.py:49"
+        assert held["code"]["where"]["at"] == "agent.py:50"
         assert held["code"]["where"]["library"] is False
 
     def test_a_step_carries_the_function_it_runs(self, branching) -> None:

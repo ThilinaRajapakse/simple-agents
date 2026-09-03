@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     CallerFacingError,
     Deterministic,
@@ -621,7 +622,9 @@ class TestSuspensionInsideAnAgentLoop:
         return Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: f"Find it. Tools: {ctx.describe_tools()}",
+                    lambda inputs, ctx: Prompt.user(
+                        "Find it. Tools: {describe_tools}", describe_tools=ctx.describe_tools()
+                    ),
                     tools=registry,
                     output_schema=Notes,
                     budget=budget
@@ -723,7 +726,7 @@ class TestSuspensionInsideAnAgentLoop:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "Find it.",
+                    lambda inputs, ctx: Prompt.user("Find it."),
                     tools=registry,
                     output_schema=Notes,
                     node_id="hunt",
@@ -819,7 +822,7 @@ class TestSuspensionInsideAnAgentLoop:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "Find it.",
+                    lambda inputs, ctx: Prompt.user("Find it."),
                     tools=registry,
                     output_schema=Notes,
                     node_id="hunt",
@@ -857,7 +860,7 @@ class TestConsultationAcrossProcesses:
         return Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "Ask if unsure.",
+                    lambda inputs, ctx: Prompt.user("Ask if unsure."),
                     tools=registry,
                     output_schema=Notes,
                     node_id="hunt",
@@ -1136,7 +1139,9 @@ class TestVerifyingTheGraphOnResume:
     def test_it_refuses_a_changed_prompt_and_names_the_waiver(self, envelope):
         first = Pipeline(
             [
-                LLMNode(lambda i, c: "ask one way", output_schema=Notes, node_id="draft"),
+                LLMNode(
+                    lambda i, c: Prompt.user("ask one way"), output_schema=Notes, node_id="draft"
+                ),
                 _tag("use", suspend_before=True),
             ],
             budget=_budget(),
@@ -1147,7 +1152,11 @@ class TestVerifyingTheGraphOnResume:
 
         edited = Pipeline(
             [
-                LLMNode(lambda i, c: "ask another way", output_schema=Notes, node_id="draft"),
+                LLMNode(
+                    lambda i, c: Prompt.user("ask another way"),
+                    output_schema=Notes,
+                    node_id="draft",
+                ),
                 _tag("use", suspend_before=True),
             ],
             budget=_budget(),
@@ -1160,7 +1169,9 @@ class TestVerifyingTheGraphOnResume:
     def test_a_named_waiver_lets_it_through_and_is_recorded(self, envelope, manifest_path):
         first = Pipeline(
             [
-                LLMNode(lambda i, c: "ask one way", output_schema=Notes, node_id="draft"),
+                LLMNode(
+                    lambda i, c: Prompt.user("ask one way"), output_schema=Notes, node_id="draft"
+                ),
                 _tag("use", suspend_before=True),
             ],
             budget=_budget(),
@@ -1171,7 +1182,11 @@ class TestVerifyingTheGraphOnResume:
 
         edited = Pipeline(
             [
-                LLMNode(lambda i, c: "ask another way", output_schema=Notes, node_id="draft"),
+                LLMNode(
+                    lambda i, c: Prompt.user("ask another way"),
+                    output_schema=Notes,
+                    node_id="draft",
+                ),
                 _tag("use", suspend_before=True),
             ],
             budget=_budget(),
@@ -1193,11 +1208,11 @@ class TestVerifyingTheGraphOnResume:
 
         client = FakeModelClient(responses=[fake_response(content='{"text": "x"}')])
         with pytest.raises(RunSuspended):
-            build(lambda i, c: "ask one way").run(
+            build(lambda i, c: Prompt.user("ask one way")).run(
                 None, envelope=envelope, model=client, run_id=RUN_ID, seed=41
             )
 
-        resumed = build(lambda i, c: "ask another way").resume(
+        resumed = build(lambda i, c: Prompt.user("ask another way")).resume(
             RUN_ID, envelope=envelope, model=client
         )
 
@@ -1236,7 +1251,7 @@ class TestVerifyingTheGraphOnResume:
     def test_it_refuses_a_changed_model_pin(self, envelope):
         pipeline = Pipeline(
             [
-                LLMNode(lambda i, c: "ask", output_schema=Notes, node_id="draft"),
+                LLMNode(lambda i, c: Prompt.user("ask"), output_schema=Notes, node_id="draft"),
                 _tag("use", suspend_before=True),
             ],
             budget=_budget(),
@@ -1386,7 +1401,9 @@ class TestSuspensionInsideAFanOut:
         return Pipeline(
             [
                 LLMNode(
-                    lambda inputs, ctx: f"summarise {inputs['documents']}",
+                    lambda inputs, ctx: Prompt.user(
+                        "summarise {documents}", documents=inputs["documents"]
+                    ),
                     output_schema=Notes,
                     over="documents",
                     node_id="summarise",
@@ -1463,7 +1480,9 @@ class TestSuspensionInsideAFanOut:
                     node_id="load",
                 ),
                 LLMNode(
-                    lambda inputs, ctx: f"summarise {inputs['documents']}",
+                    lambda inputs, ctx: Prompt.user(
+                        "summarise {documents}", documents=inputs["documents"]
+                    ),
                     output_schema=Notes,
                     over="documents",
                     keep=["question"],
@@ -1643,7 +1662,7 @@ class TestWhatAResumedManifestKeeps:
         pipeline = Pipeline(
             [
                 LLMNode(
-                    lambda i, c: [{"role": "user", "content": "hi"}],
+                    lambda i, c: Prompt.user("hi"),
                     output_schema=Answer,
                     allow_unknown=False,
                     node_id="ask",

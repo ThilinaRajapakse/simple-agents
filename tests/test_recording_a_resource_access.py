@@ -19,6 +19,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     ConfigurationError,
@@ -165,7 +166,7 @@ class TestEveryNodeKindCanRecord:
     def test_an_llm_node_records_from_its_prompt_function(self, tmp_path) -> None:
         def build(inputs, ctx):
             ctx.record_access("handbook", "read", outputs={"passages": 3})
-            return "say something"
+            return Prompt.user("say something")
 
         node = LLMNode(build, output_schema=Answer, node_id="ask", touches="handbook")
         result = Pipeline([node], budget=Budget.unbounded()).run(
@@ -179,7 +180,7 @@ class TestEveryNodeKindCanRecord:
     def test_an_agent_node_records_from_its_prompt_function(self, tmp_path) -> None:
         def build(inputs, ctx):
             ctx.record_access("handbook", "read", outputs={"passages": 3})
-            return "say something"
+            return Prompt.user("say something")
 
         node = AgentNode(
             build,

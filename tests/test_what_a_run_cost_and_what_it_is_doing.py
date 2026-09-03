@@ -24,7 +24,16 @@ import pytest
 
 from pydantic import BaseModel
 
-from simple_agents import Budget, Deterministic, LLMNode, Pipeline, Redaction, RunEnvelope, runs
+from simple_agents import (
+    Budget,
+    Deterministic,
+    LLMNode,
+    Pipeline,
+    Prompt,
+    Redaction,
+    RunEnvelope,
+    runs,
+)
 from simple_agents.adapters._http import HTTPBackend, Retry, _is_spent_quota
 from simple_agents.records.cassette import Cassette
 from simple_agents.cost import DEVICE_SECONDS, Cost, DeviceBasis, PriceBasis, total_cost
@@ -688,7 +697,7 @@ class TestRunningAgainWhatADeadRunWasGiven:
         pipeline = Pipeline(
             [
                 LLMNode(
-                    lambda inputs, ctx: [{"role": "user", "content": "say something"}],
+                    lambda inputs, ctx: Prompt.user("say something"),
                     output_schema=Answer,
                     node_id="ask",
                     allow_unknown=False,

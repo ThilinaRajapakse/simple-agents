@@ -16,6 +16,7 @@ import pytest
 
 from simple_agents.pipeline.recording import _node_entries
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     ConfigurationError,
@@ -49,11 +50,11 @@ ANSWER = '{"answer": "32 inches", "source": "size chart"}'
 
 
 def hunt_prompt(inputs, ctx):
-    return f"Find: {inputs['question']}"
+    return Prompt.user("Find: {question}", question=inputs["question"])
 
 
 def verify_prompt(inputs, ctx):
-    return f"Check: {inputs}"
+    return Prompt.user("Check: {inputs}", inputs=inputs)
 
 
 def look_up() -> Tool:
@@ -211,7 +212,7 @@ class TestThePlan:
             [
                 base.nodes[0],
                 LLMNode(
-                    lambda inputs, ctx: f"Verify this instead: {inputs}",
+                    lambda inputs, ctx: Prompt.user("Verify this instead: {inputs}", inputs=inputs),
                     output_schema=Answer,
                     node_id="verify",
                 ),
@@ -581,7 +582,7 @@ NESTED_BUDGET = Budget(max_steps=6, max_tokens=20_000, max_cost=None, max_wall_c
 
 
 def write_prompt(inputs, ctx):
-    return f"Write: {inputs}"
+    return Prompt.user("Write: {inputs}", inputs=inputs)
 
 
 def nested() -> Pipeline:

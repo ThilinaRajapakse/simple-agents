@@ -23,6 +23,7 @@ import pytest
 from simple_agents.errors import CallerFacingError
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Deterministic,
@@ -146,12 +147,12 @@ def load_docs(inputs, ctx):
 
 
 def ask(inputs, ctx):
-    return f"{inputs['docs']}\n\nQ: {inputs['question']}"
+    return Prompt.user("{docs}\n\nQ: {question}", docs=inputs["docs"], question=inputs["question"])
 
 
 def question(inputs, ctx):
     """A prompt that needs nothing but the question, for runs that fail at the call."""
-    return inputs["question"]
+    return Prompt.user("{question}", question=inputs["question"])
 
 
 def explode(inputs, ctx):
@@ -194,7 +195,7 @@ class TestCommonFields:
     def test_format_version_is_declared_on_every_record(self, two_node_run):
         _, records = two_node_run
         # §2: present on every record so a single line is interpretable in isolation.
-        assert {r["format_version"] for r in records} == {"0.29"}
+        assert {r["format_version"] for r in records} == {"0.30"}
 
     def test_seq_is_monotonic_in_emission_order(self, two_node_run):
         _, records = two_node_run
@@ -391,7 +392,9 @@ class TestAgentNodeRecords:
         )
 
         def hunt(inputs, ctx):
-            return f"Find it. Tools: {ctx.describe_tools()}"
+            return Prompt.user(
+                "Find it. Tools: {describe_tools}", describe_tools=ctx.describe_tools()
+            )
 
         pipeline = Pipeline(
             [
@@ -598,7 +601,7 @@ class TestConsultationRecords:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "Ask before answering.",
+                    lambda inputs, ctx: Prompt.user("Ask before answering."),
                     tools=registry,
                     output_schema=Answer,
                     budget=Budget(

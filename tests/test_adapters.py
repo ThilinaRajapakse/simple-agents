@@ -24,6 +24,7 @@ import pytest
 from pydantic import SecretStr
 
 from simple_agents import (
+    Prompt,
     Budget,
     CallerFacingError,
     ConfigurationError,
@@ -335,7 +336,7 @@ class TestWhatTheBackendReportsAlongside:
             http_client=recorder.client("https://api.mistral.ai/v1"),
         )
         pipeline = Pipeline(
-            [LLMNode(lambda inputs, ctx: "go", output_schema=Answer, node_id="ask")],
+            [LLMNode(lambda inputs, ctx: Prompt.user("go"), output_schema=Answer, node_id="ask")],
             budget=Budget.unbounded(),
         )
         result = pipeline.run({}, envelope=RunEnvelope(run_dir=tmp_path), model=client)
@@ -358,7 +359,7 @@ class TestWhatTheBackendReportsAlongside:
             http_client=recorder.client("https://api.mistral.ai/v1"),
         )
         pipeline = Pipeline(
-            [LLMNode(lambda inputs, ctx: "go", output_schema=Answer, node_id="ask")],
+            [LLMNode(lambda inputs, ctx: Prompt.user("go"), output_schema=Answer, node_id="ask")],
             budget=Budget.unbounded(),
         )
         result = pipeline.run({}, envelope=RunEnvelope(run_dir=tmp_path), model=client)

@@ -17,6 +17,7 @@ import json
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Deterministic,
     Pipeline,
@@ -296,7 +297,14 @@ class TestTwoWorkersCannotBothAnswerOne:
         from schemas import Answer
 
         acting = Pipeline(
-            [LLMNode(lambda i, c: "x", output_schema=Answer, node_id="act", max_output_tokens=10)],
+            [
+                LLMNode(
+                    lambda i, c: Prompt.user("x"),
+                    output_schema=Answer,
+                    node_id="act",
+                    max_output_tokens=10,
+                )
+            ],
             budget=BUDGET,
         )
         with pytest.raises(CallerFacingError):

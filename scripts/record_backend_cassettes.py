@@ -35,6 +35,8 @@ from schemas import Answer, Finding  # noqa: E402
 
 from simple_agents import (  # noqa: E402
     AgentNode,
+    Prompt,
+    Section,
     AppendAll,
     Budget,
     Cassette,
@@ -105,7 +107,10 @@ GEMINI_PRICES = PriceBasis(
 
 
 def build_prompt(inputs, ctx):
-    return f"{inputs['question']}\n\nReport the answer, or `unknown` if it is not known."
+    return Prompt.user(
+        "{question}\n\nReport the answer, or `unknown` if it is not known.",
+        question=inputs["question"],
+    )
 
 
 def pipeline() -> Pipeline:
@@ -145,10 +150,10 @@ def search(query: str) -> str:
 
 
 def hunt(inputs, ctx):
-    return (
-        f"{inputs['question']}\n\n"
-        f"Search the catalogue as many times as needed, then call finish. "
-        f"Report `unknown` for anything the catalogue does not say."
+    return Prompt.user(
+        "{question}\n\nSearch the catalogue as many times as needed, then call finish. Report "
+        "`unknown` for anything the catalogue does not say.",
+        question=inputs["question"],
     )
 
 
@@ -186,9 +191,9 @@ def load_documents(inputs, ctx):
 
 
 def describe(inputs, ctx):
-    return (
-        f"{inputs['documents']}\n\n"
-        f"Report the retailer named in that line, or `unknown` if none is named."
+    return Prompt.user(
+        "{documents}\n\nReport the retailer named in that line, or `unknown` if none is named.",
+        documents=inputs["documents"],
     )
 
 
@@ -235,11 +240,11 @@ TOOLS_QUESTION = (
 
 
 def outfit(inputs, ctx):
-    return (
-        f"{inputs['question']}\n\n"
-        f"Search the documents, then use the extraction tool on the passage you found to pull "
-        f"out the fabric. Save what you found with the workspace tool, then call finish. "
-        f"Report `unknown` for anything the documents do not state."
+    return Prompt.user(
+        "{question}\n\nSearch the documents, then use the extraction tool on the passage you "
+        "found to pull out the fabric. Save what you found with the workspace tool, then "
+        "call finish. Report `unknown` for anything the documents do not state.",
+        question=inputs["question"],
     )
 
 
@@ -310,10 +315,10 @@ def catalogue_search(query: str) -> str:
 
 
 def eval_hunt(inputs, ctx):
-    return (
-        f"{inputs['question']}\n\n"
-        f"Search the retailer notes as many times as needed, then call finish. "
-        f"Report `unknown` for anything the notes do not state."
+    return Prompt.user(
+        "{question}\n\nSearch the retailer notes as many times as needed, then call finish. "
+        "Report `unknown` for anything the notes do not state.",
+        question=inputs["question"],
     )
 
 
@@ -321,10 +326,11 @@ def eval_verify(inputs, ctx):
     # The notes come from the prompt function rather than from the previous node's output: a
     # node receives what the node before it returned, and `hunt` returns an answer.
     notes = "\n".join(f"{name}: {text}" for name, text in EVAL_CORPUS.items())
-    return (
-        f"An earlier step answered a question with: {inputs}\n\n"
-        f"Retailer notes:\n{notes}\n\n"
-        f"Repeat that answer if the notes support it, or report `unknown` if they do not."
+    return Prompt.user(
+        "An earlier step answered a question with: {inputs}\n\nRetailer notes:\n{notes}\n\nRepeat "
+        "that answer if the notes support it, or report `unknown` if they do not.",
+        inputs=inputs,
+        notes=notes,
     )
 
 
@@ -447,11 +453,12 @@ GRAPH_QUESTIONS = [
 
 
 def graph_classify(inputs, ctx):
-    return (
-        f"Retailer notes:\n{GRAPH_NOTES}\n\n"
-        f"Question: {inputs['question']}\n\n"
-        f"If the notes state the answer, put it in `answer` as a short phrase. Report "
-        f"`unknown` only when nothing in the notes bears on the question."
+    return Prompt.user(
+        "Retailer notes:\n{GRAPH_NOTES}\n\nQuestion: {question}\n\nIf the notes state the answer, "
+        "put it in `answer` as a short phrase. Report `unknown` only when nothing in the "
+        "notes bears on the question.",
+        GRAPH_NOTES=GRAPH_NOTES,
+        question=inputs["question"],
     )
 
 
@@ -463,25 +470,28 @@ def graph_route(output, ctx):
 
 
 def graph_hunt(inputs, ctx):
-    return (
-        f"Retailer notes:\n{GRAPH_NOTES}\n\n"
-        f"An earlier step answered: {inputs.answer}\n\n"
-        f"Repeat that answer if the notes support it, or report `unknown` if they do not."
+    return Prompt.user(
+        "Retailer notes:\n{GRAPH_NOTES}\n\nAn earlier step answered: {answer}\n\nRepeat that "
+        "answer if the notes support it, or report `unknown` if they do not.",
+        GRAPH_NOTES=GRAPH_NOTES,
+        answer=inputs.answer,
     )
 
 
 def graph_summarise(inputs, ctx):
-    return (
-        f"Summarise this answer in one short sentence: {inputs.answer}\n\n"
-        f"Report `unknown` if there is nothing to summarise."
+    return Prompt.user(
+        "Summarise this answer in one short sentence: {answer}\n\nReport `unknown` if there is "
+        "nothing to summarise.",
+        answer=inputs.answer,
     )
 
 
 def graph_cite(inputs, ctx):
-    return (
-        f"Retailer notes:\n{GRAPH_NOTES}\n\n"
-        f"Which note supports this answer: {inputs.answer}\n\n"
-        f"Name the note, or report `unknown` if none does."
+    return Prompt.user(
+        "Retailer notes:\n{GRAPH_NOTES}\n\nWhich note supports this answer: {answer}\n\nName the "
+        "note, or report `unknown` if none does.",
+        GRAPH_NOTES=GRAPH_NOTES,
+        answer=inputs.answer,
     )
 
 
@@ -557,9 +567,11 @@ def loop_draft(inputs, ctx):
     # The entry node, and the node the cycle returns to, so it receives the run's inputs on
     # the first pass and the critique's output on the ones after.
     previous = f" Previous attempt: {inputs}." if isinstance(inputs, Answer) else ""
-    return (
-        f"Write one sentence describing what Kirkwall offers, from this note: "
-        f"{GRAPH_CORPUS['kirkwall']}.{previous} Report `unknown` if the note says nothing."
+    return Prompt.user(
+        "Write one sentence describing what Kirkwall offers, from this note: "
+        "{kirkwall}.{previous} Report `unknown` if the note says nothing.",
+        kirkwall=GRAPH_CORPUS["kirkwall"],
+        previous=previous,
     )
 
 
@@ -700,18 +712,20 @@ MIXED_QUESTION = "How much does the Aurora 3 Pro weigh?"
 
 def mixed_reduce(inputs, ctx):
     """The cheap step: pull the facts out, no judgement."""
-    return (
-        f"List every fact stated about the Aurora 3 Pro, one per line. Report `unknown` if "
-        f"the notes state none.\n\nNotes:\n{inputs['notes']}"
+    return Prompt.user(
+        "List every fact stated about the Aurora 3 Pro, one per line. Report `unknown` if "
+        "the notes state none.\n\nNotes:\n{notes}",
+        notes=inputs["notes"],
     )
 
 
 def mixed_answer(inputs, ctx):
     """The expensive step: answer from what the cheap one kept."""
-    return (
-        f"{MIXED_QUESTION}\n\nAnswer from these facts alone. Report `unknown` only when "
-        f"the facts do not contain the answer; where they do, give it.\n\n"
-        f"{inputs.answer}"
+    return Prompt.user(
+        MIXED_QUESTION
+        + "\n\nAnswer from these facts alone. Report `unknown` only when the facts do not "
+        "contain the answer; where they do, give it.\n\n{answer}",
+        answer=inputs.answer,
     )
 
 
@@ -807,11 +821,11 @@ def suspend_registry(extra_answer: bool = False) -> ToolRegistry:
 
 
 def suspend_prompt(inputs, ctx):
-    return (
-        f"{inputs['question']}\n\n"
-        f"Search the documents first. Then call `consult` once to ask the buyer which fit "
-        f"they want, and use their answer in your final response. Call finish when done. "
-        f"Report `unknown` for anything the documents do not state."
+    return Prompt.user(
+        "{question}\n\nSearch the documents first. Then call `consult` once to ask the buyer "
+        "which fit they want, and use their answer in your final response. Call finish when "
+        "done. Report `unknown` for anything the documents do not state.",
+        question=inputs["question"],
     )
 
 
@@ -900,10 +914,14 @@ STREAM_QUESTION = (
 
 
 def stream_prompt(inputs, ctx):
-    return (
-        f"{inputs['question']}\n\nUse only this catalogue:\n"
-        + "\n".join(f"- {k}: {v}" for k, v in CATALOGUE.items())
-        + "\n\nReport the answer, or `unknown` if it is not in the catalogue."
+    return Prompt.user(
+        "{question}\n\nUse only this catalogue:\n{catalogue}"
+        "\n\nReport the answer, or `unknown` if it is not in the catalogue.",
+        question=inputs["question"],
+        catalogue=Section.joined(
+            "catalogue",
+            [Section("entry", "- {k}: {v}", k=k, v=v) for k, v in CATALOGUE.items()],
+        ),
     )
 
 
@@ -920,8 +938,9 @@ def stream_pipeline(extra=None) -> Pipeline:
                 extra=extra,
             ),
             LLMNode(
-                lambda inputs, ctx: (
-                    f"Restate this in one sentence: {inputs}. Report `unknown` for anything absent."
+                lambda inputs, ctx: Prompt.user(
+                    "Restate this in one sentence: {inputs}. Report `unknown` for anything absent.",
+                    inputs=inputs,
                 ),
                 output_schema=Finding,
                 node_id="restate",

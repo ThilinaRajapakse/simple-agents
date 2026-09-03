@@ -16,6 +16,7 @@ from simple_agents.errors import CallerFacingError
 
 from simple_agents.pipeline.recording import _node_entries
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -42,7 +43,7 @@ PAID = DeclaredCost(currency="USD", per_call=0.005, latency_ms=800)
 
 
 def _prompt(inputs, ctx):
-    return "find it"
+    return Prompt.user("find it")
 
 
 def _calls(*names: str):
@@ -197,7 +198,7 @@ class TestACostLimitAgainstAFigureThatIsABound:
         from simple_agents import ComputeBasis, LLMNode
 
         def prompt(inputs, ctx):
-            return "go"
+            return Prompt.user("go")
 
         envelope = RunEnvelope(
             run_dir=tmp_path,

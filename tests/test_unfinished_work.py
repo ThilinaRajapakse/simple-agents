@@ -16,6 +16,7 @@ from pathlib import Path
 
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Deterministic,
@@ -43,7 +44,7 @@ def look_up(name: str) -> str:
 
 
 def _prompt(inputs, ctx):
-    return "answer the question"
+    return Prompt.user("answer the question")
 
 
 def _after(inputs, ctx):
@@ -181,10 +182,10 @@ class TestACallMadeInsideATool:
             """Summarise one passage, with a model of its own."""
             if hold_back in text:
                 time.sleep(0.2)
-            return str(model.complete(text).content)
+            return str(model.complete(Prompt.user("{text}", text=text)).content)
 
         def judge_one(inputs, ctx):
-            return f"judge {inputs['book']}"
+            return Prompt.user("judge {book}", book=inputs["book"])
 
         def answer(request):
             said = str(request.messages[-1].get("content", ""))

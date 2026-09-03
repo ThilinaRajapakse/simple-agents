@@ -13,6 +13,7 @@ from unittest.mock import ANY
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -45,7 +46,7 @@ PRICE = PriceBasis(currency="USD", input_uncached_per_mtok=3.00, output_per_mtok
 
 
 def build_prompt(inputs, ctx):
-    return f"Answer the question: {inputs.get('question', 'how long?')}"
+    return Prompt.user("Answer the question: {value}", value=inputs.get("question", "how long?"))
 
 
 def one_llm_pipeline() -> Pipeline:
@@ -59,7 +60,11 @@ def two_llm_pipeline() -> Pipeline:
     return Pipeline(
         [
             LLMNode(build_prompt, output_schema=Answer, node_id="extract"),
-            LLMNode(lambda inputs, ctx: "Confirm it.", output_schema=Answer, node_id="confirm"),
+            LLMNode(
+                lambda inputs, ctx: Prompt.user("Confirm it."),
+                output_schema=Answer,
+                node_id="confirm",
+            ),
         ],
         budget=Budget(max_steps=None, max_tokens=100_000, max_cost=None, max_wall_clock_ms=None),
     )
@@ -460,7 +465,7 @@ class TestManifest:
         manifest = read_manifest(manifest_path)
         assert manifest["run_id"] == RUN_ID
         assert manifest["paths"]["trajectory"] == str(result.paths.trajectory)
-        assert manifest["trajectory_format_version"] == "0.29"
+        assert manifest["trajectory_format_version"] == "0.30"
 
     def test_it_records_a_completed_run_as_completed(self, envelope, manifest_path) -> None:
         one_llm_pipeline().run({}, envelope=envelope, run_id=RUN_ID, model=client_with(ANSWER))
@@ -1096,7 +1101,10 @@ class TestRedaction:
         def leaky_prompt(inputs, ctx):
             import os
 
-            return f"Use key {os.environ['PROJECT_API_KEY']} to answer."
+            return Prompt.user(
+                "Use key {PROJECT_API_KEY} to answer.",
+                PROJECT_API_KEY=os.environ["PROJECT_API_KEY"],
+            )
 
         pipeline = Pipeline(
             [LLMNode(leaky_prompt, output_schema=Answer, node_id="extract")],
@@ -1123,7 +1131,10 @@ class TestRedaction:
         def leaky_prompt(inputs, ctx):
             import os
 
-            return f"Use key {os.environ['PROJECT_API_KEY']} to answer."
+            return Prompt.user(
+                "Use key {PROJECT_API_KEY} to answer.",
+                PROJECT_API_KEY=os.environ["PROJECT_API_KEY"],
+            )
 
         pipeline = Pipeline(
             [LLMNode(leaky_prompt, output_schema=Answer, node_id="extract")],
@@ -1150,7 +1161,10 @@ class TestRedaction:
         def leaky_prompt(inputs, ctx):
             import os
 
-            return f"Use key {os.environ['PROJECT_API_KEY']} to answer."
+            return Prompt.user(
+                "Use key {PROJECT_API_KEY} to answer.",
+                PROJECT_API_KEY=os.environ["PROJECT_API_KEY"],
+            )
 
         def make() -> Pipeline:
             return Pipeline(

@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -49,11 +50,15 @@ _asked: list[str] = []
 def counting_prompt(inputs: dict, ctx) -> str:
     """A prompt that is not a function of the example alone, which is the defect being read."""
     _asked.append(inputs["question"])
-    return f"Answer the question: {inputs['question']} [{len(_asked)}]"
+    return Prompt.user(
+        "Answer the question: {question} [{len}]", question=inputs["question"], len=len(_asked)
+    )
 
 
 def citing_prompt(inputs, ctx) -> str:
-    return f"Answer the question, citing the catalogue: {inputs['question']}"
+    return Prompt.user(
+        "Answer the question, citing the catalogue: {question}", question=inputs["question"]
+    )
 
 
 @tool(name="look_up", side_effect_class=SideEffectClass.READ_ONLY)

@@ -13,6 +13,7 @@ import json
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -44,7 +45,7 @@ def load_docs(inputs, ctx):
 
 
 def ask(inputs, ctx):
-    return f"{inputs['docs']}\n\nQ: {inputs['question']}"
+    return Prompt.user("{docs}\n\nQ: {question}", docs=inputs["docs"], question=inputs["question"])
 
 
 def explode(inputs, ctx):
@@ -324,7 +325,7 @@ class TestTheSchemaReference:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "go",
+                    lambda inputs, ctx: Prompt.user("go"),
                     tools=registry,
                     output_schema=Answer,
                     node_id="hunt",
@@ -382,7 +383,7 @@ class TestTheSchemaReference:
 
         def agent(name, offered):
             return AgentNode(
-                lambda inputs, ctx: "go",
+                lambda inputs, ctx: Prompt.user("go"),
                 tools=ToolRegistry([offered]),
                 output_schema=Answer,
                 node_id=name,
@@ -469,7 +470,7 @@ class TestConsultationRecords:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "go",
+                    lambda inputs, ctx: Prompt.user("go"),
                     tools=ToolRegistry(
                         [
                             consult(

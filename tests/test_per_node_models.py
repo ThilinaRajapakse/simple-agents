@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -86,11 +87,11 @@ def local(**kwargs) -> FakeModelClient:
 
 
 def reduce_notes(inputs, ctx) -> str:
-    return "reduce these notes"
+    return Prompt.user("reduce these notes")
 
 
 def answer(inputs, ctx) -> str:
-    return "answer the question"
+    return Prompt.user("answer the question")
 
 
 class TestWhichClientACallGoesTo:

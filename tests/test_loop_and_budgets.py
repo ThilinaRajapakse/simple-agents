@@ -8,6 +8,7 @@ import time
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     BudgetExceeded,
@@ -35,7 +36,7 @@ def _finish(answer: str = "done") -> ToolCallRequest:
 
 
 def _prompt(inputs, ctx):
-    return "go"
+    return Prompt.user("go")
 
 
 def _tokens(output: int = 5) -> TokenUsage:
@@ -246,7 +247,7 @@ class TestWaitingIsChargedToNothing:
 
     def test_a_paced_wait_does_not_exhaust_the_wall_clock_axis(self, envelope, trajectory):
         def prompt(inputs, ctx):
-            return "x"
+            return Prompt.user("x")
 
         result = Pipeline(
             [LLMNode(prompt, output_schema=Answer, node_id="answer")],
@@ -259,7 +260,7 @@ class TestWaitingIsChargedToNothing:
         """The trajectory says what happened; the budget says what the run is charged."""
 
         def prompt(inputs, ctx):
-            return "x"
+            return Prompt.user("x")
 
         Pipeline(
             [LLMNode(prompt, output_schema=Answer, node_id="answer")],
@@ -290,7 +291,7 @@ class TestBudgetComposition:
             return inputs
 
         def prompt(inputs, ctx):
-            return "x"
+            return Prompt.user("x")
 
         client = FakeModelClient(
             responses=[fake_response(json.dumps({"answer": "a"}), tokens=_tokens(output=90))]
@@ -309,7 +310,7 @@ class TestBudgetComposition:
 
     def test_run_budget_exhaustion_stops_the_pipeline(self, envelope, trajectory):
         def prompt(inputs, ctx):
-            return "x"
+            return Prompt.user("x")
 
         def plain(inputs, ctx):
             return inputs
@@ -432,7 +433,7 @@ class TestUnknown:
         """null, "", and absence never mean unknown."""
 
         def prompt(inputs, ctx):
-            return "x"
+            return Prompt.user("x")
 
         client = FakeModelClient(
             responses=[
@@ -572,7 +573,7 @@ class TestToolTimeIsRunWallClock:
 
     def test_an_agents_tool_time_counts_against_the_run_wall_clock(self, envelope) -> None:
         node = AgentNode(
-            lambda inputs, ctx: "call the tool",
+            lambda inputs, ctx: Prompt.user("call the tool"),
             tools=[self._slow_tool(0.08)],
             output_schema=Answer,
             budget=Budget(max_steps=4, max_tokens=None, max_cost=None, max_wall_clock_ms=None),

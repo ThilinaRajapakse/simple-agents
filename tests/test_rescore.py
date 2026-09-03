@@ -21,6 +21,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     ConfigurationError,
@@ -66,7 +67,7 @@ def examples() -> ExampleSet:
 
 
 def prompt(inputs, ctx) -> str:
-    return f"Answer: {inputs['question']}"
+    return Prompt.user("Answer: {question}", question=inputs["question"])
 
 
 def client(reached: list[str] | None = None) -> FakeModelClient:

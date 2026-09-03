@@ -16,6 +16,7 @@ import pytest
 from pydantic import BaseModel, Field
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     FakeModelClient,
@@ -51,7 +52,11 @@ class Verdict(BaseModel):
 
 def build_label_prompt(inputs, ctx):
     candidate = inputs["candidates"]
-    return f"Question: {candidate['question']}\n\nPassages:\n{candidate['passages']}"
+    return Prompt.user(
+        "Question: {question}\n\nPassages:\n{passages}",
+        question=candidate["question"],
+        passages=candidate["passages"],
+    )
 
 
 @pytest.fixture

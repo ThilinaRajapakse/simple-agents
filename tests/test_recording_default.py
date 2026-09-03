@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     CallerFacingError,
     Cassette,
@@ -38,7 +39,7 @@ BUDGET = Budget(max_steps=4, max_tokens=None, max_cost=None, max_wall_clock_ms=N
 
 
 def prompt(inputs, ctx) -> str:
-    return f"Answer: {inputs['question']}"
+    return Prompt.user("Answer: {question}", question=inputs["question"])
 
 
 def client(reached: list[str] | None = None) -> FakeModelClient:

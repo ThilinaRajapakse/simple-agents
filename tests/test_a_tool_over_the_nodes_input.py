@@ -20,6 +20,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentContext,
     AgentNode,
     Budget,
@@ -178,7 +179,7 @@ class TestEachNodeKindFillsItFromItsOwnInput:
 
     def test_an_llm_node(self, tmp_path):
         def prompt(inputs: dict, ctx: NodeContext) -> str:
-            return f"Found: {ctx.call_tool('rank', query=inputs['query'])}"
+            return Prompt.user("Found: {value}", value=ctx.call_tool("rank", query=inputs["query"]))
 
         model = FakeModelClient(responses=[fake_response(content='{"titles": ["Red Rock"]}')])
         pipeline = Pipeline(
@@ -203,7 +204,9 @@ class TestEachNodeKindFillsItFromItsOwnInput:
 
     def test_an_agent_node_where_the_model_chose_the_call(self, tmp_path):
         def prompt(inputs: dict, ctx: AgentContext) -> str:
-            return f"Search it. Tools: {ctx.describe_tools()}"
+            return Prompt.user(
+                "Search it. Tools: {describe_tools}", describe_tools=ctx.describe_tools()
+            )
 
         model = FakeModelClient(
             responses=[
@@ -384,7 +387,7 @@ class TestTheFourShapesANodesInputTakes:
             return row["title"]
 
         def prompt(inputs, ctx: NodeContext) -> str:
-            return f"Report {ctx.call_tool('title_of')}."
+            return Prompt.user("Report {value}.", value=ctx.call_tool("title_of"))
 
         model = FakeModelClient(
             answer=lambda request: fake_response(
@@ -435,7 +438,7 @@ class TestTheToolIsReRunRatherThanStored:
             return {"found": ctx.call_tool("rank", query="r")}
 
         def prompt(inputs: dict, ctx: NodeContext) -> str:
-            return "Report what was found."
+            return Prompt.user("Report what was found.")
 
         return Pipeline(
             [
@@ -512,7 +515,7 @@ class TestEveryRolloutSeesItsOwn:
 
     def test_each_example_is_ranked_against_its_own_pool(self, tmp_path):
         def prompt(inputs: dict, ctx: NodeContext) -> str:
-            return f"Ranked: {ctx.call_tool('rank', query='a')}"
+            return Prompt.user("Ranked: {value}", value=ctx.call_tool("rank", query="a"))
 
         class Ranked(BaseModel):
             titles: list[str]

@@ -14,6 +14,7 @@ import warnings
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -48,7 +49,7 @@ ABSENT = json.dumps({"answer": {"type": "unknown", "reason": "not published"}})
 
 
 def summarise(inputs, ctx):
-    return f"summarise: {inputs['documents']}"
+    return Prompt.user("summarise: {documents}", documents=inputs["documents"])
 
 
 def load(inputs, ctx):
@@ -552,7 +553,11 @@ def look_up(name: str) -> str:
 
 
 def read_one(inputs, ctx):
-    return f"read: {inputs['documents']} {ctx.describe_tools()}"
+    return Prompt.user(
+        "read: {documents} {describe_tools}",
+        documents=inputs["documents"],
+        describe_tools=ctx.describe_tools(),
+    )
 
 
 def parse_one(inputs, ctx):
@@ -869,12 +874,16 @@ class TestTheTwoBudgetsAFanOutDeclares:
         @tool(side_effect_class=SideEffectClass.READ_ONLY)
         def rewrite(text: str, model: ModelHandle) -> str:
             """Rewrite text with a model. Returns the rewritten text."""
-            model.complete([{"role": "user", "content": text}])
-            model.complete([{"role": "user", "content": text}])
+            model.complete(Prompt.user("{text}", text=text))
+            model.complete(Prompt.user("{text}", text=text))
             return "done"
 
         def ask(inputs, ctx):
-            return f"{inputs['documents']} {ctx.describe_tools()}"
+            return Prompt.user(
+                "{documents} {describe_tools}",
+                documents=inputs["documents"],
+                describe_tools=ctx.describe_tools(),
+            )
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", SimpleAgentsWarning)
@@ -1017,7 +1026,9 @@ class TestAnLLMNodeCallsATool:
 
     def test_the_prompt_function_reaches_its_tools(self, envelope, trajectory):
         def build(inputs, ctx):
-            return f"summarise: {ctx.call_tool('look_up', name=inputs['documents'])}"
+            return Prompt.user(
+                "summarise: {value}", value=ctx.call_tool("look_up", name=inputs["documents"])
+            )
 
         pipeline = Pipeline(
             [
@@ -1046,7 +1057,7 @@ class TestAnLLMNodeCallsATool:
         """
 
         def build(inputs, ctx):
-            return ctx.call_tool("look_up", name="a")
+            return Prompt.user("{found}", found=ctx.call_tool("look_up", name="a"))
 
         pipeline = Pipeline(
             [Deterministic(load), LLMNode(build, output_schema=Answer, over="documents")],
@@ -1098,7 +1109,9 @@ class TestAnLLMNodeCallsATool:
 
         def build(inputs, ctx):
             # The tool's name is positional, so `name=` is the tool's own argument.
-            return ctx.call_tool("greet", name=inputs["documents"])
+            return Prompt.user(
+                "{greeting}", greeting=ctx.call_tool("greet", name=inputs["documents"])
+            )
 
         pipeline = Pipeline(
             [

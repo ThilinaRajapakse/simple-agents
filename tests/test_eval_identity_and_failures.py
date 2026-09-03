@@ -26,6 +26,7 @@ from simple_agents.pipeline.recording import _node_entries
 from simple_agents.builtins import Reply, Shelved
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -63,7 +64,7 @@ ANSWERS = {
 
 
 def build_prompt(inputs, ctx):
-    return f"Answer the question: {inputs['question']}"
+    return Prompt.user("Answer the question: {question}", question=inputs["question"])
 
 
 class Scripted:
@@ -221,7 +222,7 @@ class TestTheBehaviourFingerprintCoversWhatDecidesTheOutput:
         """The case a project stamping with `graph_fingerprint` could not see."""
 
         def build_prompt_v2(inputs: dict) -> str:
-            return f"Answer, in one sentence: {inputs['question']}"
+            return Prompt.user("Answer, in one sentence: {question}", question=inputs["question"])
 
         edited = Pipeline(
             [LLMNode(build_prompt_v2, output_schema=Answer, node_id="extract")],
@@ -342,7 +343,7 @@ class TestTheStampCoversTheModelAndTheTools:
         cheap = Scripted("cheap/model")
 
         def ask(question: str) -> str:
-            return "yes"
+            return Prompt.user("yes")
 
         def with_reader(reader) -> Pipeline:
             return Pipeline(
@@ -784,7 +785,7 @@ class TestAFanOutItemThatNeverReachedTheBackend:
             return {"questions": [inputs["question"]]}
 
         def ask(inputs, ctx):
-            return f"Answer the question: {inputs['questions']}"
+            return Prompt.user("Answer the question: {questions}", questions=inputs["questions"])
 
         pipeline = Pipeline(
             [
@@ -854,7 +855,7 @@ class TestAFanOutItemThatNeverReachedTheBackend:
             return {"questions": [inputs["question"]]}
 
         def ask(inputs, ctx):
-            return f"Answer the question: {inputs['questions']}"
+            return Prompt.user("Answer the question: {questions}", questions=inputs["questions"])
 
         def again(inputs, ctx):
             return {"questions": ["Who founded Northgate?"]}
@@ -1072,7 +1073,7 @@ class TestADeclaredVersionGovernsAndTheHashRecordsTheEdit:
 
         def build(inputs, ctx):
             cache["hits"] += 1
-            return f"Answer the question: {inputs['question']}"
+            return Prompt.user("Answer the question: {question}", question=inputs["question"])
 
         pipeline = Pipeline(
             [LLMNode(build, output_schema=Answer, node_id="extract")], budget=BUDGET

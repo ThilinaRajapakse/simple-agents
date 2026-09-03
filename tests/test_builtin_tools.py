@@ -16,6 +16,7 @@ from types import SimpleNamespace
 from pydantic import BaseModel, SecretStr
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Cassette,
     Budget,
@@ -69,7 +70,7 @@ CORPUS = {
 
 
 def _prompt(inputs, ctx):
-    return "go"
+    return Prompt.user("go")
 
 
 def _finish() -> ToolCallRequest:

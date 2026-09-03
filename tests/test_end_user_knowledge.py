@@ -14,6 +14,7 @@ import json
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     FakeModelClient,
@@ -89,7 +90,7 @@ class Reader:
 
 
 def _prompt(inputs, ctx):
-    return "go"
+    return Prompt.user("go")
 
 
 def _ask(question="Which cost centre?", options=None, call_id="c1", name="consult"):

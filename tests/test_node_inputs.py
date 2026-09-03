@@ -18,6 +18,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     Budget,
     Deterministic,
     FakeModelClient,
@@ -68,7 +69,7 @@ def count(inputs, ctx) -> Count:
 
 
 def reads_notes(inputs: Notes, ctx: NodeContext) -> str:
-    return f"Check this: {inputs.notes}"
+    return Prompt.user("Check this: {notes}", notes=inputs.notes)
 
 
 def reads_join(inputs: Join, ctx: NodeContext) -> str:
@@ -564,7 +565,7 @@ class TestEveryNodeCanReadTheRunInputs:
 
         def prompt(inputs, ctx: NodeContext) -> str:
             seen.append(ctx.run_inputs)
-            return "answer it"
+            return Prompt.user("answer it")
 
         pipeline = Pipeline(
             [

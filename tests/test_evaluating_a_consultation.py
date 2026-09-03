@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -203,7 +204,7 @@ class TestConsultKeepsItsClass:
             Pipeline(
                 [
                     AgentNode(
-                        lambda inputs, ctx: "go",
+                        lambda inputs, ctx: Prompt.user("go"),
                         tools=ToolRegistry([consult(_channel("end_user"), answered_by="end_user")]),
                         output_schema=Answer,
                         budget=BUDGET,

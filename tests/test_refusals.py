@@ -14,6 +14,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     ConfigurationError,
@@ -36,7 +37,7 @@ class PlainVerdict:
 
 
 def _prompt(inputs, ctx):
-    return "irrelevant"
+    return Prompt.user("irrelevant")
 
 
 def _plain(inputs, ctx):

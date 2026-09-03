@@ -19,7 +19,7 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from simple_agents import LLMNode, Maybe
+from simple_agents import LLMNode, Maybe, Prompt
 from simple_agents.errors import SimpleAgentsWarning
 from simple_agents.schema import Unknown, json_schema_for_model, value_or
 from simple_agents.tools import FinishTool
@@ -103,7 +103,7 @@ class TestAbsenceIsShownRatherThanNamed:
 
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            LLMNode(lambda inputs, ctx: "ask", output_schema=Answer, node_id="hunt")
+            LLMNode(lambda inputs, ctx: Prompt.user("ask"), output_schema=Answer, node_id="hunt")
 
     def test_a_replacement_that_says_how_to_send_an_absence_is_quiet(self):
         class Answer(BaseModel):
@@ -114,7 +114,7 @@ class TestAbsenceIsShownRatherThanNamed:
 
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            LLMNode(lambda inputs, ctx: "ask", output_schema=Answer, node_id="hunt")
+            LLMNode(lambda inputs, ctx: Prompt.user("ask"), output_schema=Answer, node_id="hunt")
 
     def test_maybe_on_its_own_is_quiet_because_it_carries_its_own_description(self):
         class Answer(BaseModel):
@@ -122,7 +122,7 @@ class TestAbsenceIsShownRatherThanNamed:
 
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            LLMNode(lambda inputs, ctx: "ask", output_schema=Answer, node_id="hunt")
+            LLMNode(lambda inputs, ctx: Prompt.user("ask"), output_schema=Answer, node_id="hunt")
 
     def test_a_union_wrapped_around_maybe_is_described_too(self):
         """`Maybe[T] | None` is a union around a union, and pydantic keeps no metadata.
@@ -190,14 +190,14 @@ class TestAbsenceIsShownRatherThanNamed:
             )
 
         with pytest.warns(SimpleAgentsWarning, match="unions a fixed label set"):
-            LLMNode(lambda inputs, ctx: "ask", output_schema=Finding, node_id="chase")
+            LLMNode(lambda inputs, ctx: Prompt.user("ask"), output_schema=Finding, node_id="chase")
 
     def test_the_label_warning_names_the_existing_labels_and_the_waiver(self):
         class Finding(BaseModel):
             source: Maybe[Literal["page", "chart"]]
 
         with pytest.warns(SimpleAgentsWarning) as caught:
-            LLMNode(lambda inputs, ctx: "ask", output_schema=Finding, node_id="chase")
+            LLMNode(lambda inputs, ctx: Prompt.user("ask"), output_schema=Finding, node_id="chase")
 
         message = str(caught[0].message)
         assert "'page', 'chart', 'not_found'" in message
@@ -210,7 +210,7 @@ class TestAbsenceIsShownRatherThanNamed:
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             LLMNode(
-                lambda inputs, ctx: "ask",
+                lambda inputs, ctx: Prompt.user("ask"),
                 output_schema=Finding,
                 node_id="chase",
                 allow_unknown=False,
@@ -222,7 +222,7 @@ class TestAbsenceIsShownRatherThanNamed:
 
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            LLMNode(lambda inputs, ctx: "ask", output_schema=Finding, node_id="chase")
+            LLMNode(lambda inputs, ctx: Prompt.user("ask"), output_schema=Finding, node_id="chase")
 
     def test_unknown_carries_a_description_written_for_the_model(self):
         described = json_schema_for_model(Unknown)["description"]

@@ -13,6 +13,8 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
+    Section,
     AgentNode,
     Budget,
     ConversationStore,
@@ -36,11 +38,11 @@ class Answer(BaseModel):
 
 
 def build_prompt(inputs, ctx):
-    return [
-        {"role": "system", "content": SYSTEM},
-        *ctx.conversation,
-        {"role": "user", "content": inputs["question"]},
-    ]
+    return (
+        Prompt.system(SYSTEM)
+        + Prompt.turns(ctx.conversation)
+        + Prompt.user("{question}", question=inputs["question"])
+    )
 
 
 def _budget() -> Budget:
@@ -91,7 +93,9 @@ class TestWhatCarriesBetweenRuns:
 
         def alone(inputs, ctx):
             assert ctx.conversation.id is None
-            return [*ctx.conversation, {"role": "user", "content": inputs["question"]}]
+            return Prompt.turns(ctx.conversation) + Prompt.user(
+                "{question}", question=inputs["question"]
+            )
 
         Pipeline([LLMNode(alone, output_schema=Answer, node_id="reply")], budget=_budget()).run(
             {"question": "q2"}, envelope=env, model=client
@@ -115,7 +119,7 @@ class TestWhatEnrolsANode:
         """A middle step that summarises a document does not join the chat."""
 
         def aside(inputs, ctx):
-            return [{"role": "user", "content": "unrelated"}]
+            return Prompt.user("unrelated")
 
         client = _client()
         Pipeline([LLMNode(aside, output_schema=Answer, node_id="aside")], budget=_budget()).run(
@@ -135,7 +139,7 @@ class TestWhatEnrolsANode:
             # A fanned-out node is handed the whole input with the fanned key holding one
             # item, rather than the item alone.
             assert list(ctx.conversation) == before
-            return [*ctx.conversation, {"role": "user", "content": inputs["items"]["q"]}]
+            return Prompt.turns(ctx.conversation) + Prompt.user("{q}", q=inputs["items"]["q"])
 
         Pipeline(
             [LLMNode(per_item, output_schema=Answer, node_id="each", over="items")],
@@ -289,7 +293,7 @@ class TestWhatTheManifestSays:
         """The failure this field exists for: written correctly and never read."""
 
         def never_reads(inputs, ctx):
-            return [{"role": "user", "content": inputs["question"]}]
+            return Prompt.user("{question}", question=inputs["question"])
 
         pipeline = Pipeline(
             [LLMNode(never_reads, output_schema=Answer, node_id="reply")], budget=_budget()
@@ -605,7 +609,9 @@ class TestAnAbsentConversation:
 
         def looking(inputs, ctx):
             seen.append(ctx.conversation.id)
-            return [*ctx.conversation, {"role": "user", "content": inputs["question"]}]
+            return Prompt.turns(ctx.conversation) + Prompt.user(
+                "{question}", question=inputs["question"]
+            )
 
         pipeline = Pipeline(
             [LLMNode(looking, output_schema=Answer, node_id="reply")], budget=_budget()
@@ -631,7 +637,9 @@ class TestTheDocumentedPatterns:
 
         def summarise(inputs, ctx):
             older = ctx.conversation.messages()[:-6]
-            return "Summarise this conversation for whoever continues it:\n" + str(older)
+            return Prompt.user(
+                "Summarise this conversation for whoever continues it:\n{older}", older=older
+            )
 
         def file_it(summary, ctx):
             ctx.call_tool("compact_conversation", summary=summary.summary)
@@ -767,7 +775,7 @@ class TestLookingAtAConversationIsNotJoiningIt:
 
         def looking(inputs, ctx):
             rendered = "\n".join(str(m.get("content")) for m in ctx.conversation.messages())
-            return [{"role": "user", "content": f"Summarise this:\n{rendered}"}]
+            return Prompt.user("Summarise this:\n{rendered}", rendered=rendered)
 
         Pipeline(
             [LLMNode(looking, output_schema=Answer, node_id="summarise")], budget=_budget()
@@ -782,7 +790,12 @@ class TestLookingAtAConversationIsNotJoiningIt:
 
         def summarise(inputs, ctx):
             older = ctx.conversation.messages()[:-2]
-            return "Summarise:\n" + "\n".join(str(m.get("content")) for m in older)
+            return Prompt.user(
+                "Summarise:\n{older}",
+                older=Section.joined(
+                    "older", [Section("said", "{said}", said=m.get("content")) for m in older]
+                ),
+            )
 
         def file_it(summary, ctx):
             ctx.state = ctx.call_tool("compact_conversation", summary=summary.summary)

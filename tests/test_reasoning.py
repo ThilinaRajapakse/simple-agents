@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -98,7 +99,7 @@ def one_node(*, stream: bool = True) -> Pipeline:
     return Pipeline(
         [
             LLMNode(
-                lambda inputs, ctx: "what size?",
+                lambda inputs, ctx: Prompt.user("what size?"),
                 output_schema=Answer,
                 node_id="answer",
                 stream=stream,
@@ -182,7 +183,7 @@ class TestTheAgentConversation:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "how wide?",
+                    lambda inputs, ctx: Prompt.user("how wide?"),
                     tools=[look],
                     output_schema=Answer,
                     budget=BUDGET,
@@ -211,7 +212,7 @@ class TestTheAgentConversation:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "how wide?",
+                    lambda inputs, ctx: Prompt.user("how wide?"),
                     tools=[],
                     output_schema=Answer,
                     budget=BUDGET,

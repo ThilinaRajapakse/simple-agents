@@ -46,6 +46,7 @@ from simple_agents.cost import duration_seconds  # noqa: E402
 from simple_agents.evaluation import EvalResults  # noqa: E402
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     ComputeBasis,
@@ -68,7 +69,10 @@ VLLM_REVISION = "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
 
 def build_prompt(inputs, ctx):
     """Byte-identical to the recording script's prompt. The cassette key covers it."""
-    return f"{inputs['question']}\n\nReport the answer, or `unknown` if it is not known."
+    return Prompt.user(
+        "{question}\n\nReport the answer, or `unknown` if it is not known.",
+        question=inputs["question"],
+    )
 
 
 def pipeline() -> Pipeline:

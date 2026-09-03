@@ -18,6 +18,7 @@ import time
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -761,7 +762,7 @@ class TestUnderAnAgentNode:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda i, c: "go",
+                    lambda i, c: Prompt.user("go"),
                     tools=ToolRegistry([tool]),
                     output_schema=Answer,
                     budget=BUDGET,
@@ -811,7 +812,7 @@ class TestUnderAnAgentNode:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda i, c: "go",
+                    lambda i, c: Prompt.user("go"),
                     tools=ToolRegistry([tool]),
                     output_schema=Answer,
                     budget=BUDGET,
@@ -928,7 +929,7 @@ class TestModelReaderRefusals:
                 ),
             )
 
-        assert "KeyError" in str(exc.value)
+        assert "ConfigurationError" in str(exc.value)
         assert "Double any other brace" in str(exc.value)
 
     def test_the_shipped_prompt_fills_in(self):

@@ -18,6 +18,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     Budget,
     CallerFacingError,
     ConfigurationError,
@@ -58,8 +59,8 @@ def _pipeline() -> Pipeline:
     """Two model calls, so a once-per-run warning can be told from a once-per-call one."""
     return Pipeline(
         [
-            LLMNode(lambda i, c: "ask", output_schema=_Answer, node_id="first"),
-            LLMNode(lambda i, c: "ask again", output_schema=_Answer, node_id="second"),
+            LLMNode(lambda i, c: Prompt.user("ask"), output_schema=_Answer, node_id="first"),
+            LLMNode(lambda i, c: Prompt.user("ask again"), output_schema=_Answer, node_id="second"),
         ],
         budget=Budget(max_steps=None, max_tokens=100_000, max_cost=None, max_wall_clock_ms=None),
     )

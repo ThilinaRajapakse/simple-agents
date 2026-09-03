@@ -20,6 +20,7 @@ import pytest
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     Cassette,
     AgentNode,
     Budget,
@@ -170,7 +171,7 @@ class TestTwoArmsStoppingAtOnce:
                     route=lambda o, c: ["left", "right"],
                 ),
                 AgentNode(
-                    lambda i, c: "ask about fit",
+                    lambda i, c: Prompt.user("ask about fit"),
                     output_schema=Answer,
                     tools=[
                         consult(unavailable, description="Ask about fit.", answered_by="end_user")
@@ -180,7 +181,7 @@ class TestTwoArmsStoppingAtOnce:
                     successors=["join"],
                 ),
                 AgentNode(
-                    lambda i, c: "ask about size",
+                    lambda i, c: Prompt.user("ask about size"),
                     output_schema=Answer,
                     tools=[
                         consult(unavailable, description="Ask about size.", answered_by="end_user")
@@ -315,7 +316,7 @@ class TestAFanOutThatOverlaps:
         return Pipeline(
             [
                 LLMNode(
-                    lambda inputs, ctx: f"summarise {inputs['docs']}",
+                    lambda inputs, ctx: Prompt.user("summarise {docs}", docs=inputs["docs"]),
                     output_schema=Answer,
                     node_id="read",
                     over="docs",
@@ -371,7 +372,7 @@ class TestAFanOutThatOverlaps:
     def test_concurrent_items_without_over_is_refused(self) -> None:
         with pytest.raises(ConfigurationError) as caught:
             LLMNode(
-                lambda inputs, ctx: "one call",
+                lambda inputs, ctx: Prompt.user("one call"),
                 output_schema=Answer,
                 node_id="read",
                 concurrent_items=4,
@@ -383,7 +384,7 @@ class TestAFanOutThatOverlaps:
     def test_fewer_than_one_at_a_time_is_refused(self) -> None:
         with pytest.raises(ConfigurationError) as caught:
             LLMNode(
-                lambda inputs, ctx: "one call",
+                lambda inputs, ctx: Prompt.user("one call"),
                 output_schema=Answer,
                 node_id="read",
                 over="docs",
@@ -434,7 +435,7 @@ class TestOverlappingToolCalls:
         return Pipeline(
             [
                 AgentNode(
-                    lambda i, c: "go",
+                    lambda i, c: Prompt.user("go"),
                     tools=[look_up],
                     output_schema=Answer,
                     budget=UNBOUNDED,
@@ -477,7 +478,7 @@ class TestOverlappingToolCalls:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda i, c: "go",
+                    lambda i, c: Prompt.user("go"),
                     tools=[look_up],
                     output_schema=Answer,
                     budget=UNBOUNDED,
@@ -519,7 +520,7 @@ class TestOverlappingToolCalls:
         writes = self._writes()
         with pytest.raises(ConfigurationError) as caught:
             AgentNode(
-                lambda i, c: "go",
+                lambda i, c: Prompt.user("go"),
                 tools=[writes],
                 output_schema=Answer,
                 budget=UNBOUNDED,
@@ -537,7 +538,7 @@ class TestOverlappingToolCalls:
         asking = consult(unavailable, description="Ask.", answered_by="end_user")
         with pytest.raises(ConfigurationError) as caught:
             AgentNode(
-                lambda i, c: "go",
+                lambda i, c: Prompt.user("go"),
                 tools=[asking],
                 output_schema=Answer,
                 budget=UNBOUNDED,
@@ -552,7 +553,7 @@ class TestOverlappingToolCalls:
         other = self._writes()
         with pytest.raises(ConfigurationError) as caught:
             AgentNode(
-                lambda i, c: "go",
+                lambda i, c: Prompt.user("go"),
                 tools=[look_up],
                 output_schema=Answer,
                 budget=UNBOUNDED,
@@ -596,7 +597,7 @@ class TestDraining:
         pipeline = Pipeline(
             [
                 LLMNode(
-                    lambda inputs, ctx: f"read {inputs['docs']}",
+                    lambda inputs, ctx: Prompt.user("read {docs}", docs=inputs["docs"]),
                     output_schema=Answer,
                     node_id="read",
                     over="docs",
@@ -704,7 +705,7 @@ def _reading(request):
 
 def _fan_out_node(node_id, width, model=None):
     return LLMNode(
-        lambda i, c: "x",
+        lambda i, c: Prompt.user("x"),
         output_schema=Answer,
         node_id=node_id,
         over="docs",
@@ -722,7 +723,7 @@ class TestTheCeilingBinds:
         Pipeline(
             [
                 LLMNode(
-                    lambda i, c: "x",
+                    lambda i, c: Prompt.user("x"),
                     output_schema=Answer,
                     node_id="read",
                     over="docs",
@@ -776,7 +777,7 @@ class TestTheCeilingBinds:
                 ),
                 _fan_out_node("bulk", 6, model=cheap),
                 LLMNode(
-                    lambda i, c: "x",
+                    lambda i, c: Prompt.user("x"),
                     output_schema=Answer,
                     node_id="hard",
                     model=dear,
@@ -826,8 +827,18 @@ class TestOverlapNestedInsideOverlap:
                     successors=["a", "b"],
                     route=lambda o, c: ["a", "b"],
                 ),
-                LLMNode(lambda i, c: "x", output_schema=Answer, node_id="a", successors=["m"]),
-                LLMNode(lambda i, c: "x", output_schema=Answer, node_id="b", successors=["m"]),
+                LLMNode(
+                    lambda i, c: Prompt.user("x"),
+                    output_schema=Answer,
+                    node_id="a",
+                    successors=["m"],
+                ),
+                LLMNode(
+                    lambda i, c: Prompt.user("x"),
+                    output_schema=Answer,
+                    node_id="b",
+                    successors=["m"],
+                ),
                 Deterministic(lambda i, c: "inner", node_id="m", successors=[]),
             ],
             budget=UNBOUNDED,
@@ -986,7 +997,7 @@ class TestAnEvaluationOfAConcurrentPipeline:
             pipeline=Pipeline(
                 [
                     LLMNode(
-                        lambda i, c: "x",
+                        lambda i, c: Prompt.user("x"),
                         output_schema=Answer,
                         node_id="read",
                         over="docs",
@@ -1045,7 +1056,7 @@ class TestSharedStateUnderOverlap:
         result = Pipeline(
             [
                 LLMNode(
-                    lambda i, c: "x",
+                    lambda i, c: Prompt.user("x"),
                     output_schema=Answer,
                     node_id="read",
                     over="docs",
@@ -1274,8 +1285,15 @@ class TestTheWallClockIsElapsed:
     def _pipeline(self, ceiling_ms):
         return Pipeline(
             [
-                LLMNode(lambda i, c: "x", output_schema=Answer, node_id="a", successors=["b"]),
-                LLMNode(lambda i, c: "x", output_schema=Answer, node_id="b", successors=[]),
+                LLMNode(
+                    lambda i, c: Prompt.user("x"),
+                    output_schema=Answer,
+                    node_id="a",
+                    successors=["b"],
+                ),
+                LLMNode(
+                    lambda i, c: Prompt.user("x"), output_schema=Answer, node_id="b", successors=[]
+                ),
             ],
             budget=Budget(
                 max_steps=None, max_tokens=None, max_cost=None, max_wall_clock_ms=ceiling_ms
@@ -1316,14 +1334,14 @@ class TestTheWallClockIsElapsed:
                     route=lambda o, c: ["l", "r"],
                 ),
                 LLMNode(
-                    lambda i, c: "x",
+                    lambda i, c: Prompt.user("x"),
                     output_schema=Answer,
                     node_id="l",
                     model=self._HeldBack(0.2),
                     successors=["j"],
                 ),
                 LLMNode(
-                    lambda i, c: "x",
+                    lambda i, c: Prompt.user("x"),
                     output_schema=Answer,
                     node_id="r",
                     model=self._HeldBack(0.2),
@@ -1471,7 +1489,7 @@ class TestADeclarationTheRunCuts:
         return Pipeline(
             [
                 LLMNode(
-                    lambda inputs, ctx: f"summarise {inputs['docs']}",
+                    lambda inputs, ctx: Prompt.user("summarise {docs}", docs=inputs["docs"]),
                     output_schema=Answer,
                     node_id="read",
                     over="docs",

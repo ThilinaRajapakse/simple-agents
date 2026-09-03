@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     ConfigurationError,
@@ -295,7 +296,7 @@ def test_a_real_run_reads_back_through_the_same_surface(tmp_path: Path) -> None:
         [
             Deterministic(lambda inputs, ctx: inputs["question"], node_id="prepare"),
             LLMNode(
-                lambda question, ctx: f"Answer: {question}",
+                lambda question, ctx: Prompt.user("Answer: {question}", question=question),
                 output_schema=Answer,
                 node_id="extract",
             ),

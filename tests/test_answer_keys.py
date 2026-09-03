@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Cassette,
     ConfigurationError,
@@ -726,7 +727,7 @@ ANSWERS = {
 
 
 def build_prompt(inputs, ctx):
-    return f"Answer the question: {inputs['question']}"
+    return Prompt.user("Answer the question: {question}", question=inputs["question"])
 
 
 class ScriptedClient:
@@ -1474,7 +1475,9 @@ class TestAbsencesThroughTheSurfacesBesideARun:
         from simple_agents.evaluation.variants import compare_variants
 
         def asked_differently(inputs, ctx):
-            return f"Please answer this question: {inputs['question']}"
+            return Prompt.user(
+                "Please answer this question: {question}", question=inputs["question"]
+            )
 
         base = Pipeline(
             [LLMNode(build_prompt, output_schema=Answer, node_id="extract")], budget=BUDGET

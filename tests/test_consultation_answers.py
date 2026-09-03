@@ -16,6 +16,7 @@ import json
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Deterministic,
@@ -43,7 +44,7 @@ from schemas import Answer
 
 
 def _prompt(inputs, ctx):
-    return "go"
+    return Prompt.user("go")
 
 
 def _ask(name: str, question: str = "Which fit?", options=None) -> ToolCallRequest:

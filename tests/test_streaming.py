@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     Cassette,
@@ -82,7 +83,7 @@ def one_node(*, stream: bool = True, node_id: str = "answer") -> Pipeline:
     return Pipeline(
         [
             LLMNode(
-                lambda inputs, ctx: "what size?",
+                lambda inputs, ctx: Prompt.user("what size?"),
                 output_schema=Answer,
                 node_id=node_id,
                 stream=stream,
@@ -114,8 +115,10 @@ class TestTheSinkDecidesWhetherAnythingStreams:
         client = answering(ANSWER, ANSWER)
         Pipeline(
             [
-                LLMNode(lambda i, c: "a", output_schema=Answer, node_id="quiet"),
-                LLMNode(lambda i, c: "b", output_schema=Answer, node_id="loud", stream=True),
+                LLMNode(lambda i, c: Prompt.user("a"), output_schema=Answer, node_id="quiet"),
+                LLMNode(
+                    lambda i, c: Prompt.user("b"), output_schema=Answer, node_id="loud", stream=True
+                ),
             ],
             budget=BUDGET,
         ).run({}, envelope=envelope, model=client, on_token=seen.append, seed=41)
@@ -161,7 +164,7 @@ class TestWhatATokenEventCarries:
         Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "find the size",
+                    lambda inputs, ctx: Prompt.user("find the size"),
                     tools=[look_up],
                     output_schema=Answer,
                     budget=BUDGET,
@@ -179,7 +182,9 @@ class TestWhatATokenEventCarries:
         Pipeline(
             [
                 LLMNode(
-                    lambda inputs, ctx: f"summarise {inputs['documents']}",
+                    lambda inputs, ctx: Prompt.user(
+                        "summarise {documents}", documents=inputs["documents"]
+                    ),
                     output_schema=Answer,
                     over="documents",
                     node_id="each",
@@ -367,7 +372,14 @@ class TestRefusals:
 
         unbounded = Budget(max_steps=None, max_tokens=None, max_cost=None, max_wall_clock_ms=None)
         pipeline = Pipeline(
-            [LLMNode(lambda i, c: "x", output_schema=Answer, node_id="answer", stream=True)],
+            [
+                LLMNode(
+                    lambda i, c: Prompt.user("x"),
+                    output_schema=Answer,
+                    node_id="answer",
+                    stream=True,
+                )
+            ],
             budget=unbounded,
         )
         with pytest.raises(StreamUsageMissing) as refusal:

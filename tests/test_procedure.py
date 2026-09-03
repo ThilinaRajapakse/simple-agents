@@ -74,7 +74,9 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # on 2026-09-03, for two things the library did not have: a writer for a decision the builder
 # settled by a click, since eight of those on one project produced eight decisions whose
 # `because` opened with the same two lines, and the feature index line for naming a pipeline.
-WORD_BUDGET = 3897
+# And from 3897 on 2026-09-03 for the prompts document, which the index has to name: a
+# capability nothing in the index points at is one a coding agent has to find by accident.
+WORD_BUDGET = 3959
 # Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
 # three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
 # `simple-agents record` command, seven words over the ceiling across eight sentences.

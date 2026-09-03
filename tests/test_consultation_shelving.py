@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from simple_agents import (
+    Prompt,
     Budget,
     Deterministic,
     Pipeline,
@@ -217,7 +218,7 @@ class TestTheMemoedRecordSaysTheChannelWasNotReached:
         pipeline = Pipeline(
             [
                 AgentNode(
-                    lambda inputs, ctx: "go",
+                    lambda inputs, ctx: Prompt.user("go"),
                     tools=ToolRegistry([consult(channel, answered_by="end_user")]),
                     output_schema=Answer,
                     budget=_budget(),
