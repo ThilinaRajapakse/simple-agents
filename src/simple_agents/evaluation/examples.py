@@ -19,12 +19,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import warnings
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any, Callable, Iterable, Iterator, Mapping, Sequence
 
 from ..builtins.search import tokens
-from ..errors import ConfigurationError
+from ..errors import ConfigurationError, SimpleAgentsWarning
 from ..schema import Unknown, encode_answer
 from .answer_key import Criteria, decode_answer_key
 from .end_user import EndUser, Fact, decode_end_user, encode_end_user
@@ -207,9 +208,11 @@ class Example:
     def text(self) -> str:
         """The example's own words, for comparing one example against another.
 
-        Every string anywhere in ``inputs``, in order, joined by spaces. Keys and structure
-        are left out, so two examples phrased alike compare alike whatever shape the inputs
-        have.
+        Every string, number and boolean anywhere in ``inputs``, in order, joined by spaces.
+        Keys and structure are left out, so two examples phrased alike compare alike whatever
+        shape the inputs have. Numbers are read because a set whose inputs are identifiers
+        carries its content in them: an example of a user id and a list of integer item ids
+        has one word without them, and every pair then scores 1.0.
         """
         return " ".join(_strings(self.inputs))
 
@@ -308,7 +311,9 @@ class NearestPair:
             print(pair.describe())
 
     ``shared_source`` names the ``source`` both sides came from, and is ``None`` where they
-    came from different ones or declared none.
+    came from different ones or declared none. ``measured_by`` is ``"word_overlap"`` for the
+    shipped comparison and ``"custom"`` for a ``similarity=`` the project passed, which is
+    what :meth:`describe` reads to say what the figure counts.
     """
 
     left: str
@@ -319,12 +324,14 @@ class NearestPair:
     right_text: str
     similarity: float
     shared_source: str | None = None
+    measured_by: str = "word_overlap"
 
     def describe(self) -> str:
         """The pair as one block of text, for putting in front of the builder."""
         source = f", both from {self.shared_source!r}" if self.shared_source else ""
+        counts = "of their words in common" if self.measured_by == "word_overlap" else "similar"
         return (
-            f"{self.similarity:.0%} of their words in common{source}\n"
+            f"{self.similarity:.0%} {counts}{source}\n"
             f"  {self.left} ({self.left_split}): {self.left_text}\n"
             f"  {self.right} ({self.right_split}): {self.right_text}"
         )
@@ -342,11 +349,16 @@ class ContaminationReport:
         if not report.clean:
             for overlap in report.pairs:
                 print(overlap.detail)
+
+    ``measured_by`` is ``"word_overlap"`` for the shipped comparison and ``"custom"`` for a
+    ``similarity=`` the project passed. A threshold means something different under each, so
+    the results file records which one produced the figure.
     """
 
     threshold: float
     pairs: tuple[Overlap, ...]
     compared: int
+    measured_by: str = "word_overlap"
 
     @property
     def clean(self) -> bool:
@@ -358,6 +370,7 @@ class ContaminationReport:
             "threshold": self.threshold,
             "compared": self.compared,
             "clean": self.clean,
+            "measured_by": self.measured_by,
             "pairs": [pair.to_record() for pair in self.pairs],
         }
 
@@ -530,7 +543,12 @@ class ExampleSet:
 
     # -- contamination --------------------------------------------------------------------
 
-    def contamination(self, *, threshold: float) -> ContaminationReport:
+    def contamination(
+        self,
+        *,
+        threshold: float,
+        similarity: Callable[[Example, Example], float] | None = None,
+    ) -> ContaminationReport:
         """Examples in different splits that are the same example twice.
 
         ``threshold`` is the word overlap at or above which two examples count as
@@ -546,6 +564,16 @@ class ExampleSet:
         flags any pair sharing a ``source``. Examples inside one split are not compared: a
         repeated dev example is waste rather than contamination.
 
+        ``similarity`` replaces the word comparison with the project's own, which is what a
+        set whose inputs are identifiers needs: two ids share no words and mean the same
+        thing. It is handed both examples and returns a number from 0 to 1::
+
+            examples.contamination(threshold=0.8,
+                                   similarity=lambda a, b: cosine(vec(a), vec(b)))
+
+        Pass the same measure to :meth:`nearest_cross_split`, or the ranking a builder reads
+        orders the pairs differently from the gate that flags them.
+
         A pair can be flagged for both reasons, and is then reported once per reason. The two
         take different fixes: a ``near_duplicate`` is the same content under two ids, so one
         side goes, and a ``shared_source`` pair needs the whole source assigned to one split.
@@ -560,14 +588,16 @@ class ExampleSet:
         vocabulary = {e.id: set(tokens(e.text)) for e in self._examples}
         pairs: list[Overlap] = []
         compared = 0
+        scored: list[float] = []
 
         for i, left in enumerate(self._examples):
             for right in self._examples[i + 1 :]:
                 if left.split == right.split:
                     continue
                 compared += 1
-                similarity = _jaccard(vocabulary[left.id], vocabulary[right.id])
-                if similarity >= threshold:
+                overlap = _scored(left, right, vocabulary, similarity)
+                scored.append(round(overlap, 4))
+                if overlap >= threshold:
                     pairs.append(
                         Overlap(
                             left=left.id,
@@ -575,11 +605,9 @@ class ExampleSet:
                             left_split=left.split,
                             right_split=right.split,
                             kind="near_duplicate",
-                            similarity=round(similarity, 4),
-                            detail=(
-                                f"{left.id} ({left.split}) and {right.id} ({right.split}) "
-                                f"share {similarity:.0%} of their words, at or above the "
-                                f"threshold of {threshold:.0%}."
+                            similarity=round(overlap, 4),
+                            detail=_near_duplicate_detail(
+                                left, right, overlap, threshold, similarity is not None
                             ),
                         )
                     )
@@ -591,7 +619,7 @@ class ExampleSet:
                             left_split=left.split,
                             right_split=right.split,
                             kind="shared_source",
-                            similarity=round(similarity, 4),
+                            similarity=round(overlap, 4),
                             detail=(
                                 f"{left.id} ({left.split}) and {right.id} ({right.split}) "
                                 f"were both drawn from {left.source!r}, so what was learned "
@@ -600,11 +628,22 @@ class ExampleSet:
                         )
                     )
 
-        return ContaminationReport(threshold=threshold, pairs=tuple(pairs), compared=compared)
+        _warn_if_undiscriminating(scored, self._examples, similarity is not None)
+        return ContaminationReport(
+            threshold=threshold,
+            pairs=tuple(pairs),
+            compared=compared,
+            measured_by="word_overlap" if similarity is None else "custom",
+        )
 
     # -- files ----------------------------------------------------------------------------
 
-    def nearest_cross_split(self, *, n: int = 5) -> tuple[NearestPair, ...]:
+    def nearest_cross_split(
+        self,
+        *,
+        n: int = 5,
+        similarity: Callable[[Example, Example], float] | None = None,
+    ) -> tuple[NearestPair, ...]:
         """The examples in different splits whose wording is closest, ranked, with their text.
 
         ``contamination`` answers whether anything crosses a threshold, and returns nothing at
@@ -617,6 +656,16 @@ class ExampleSet:
 
         Compares every pair of examples in different splits, as ``contamination`` does.
         Examples inside one split are not compared. A set with one split returns nothing.
+
+        ``similarity`` replaces the word comparison with the project's own, handed both
+        examples and returning a number from 0 to 1::
+
+            examples.nearest_cross_split(n=5,
+                                         similarity=lambda a, b: cosine(vec(a), vec(b)))
+
+        Pass the same measure to :meth:`contamination`, or this ranking orders the pairs
+        differently from the gate that flags them. A ranking where every pair scored alike
+        orders nothing, and warns.
         """
         if n < 1:
             raise ConfigurationError(
@@ -640,11 +689,15 @@ class ExampleSet:
                         right_split=right.split,
                         left_text=left.text,
                         right_text=right.text,
-                        similarity=round(_jaccard(vocabulary[left.id], vocabulary[right.id]), 4),
+                        similarity=round(_scored(left, right, vocabulary, similarity), 4),
                         shared_source=shared,
+                        measured_by="word_overlap" if similarity is None else "custom",
                     )
                 )
         pairs.sort(key=lambda pair: (-pair.similarity, pair.left, pair.right))
+        _warn_if_undiscriminating(
+            [pair.similarity for pair in pairs], self._examples, similarity is not None
+        )
         return tuple(pairs[:n])
 
     @classmethod
@@ -688,6 +741,92 @@ class ExampleSet:
         return target
 
 
+def _near_duplicate_detail(
+    left: Example, right: Example, overlap: float, threshold: float, custom: bool
+) -> str:
+    """What a flagged pair says about itself, in the terms the measure that flagged it uses."""
+    counts = "score" if custom else "share"
+    of_words = "" if custom else " of their words"
+    return (
+        f"{left.id} ({left.split}) and {right.id} ({right.split}) {counts} "
+        f"{overlap:.0%}{of_words}, at or above the threshold of {threshold:.0%}."
+    )
+
+
+def _scored(
+    left: Example,
+    right: Example,
+    vocabulary: Mapping[str, set[str]],
+    similarity: Callable[[Example, Example], float] | None,
+) -> float:
+    """How alike two examples are, by word overlap or by the project's own measure.
+
+    A measure the project passed is checked on every pair: a value outside 0 to 1 would make
+    ``threshold`` mean something the caller did not choose and would render as a percentage
+    that is not one.
+    """
+    if similarity is None:
+        return _jaccard(vocabulary[left.id], vocabulary[right.id])
+    value = similarity(left, right)
+    if not isinstance(value, (int, float)) or isinstance(value, bool) or value != value:
+        raise ConfigurationError(
+            f"similarity({left.id!r}, {right.id!r}) returned {value!r}. A similarity is a "
+            f"number between 0 and 1, where 1 is the same example twice.\n"
+            f"Return a float: a cosine over embeddings maps on with (cosine + 1) / 2."
+        )
+    if not 0.0 <= float(value) <= 1.0:
+        raise ConfigurationError(
+            f"similarity({left.id!r}, {right.id!r}) returned {value}, and a similarity runs "
+            f"from 0 to 1. `threshold` is read against it and `describe()` renders it as a "
+            f"percentage, so a value outside that range means neither.\n"
+            f"Map the measure onto 0 to 1: a cosine becomes (cosine + 1) / 2, and a distance "
+            f"becomes 1 / (1 + distance)."
+        )
+    return float(value)
+
+
+def _warn_if_undiscriminating(
+    scores: Sequence[float], examples: Sequence[Example], custom: bool
+) -> None:
+    """Say when every compared pair scored alike, so the ranking orders nothing.
+
+    Word overlap over inputs that are identifiers is the case this catches: one project's
+    examples were a user id and a list of item ids, every text came out the same word, and a
+    full table of pairs at 1.0 was put in front of the builder with nothing saying why.
+    """
+    if len(scores) < 2 or len(set(scores)) > 1:
+        return
+    alike = scores[0]
+    words = {e.text for e in examples}
+    if alike == 0.0 and len(words) > 1:
+        # Every pair unalike is what a clean set looks like, and is the answer a
+        # contamination check exists to give.
+        return
+    if custom:
+        warnings.warn(
+            f"Every compared pair scored {alike} under the similarity= this was given, so the "
+            f"ranking orders nothing and the figure says nothing about which examples are the "
+            f"same example twice. Check the measure against a pair known to differ.",
+            SimpleAgentsWarning,
+            stacklevel=3,
+        )
+        return
+    detail = (
+        "every example's inputs render to the same text"
+        if len(words) == 1
+        else f"every pair shares {alike:.0%} of its words"
+    )
+    warnings.warn(
+        f"Every compared pair scored {alike}, because {detail}. The ranking therefore orders "
+        f"nothing and the figure says nothing about which examples are the same example "
+        f"twice. Inputs that are identifiers carry their content in the identifiers, so pass "
+        f"similarity= a measure that reads them, such as a distance over the embeddings the "
+        f"project already computes.",
+        SimpleAgentsWarning,
+        stacklevel=3,
+    )
+
+
 def _jaccard(left: set[str], right: set[str]) -> float:
     """Shared words over total distinct words. 0 when both are empty."""
     union = left | right
@@ -695,9 +834,17 @@ def _jaccard(left: set[str], right: set[str]) -> float:
 
 
 def _strings(value: Any) -> Iterator[str]:
-    """Every string anywhere inside a value, in order."""
+    """Every string, number and boolean anywhere inside a value, in order.
+
+    A number is content where the inputs are identifiers, so it is rendered rather than
+    skipped. ``None`` carries nothing and is left out.
+    """
     if isinstance(value, str):
         yield value
+    elif isinstance(value, bool):
+        yield str(value)
+    elif isinstance(value, (int, float)):
+        yield str(value)
     elif isinstance(value, dict):
         for item in value.values():
             yield from _strings(item)

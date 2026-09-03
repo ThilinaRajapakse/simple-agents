@@ -8,6 +8,7 @@ agrees with itself.
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 import pytest
@@ -415,3 +416,146 @@ def test_a_pair_flagged_for_both_reasons_is_reported_once_per_reason() -> None:
 
     assert sorted(p.kind for p in report.pairs) == ["near_duplicate", "shared_source"]
     assert {(p.left, p.right) for p in report.pairs} == {("dev1", "held1")}
+
+
+# -- comparing examples whose inputs are identifiers ---------------------------------------
+
+
+def _ids(example_id: str, user: str, shows: list[int], split: str) -> Example:
+    """An example of the shape a recommender's are: a user and some item ids."""
+    return Example(id=example_id, inputs={"user": user, "shows": shows}, expected="ok", split=split)
+
+
+def test_comparison_reads_numbers_and_booleans_as_well_as_strings() -> None:
+    """One project's inputs were a user id and integer item ids. Dropping the numbers left
+    one word, and every pair scored 1.0 with nothing saying why."""
+    example = Example(
+        id="q1",
+        inputs={"user": "u1", "shows": [12, 43], "seen": True, "note": None},
+        expected="ok",
+        split="dev",
+    )
+
+    assert example.text == "u1 12 43 True"
+
+
+def test_identifier_inputs_no_longer_all_score_the_same() -> None:
+    left = _ids("dev1", "u1", [12, 43, 7], "dev")
+    right = _ids("held1", "u1", [12, 99], "held_out")
+
+    (pair,) = ExampleSet([left, right]).nearest_cross_split(n=3)
+
+    assert pair.similarity == pytest.approx(0.4)
+    assert pair.measured_by == "word_overlap"
+
+
+def test_a_ranking_where_every_pair_scored_alike_says_so() -> None:
+    from simple_agents.errors import SimpleAgentsWarning
+
+    same = [_ids(f"e{i}", "u1", [], "dev" if i % 2 else "held_out") for i in range(4)]
+
+    with pytest.warns(SimpleAgentsWarning, match="Every compared pair scored"):
+        ExampleSet(same).nearest_cross_split(n=3)
+    with pytest.warns(SimpleAgentsWarning, match="render to the same text"):
+        ExampleSet(same).contamination(threshold=0.8)
+
+
+def test_a_set_where_nothing_is_alike_says_nothing() -> None:
+    """Every pair at zero over texts that differ is what a clean set looks like, and is the
+    answer a contamination check exists to give."""
+    from simple_agents.errors import SimpleAgentsWarning
+
+    unrelated = [
+        example("dev1", "Which depot ships to Leeds"),
+        example("held1", "How long is the warranty", split="held_out"),
+        example("held2", "What size fits a Morris", split="held_out"),
+    ]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", SimpleAgentsWarning)
+        ExampleSet(unrelated).contamination(threshold=0.8)
+
+
+def test_a_ranking_that_discriminates_says_nothing() -> None:
+    from simple_agents.errors import SimpleAgentsWarning
+
+    varied = [
+        _ids("dev1", "u1", [12, 43], "dev"),
+        _ids("held1", "u1", [12, 99], "held_out"),
+        _ids("held2", "u1", [55, 66], "held_out"),
+    ]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", SimpleAgentsWarning)
+        ExampleSet(varied).nearest_cross_split(n=3)
+
+
+def _by_position(left: Example, right: Example) -> float:
+    """A measure of the project's own: how close the two users' ids are."""
+    return 1.0 - abs(int(left.inputs["user"][1:]) - int(right.inputs["user"][1:])) / 10
+
+
+def test_a_flat_project_measure_warns_without_blaming_the_words() -> None:
+    """The measure is what produced the figure, so the text is not the explanation."""
+    from simple_agents.errors import SimpleAgentsWarning
+
+    varied = [
+        _ids("dev1", "u1", [12, 43], "dev"),
+        _ids("held1", "u2", [12, 99], "held_out"),
+        _ids("held2", "u3", [55, 66], "held_out"),
+    ]
+
+    with pytest.warns(SimpleAgentsWarning) as raised:
+        ExampleSet(varied).nearest_cross_split(n=3, similarity=lambda a, b: 0.5)
+
+    message = str(raised[0].message)
+    assert "under the similarity= this was given" in message
+    assert "words" not in message
+
+
+def test_a_project_measure_replaces_the_word_comparison() -> None:
+    pairs = ExampleSet(
+        [_ids("dev1", "u1", [1], "dev"), _ids("held1", "u4", [2], "held_out")]
+    ).nearest_cross_split(n=1, similarity=_by_position)
+
+    assert pairs[0].similarity == pytest.approx(0.7)
+    assert pairs[0].measured_by == "custom"
+
+
+def test_the_same_measure_is_read_by_the_gate() -> None:
+    report = ExampleSet(
+        [_ids("dev1", "u1", [1], "dev"), _ids("held1", "u2", [2], "held_out")]
+    ).contamination(threshold=0.8, similarity=_by_position)
+
+    assert report.measured_by == "custom"
+    assert [p.kind for p in report.pairs] == ["near_duplicate"]
+    assert report.to_record()["measured_by"] == "custom"
+
+
+def test_a_measure_outside_zero_to_one_is_refused_naming_the_pair() -> None:
+    """`threshold` is read against it and `describe()` renders it as a percentage."""
+    examples = ExampleSet([_ids("dev1", "u1", [1], "dev"), _ids("held1", "u2", [2], "held_out")])
+
+    with pytest.raises(ConfigurationError) as refusal:
+        examples.nearest_cross_split(similarity=lambda a, b: 4.2)
+
+    assert "'dev1', 'held1'" in str(refusal.value)
+    assert "(cosine + 1) / 2" in str(refusal.value)
+
+
+def test_a_measure_returning_something_that_is_not_a_number_is_refused() -> None:
+    examples = ExampleSet([_ids("dev1", "u1", [1], "dev"), _ids("held1", "u2", [2], "held_out")])
+
+    with pytest.raises(ConfigurationError):
+        examples.nearest_cross_split(similarity=lambda a, b: "very")
+
+
+def test_describe_says_what_the_figure_counts() -> None:
+    examples = ExampleSet([_ids("dev1", "u1", [1], "dev"), _ids("held1", "u2", [2], "held_out")])
+
+    (shipped,) = examples.nearest_cross_split(n=1)
+    (custom,) = examples.nearest_cross_split(n=1, similarity=_by_position)
+
+    assert "of their words in common" in shipped.describe()
+    assert "similar" in custom.describe().splitlines()[0]
+    assert "words" not in custom.describe().splitlines()[0]

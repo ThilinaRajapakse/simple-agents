@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "P3-73: DocumentIndex gains add, replace and remove, and the file format left it for builtins/index_file.py; the four record units gain one field each",
+  "reason": "P3-74 cycle 6: EvalSuite.record takes stores= and makes a copy per run, on the same rule as run",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -15,10 +15,10 @@
       "function branches": 14
     },
     "src/simple_agents/adapters/_http.py::class::HTTPBackend": {
-      "class lines": 215
+      "class lines": 221
     },
-    "src/simple_agents/adapters/_http.py::function::HTTPBackend._error_for": {
-      "function lines": 51
+    "src/simple_agents/adapters/_http.py::function::HTTPBackend._attempt_stream": {
+      "function lines": 53
     },
     "src/simple_agents/adapters/_openai_wire.py::function::StreamAssembler.feed": {
       "function branches": 15
@@ -105,7 +105,7 @@
       "function lines": 76
     },
     "src/simple_agents/context.py::class::RunContext": {
-      "class lines": 748
+      "class lines": 751
     },
     "src/simple_agents/context.py::function::RunContext._replay_chunks": {
       "function branches": 13
@@ -117,7 +117,7 @@
       "function lines": 87
     },
     "src/simple_agents/context.py::module": {
-      "module lines": 1141
+      "module lines": 1159
     },
     "src/simple_agents/cost.py::function::_price": {
       "function lines": 56
@@ -141,10 +141,10 @@
       "function lines": 93
     },
     "src/simple_agents/evaluation/examples.py::class::ExampleSet": {
-      "class lines": 223
+      "class lines": 243
     },
     "src/simple_agents/evaluation/examples.py::function::ExampleSet.contamination": {
-      "function lines": 52
+      "function lines": 63
     },
     "src/simple_agents/evaluation/per_node.py::class::NodeMetrics": {
       "class lines": 219
@@ -186,10 +186,13 @@
       "function branches": 13
     },
     "src/simple_agents/evaluation/runner.py::class::EvalSuite": {
-      "class lines": 1862
+      "class lines": 1929
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.__init__": {
       "function lines": 52
+    },
+    "src/simple_agents/evaluation/runner.py::function::EvalSuite._config": {
+      "function lines": 54
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._declared_config": {
       "function lines": 77
@@ -202,25 +205,25 @@
       "function lines": 52
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._rescored_config": {
-      "function lines": 57
-    },
-    "src/simple_agents/evaluation/runner.py::function::EvalSuite._rollout": {
-      "function lines": 109
+      "function lines": 60
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._run_rollouts": {
-      "function lines": 80
+      "function lines": 83
+    },
+    "src/simple_agents/evaluation/runner.py::function::EvalSuite._scored_rollout": {
+      "function lines": 111
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.record": {
-      "function lines": 72
+      "function lines": 82
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.rescore": {
       "function lines": 66
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.run": {
-      "function lines": 129
+      "function lines": 135
     },
     "src/simple_agents/evaluation/runner.py::module": {
-      "module lines": 2277
+      "module lines": 2367
     },
     "src/simple_agents/evaluation/scoring.py::function::_criteria_verdict": {
       "function lines": 54
@@ -235,13 +238,13 @@
       "function branches": 17
     },
     "src/simple_agents/evaluation/variants.py::function::compare_variants": {
-      "function lines": 89
+      "function lines": 98
     },
     "src/simple_agents/evaluation/variants.py::function::plan_variant": {
       "function lines": 70
     },
     "src/simple_agents/evaluation/variants.py::module": {
-      "module lines": 869
+      "module lines": 879
     },
     "src/simple_agents/graph.py::class::Graph": {
       "class lines": 307
@@ -253,7 +256,7 @@
       "class lines": 242
     },
     "src/simple_agents/nodes/agent.py::class::AgentNode": {
-      "class lines": 909
+      "class lines": 911
     },
     "src/simple_agents/nodes/agent.py::function::AgentNode.__init__": {
       "function lines": 88
@@ -263,22 +266,22 @@
     },
     "src/simple_agents/nodes/agent.py::function::AgentNode._one": {
       "function branches": 39,
-      "function lines": 411
+      "function lines": 412
     },
     "src/simple_agents/nodes/agent.py::function::AgentNode._overlap": {
       "function lines": 58
     },
     "src/simple_agents/nodes/agent.py::function::AgentNode.execute": {
-      "function lines": 66
+      "function lines": 67
     },
     "src/simple_agents/nodes/agent.py::module": {
-      "module lines": 1040
+      "module lines": 1042
     },
     "src/simple_agents/nodes/delegation.py::function::Delegation.__post_init__": {
       "function lines": 67
     },
     "src/simple_agents/nodes/deterministic.py::function::Deterministic._called": {
-      "function lines": 54
+      "function lines": 55
     },
     "src/simple_agents/nodes/fanout.py::function::_declare_fan_out": {
       "function branches": 18,
@@ -289,7 +292,7 @@
       "function lines": 126
     },
     "src/simple_agents/nodes/llm.py::class::LLMNode": {
-      "class lines": 205
+      "class lines": 206
     },
     "src/simple_agents/nodes/llm.py::function::LLMNode.__init__": {
       "function lines": 75
@@ -298,10 +301,10 @@
       "function lines": 63
     },
     "src/simple_agents/nodes/llm.py::function::LLMNode.execute": {
-      "function lines": 61
+      "function lines": 62
     },
     "src/simple_agents/pipeline/core.py::class::Pipeline": {
-      "class lines": 1468
+      "class lines": 1518
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline._attempt": {
       "function branches": 19,
@@ -314,7 +317,7 @@
       "function lines": 63
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline._start_run": {
-      "function lines": 66
+      "function lines": 68
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline._verify_against": {
       "function branches": 33,
@@ -325,16 +328,16 @@
       "function lines": 137
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline.answer_shelved": {
-      "function lines": 63
+      "function lines": 66
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline.resume": {
-      "function lines": 84
+      "function lines": 78
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline.run": {
-      "function lines": 68
+      "function lines": 69
     },
     "src/simple_agents/pipeline/core.py::module": {
-      "module lines": 1732
+      "module lines": 1782
     },
     "src/simple_agents/pipeline/preflight.py::function::_refuse_a_bad_slice": {
       "function branches": 15
@@ -462,7 +465,7 @@
     "src/simple_agents/adapters/_gemini_wire.py::function::StreamAssembler.feed": "One fold over a stream's events; each branch is one event shape the wire sends.",
     "src/simple_agents/adapters/_gemini_wire.py::function::contents_from": "One translation of messages into the wire's shape; each branch is one message kind.",
     "src/simple_agents/adapters/_http.py::class::HTTPBackend": "One transport: retries, errors and timing in one place shared by the adapters.",
-    "src/simple_agents/adapters/_http.py::function::HTTPBackend._error_for": "One mapping from status to error; the length is the statuses named.",
+    "src/simple_agents/adapters/_http.py::function::HTTPBackend._attempt_stream": "One retry ladder over a streamed request; each branch is one status or one point the stream had reached, and a request that delivered an event is not retried.",
     "src/simple_agents/adapters/_openai_wire.py::function::StreamAssembler.feed": "One fold over a stream's events; each branch is one event shape the wire sends.",
     "src/simple_agents/builtins/consult.py::function::consult": "One shipped tool; its source digest is pinned in recorded cassettes, and the Mistral arms cannot be re-recorded, so the body stays as recorded.",
     "src/simple_agents/builtins/consult.py::function::on_reply": "One route factory; each branch is one reply disposition, and the digest constraint above applies.",
@@ -517,12 +520,13 @@
     "src/simple_agents/evaluation/results.py::function::totals_of": "One summation keeping each unmeasured class unmeasured.",
     "src/simple_agents/evaluation/runner.py::class::EvalSuite": "One orchestrator over one declared scoring surface; every method reads the suite's configuration, and splitting the class distributes that state (P3-63 judgement, held at P3-64 sitting 1).",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.__init__": "Validation then assignment; every refusal is a named method.",
+    "src/simple_agents/evaluation/runner.py::function::EvalSuite._config": "One results-file record; the length is the record's width and each key carries the comment saying why it is recorded.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._declared_config": "One results-file record; the length is the record's width and each key carries the comment saying why it is recorded.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._refuse_an_undescribed_end_user": "One refusal over two channel shapes; the branching builds the message naming what is missing.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._rescored": "One rollout scored from disk; each step is one read of its record.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._rescored_config": "The rescore half of the results-file record: what nothing ran cannot say, stated key by key.",
-    "src/simple_agents/evaluation/runner.py::function::EvalSuite._rollout": "The one place a rollout's three endings are told apart: the run raised, the answer was unreadable, or it scored. The endings share _failed_rollout.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._run_rollouts": "The pool and serial paths of one execution over one job list.",
+    "src/simple_agents/evaluation/runner.py::function::EvalSuite._scored_rollout": "One rollout run and scored; the length is its failure paths, each of which reports differently and three of which end the evaluation rather than the rollout.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.record": "One recording loop; the k-by-n order is the mechanism that shares calls.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.rescore": "The rescore sequence stated once: read, judge, gate, figures.",
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.run": "The run sequence stated once: refusals, seeds, execution, judging, figures; each step is a named method.",

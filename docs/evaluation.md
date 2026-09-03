@@ -129,7 +129,8 @@ the project records rather than one the library makes (FT-03). Start at 0.8 and 
 flags.
 
 Two kinds are reported. `near_duplicate` compares every pair of examples in different splits on
-the words in their inputs, using the same tokeniser the shipped search index uses.
+the words in their inputs, using the same tokeniser the shipped search index uses. Numbers and
+booleans are read as words, so a set whose inputs are identifiers compares on the identifiers.
 `shared_source` flags a pair drawn from one `source` however differently they are worded,
 because what was learned from one applies to the other.
 
@@ -163,6 +164,34 @@ came from one source. Ranked closest first. A set with one split returns nothing
 
 The builder judges the pairs, and `contamination_threshold=` records where they drew the line.
 Asking them for the threshold first asks for a number about material they have not seen.
+
+#### 1.2.2 A measure of the project's own
+
+Word overlap answers "are these the same request written twice". Where the inputs are
+identifiers it can answer nothing useful: two item ids share no words and may mean the same
+thing. `similarity` replaces it, on both methods, and is handed the two examples:
+
+```python
+def alike(left: Example, right: Example) -> float:
+    return (cosine(embedding[left.id], embedding[right.id]) + 1) / 2
+
+pairs = examples.nearest_cross_split(n=5, similarity=alike)
+report = examples.contamination(threshold=0.8, similarity=alike)
+```
+
+It runs from 0 to 1, where 1 is the same example twice. A value outside that is refused naming
+the pair: `threshold` is read against it and `describe()` renders it as a percentage, so a raw
+cosine or a distance means neither. A cosine maps on with `(cosine + 1) / 2` and a distance
+with `1 / (1 + distance)`.
+
+**Pass the same measure to both.** The ranking is what the builder reads and the report is what
+FT-03 gates on, so two measures put a different set of pairs in front of each. Both record
+`measured_by`, `"word_overlap"` or `"custom"`, and the results file carries the report's.
+
+**A comparison where every pair scored alike warns.** A ranking in which everything is 100%
+orders nothing, and neither does one where every example's inputs render to the same text. A
+clean set where nothing is alike is silent: every pair at zero over texts that differ is the
+answer the check exists to give.
 
 ### 1.3 The file
 
