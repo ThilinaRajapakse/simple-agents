@@ -31,7 +31,7 @@ from .trajectory import FORMAT_VERSION as TRAJECTORY_FORMAT_VERSION
 
 __all__ = ["MANIFEST_FORMAT_VERSION", "Manifest", "source_version"]
 
-MANIFEST_FORMAT_VERSION = "0.40"
+MANIFEST_FORMAT_VERSION = "0.41"
 
 DEFAULT_ROLE = "agent"
 
@@ -68,6 +68,19 @@ class Manifest:
     library_version: str
     trajectory_path: str
     workspace_path: str
+
+    pipeline: str | None = None
+    """Which registered pipeline this run is, from ``Pipeline.name``, and ``null`` where the
+    pipeline was built outside a ``@pipeline_factory``. A run of a slice records the name of
+    the pipeline it was sliced from, and ``slice`` says which nodes it held, so the two
+    together identify what ran. The conformance checks that read one pipeline's runs read
+    this."""
+
+    scripted: bool = False
+    """Whether the model this run called was a scripted stand-in rather than a backend, from
+    the client's own ``scripted``. ``FakeModelClient`` declares it, and a project's own stub
+    declares it the same way. A scripted run spent nothing and answered from a list, so
+    ``runs()``, ``simple-agents report`` and the checks leave it out unless asked for it."""
 
     role: str = DEFAULT_ROLE
     """What the run was for, from ``RunEnvelope.role``. ``agent`` is the project's own agent
@@ -358,7 +371,9 @@ class Manifest:
             "trajectory_format_version": TRAJECTORY_FORMAT_VERSION,
             "library_version": self.library_version,
             "run_id": self.run_id,
+            "pipeline": self.pipeline,
             "role": self.role,
+            "scripted": self.scripted,
             "live": self.live,
             "end_user": self.end_user,
             "evaluation": self.evaluation,

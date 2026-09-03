@@ -5,7 +5,7 @@ conformance checks, and by a later comparison between two versions. It therefore
 configuration the number came from as well as the number, so a reader can tell what was
 measured without the code that measured it.
 
-Current version: ``0.30``, in the ``eval_format_version`` field. A file written at or
+Current version: ``0.31``, in the ``eval_format_version`` field. A file written at or
 above ``EVAL_FORMAT_FLOOR`` is read, and a figure that cannot be derived from an older one
 says so rather than reporting nothing.
 """
@@ -36,7 +36,7 @@ from .per_node import NodeMetrics, unfinished_lines
 
 __all__ = ["EVAL_FORMAT_FLOOR", "EVAL_FORMAT_VERSION", "EvalResults", "Group"]
 
-EVAL_FORMAT_VERSION = "0.30"
+EVAL_FORMAT_VERSION = "0.31"
 
 EVAL_FORMAT_FLOOR = "0.28"
 """The oldest results file this library reads.
@@ -54,7 +54,12 @@ underivable against ``EvalResults.format_version`` rather than as absent.
 
 # What each figure needs the file to be, for `EvalResults.carries`. A figure added in a version
 # is absent from every file written before it, and absent is not the same answer as zero.
-_ARRIVED_IN = {"node_ratios": (0, 29), "slice": (0, 29), "stores": (0, 30)}
+_ARRIVED_IN = {
+    "node_ratios": (0, 29),
+    "slice": (0, 29),
+    "stores": (0, 30),
+    "pipeline": (0, 31),
+}
 
 
 def _as_pair(version: str) -> tuple[int, int]:
@@ -103,11 +108,11 @@ class Group:
 class EvalResults:
     """What one evaluation produced.
 
-    ``config`` says what was measured: the split, k, the seed, the example set's content hash,
-    the pipeline's nodes and their prompt versions, the model, the cost basis, and the cassette
-    mode. ``examples`` says what each example expected, which is what separates a right
-    abstention from a missed value. ``rollouts`` holds every individual run with its seed and
-    its trajectory path::
+    ``config`` says what was measured: the registered pipeline's name, the split, k, the seed,
+    the example set's content hash, the pipeline's nodes and their prompt versions, the model,
+    the cost basis, and the cassette mode. ``examples`` says what each example expected, which
+    is what separates a right abstention from a missed value. ``rollouts`` holds every
+    individual run with its seed and its trajectory path::
 
         results.metrics["false_confidence_rate"].interval.point
         results.nodes["hunt"].model_calls
@@ -170,9 +175,10 @@ class EvalResults:
 
         The named figures are ``node_ratios``, a ``ProjectRatio`` reported per node, and
         ``slice``, what the evaluated pipeline is a slice of, both of which arrived in
-        ``0.29``; and ``stores``, what each store the pipeline reaches did during the
-        rollouts, which arrived in ``0.30``. A file written before one holds it not at all,
-        which is a different answer from a project having declared none::
+        ``0.29``; ``stores``, what each store the pipeline reaches did during the rollouts,
+        which arrived in ``0.30``; and ``pipeline``, which registered pipeline was measured,
+        which arrived in ``0.31``. A file written before one holds it not at all, which is a
+        different answer from a project having declared none::
 
             if not results.carries("node_ratios"):
                 print(f"read from {results.format_version}, which records no per-node ratio")

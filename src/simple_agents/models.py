@@ -493,6 +493,16 @@ class FakeModelClient:
 
     ``model_identity`` is what :meth:`identity` reports. Change it to test behaviour that
     depends on which model is configured, such as a cassette recorded against another one.
+
+    ``scripted`` is true, so every run through this client records ``scripted`` on its
+    manifest and is left out of ``runs()``, ``simple-agents report`` and the conformance
+    checks unless they are asked for it. A project's own stand-in declares the same attribute
+    to be read the same way (``docs/model-clients.md`` §7).
+
+    Set it false where the run is meant to be read back as an ordinary one, which is what a
+    test of a project's own reporting wants::
+
+        client = FakeModelClient(responses=[...], scripted=False)
     """
 
     responses: list[ModelResponse] = field(default_factory=list)
@@ -501,6 +511,9 @@ class FakeModelClient:
         backend="self_hosted", request_model="test/model", model_revision="0" * 40
     )
     answer: Callable[[ModelRequest], ModelResponse] | None = None
+    scripted: bool = True
+    """Whether a run through this client records itself as answered from a script."""
+
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     _in_flight: int = 0
 

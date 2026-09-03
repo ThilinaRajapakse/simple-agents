@@ -2407,6 +2407,11 @@ class EvalSuite:
         two, which is where the rollouts came from and what ran, stays in each method.
         """
         return {
+            # Which registered pipeline these numbers were measured over, and `null` where the
+            # evaluated pipeline was built outside a `@pipeline_factory`. FT-45 reads it, and
+            # FT-37 and FT-38 use it to find the runs of that same pipeline rather than the
+            # newest run of any of them.
+            "pipeline": getattr(self.pipeline, "name", None),
             "example_set": {
                 "content_hash": self.examples.content_hash(),
                 "splits": self.examples.splits(),

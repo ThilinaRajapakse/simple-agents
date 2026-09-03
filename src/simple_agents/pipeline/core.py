@@ -173,6 +173,10 @@ class Pipeline:
 
         research = Pipeline([...], budget=..., node_id="research")
         outer = Pipeline([research, LLMNode(write, output_schema=Report)], budget=...)
+
+    ``name`` is what ``@pipeline_factory`` registers this under, and ``None`` where nothing
+    does. Every run records it, which is how a project with several pipelines reads within one
+    (``docs/pipeline.md`` §1.15).
     """
 
     node_kind = "pipeline"
@@ -195,6 +199,8 @@ class Pipeline:
         slice_of: SliceOf | None = None,
     ) -> None:
         self.nodes = list(nodes)
+        # Set by `@pipeline_factory`, and by `slice` off the pipeline it came from.
+        self.name: str | None = None
         self.node_id = node_id
         self.tools = tools
         self.fetch_policy = fetch_policy
@@ -386,8 +392,8 @@ class Pipeline:
         and the run ends there, raising :class:`~simple_agents.errors.LeftTheSlice`. The last
         node is where the run finishes, and its output is what the run returns.
 
-        The slice keeps this pipeline's budget, tools and fetch policy, its ``node_id`` is
-        ``None``, and ``slice_of`` says what it is a slice of.
+        The slice keeps this pipeline's budget, tools, fetch policy and ``name``, its
+        ``node_id`` is ``None``, and ``slice_of`` says what it is a slice of.
 
         Raises :class:`~simple_agents.errors.ConfigurationError` for a node id this pipeline
         does not hold, for a set whose nodes are not all reachable from the earliest of them,
@@ -409,7 +415,7 @@ class Pipeline:
         groups = [
             [node_id for node_id in group if node_id in kept] for group in self.concurrent_nodes
         ]
-        return Pipeline(
+        rung = Pipeline(
             sliced,
             budget=self.budget,
             tools=self.tools,
@@ -424,6 +430,8 @@ class Pipeline:
                 end=end,
             ),
         )
+        rung.name = self.name
+        return rung
 
     def _node_within(self, node: Node, kept: list[str], cut: list[CutEdge]) -> Node:
         """One node with its edges narrowed to the slice, and each edge it lost recorded.

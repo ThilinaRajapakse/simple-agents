@@ -58,6 +58,7 @@ from simple_agents import (  # noqa: E402
     ToolRegistry,
     Unknown,
     VLLMClient,
+    pipeline_factory,
     tool,
 )
 from simple_agents.evaluation import Example, EvalSuite, ExampleSet  # noqa: E402
@@ -327,7 +328,13 @@ def eval_verify(inputs, ctx):
     )
 
 
+@pipeline_factory("answer")
 def eval_pipeline() -> Pipeline:
+    """The pipeline the evaluation cassette records and the project fixtures replay.
+
+    Registered, so those manifests and their results file record which pipeline they are, and
+    the fixtures pass FT-45 the way a project that registers its own pipelines does.
+    """
     return Pipeline(
         [
             AgentNode(

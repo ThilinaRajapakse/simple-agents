@@ -328,6 +328,7 @@ def node_metrics(
     *,
     role: str | None = None,
     live: bool | None = None,
+    scripted: bool | None = False,
     since: str | None = None,
     last: int | None = None,
     cost_basis: CostBasis | None = None,
@@ -345,18 +346,22 @@ def node_metrics(
         found["hunt"].unfinished_model_calls   # what those spent
 
     Every run at any depth is read, so a directory holding evaluations is read as the rollouts
-    inside them. ``role`` and ``live`` filter the same way :func:`~simple_agents.runs` does,
-    and ``since`` takes runs that started at or after an ISO timestamp, matched as text::
+    inside them. ``role``, ``live`` and ``scripted`` filter the same way
+    :func:`~simple_agents.runs` does, so a run whose model answered from a script is left out
+    unless ``scripted=None``; ``since`` takes runs that started at or after an ISO timestamp,
+    matched as text, and ``last`` keeps the newest that many of what the others left::
 
         node_metrics("runs/", role="agent", since="2026-08-14", last=500)
 
-    ``last`` keeps the newest that many, counted after the other filters. Reading fewer runs
-    reports figures over fewer runs, and ``runs`` on each result says how many were read.
+    Reading fewer runs reports figures over fewer runs, and ``runs`` on each result says how
+    many were read.
 
     ``cost_basis`` is what cost is derived against, as on the envelope that wrote the runs.
     Without one, each node's ``cost`` reports unknown, and every other figure is unaffected.
     """
-    found = runs_under(Path(run_dir), nested=True, role=role, live=live, since=since, last=last)
+    found = runs_under(
+        Path(run_dir), nested=True, role=role, live=live, scripted=scripted, since=since, last=last
+    )
     return per_node(
         (read_trajectory(handle.trajectory_path) for handle in found),
         cost_basis=cost_basis,

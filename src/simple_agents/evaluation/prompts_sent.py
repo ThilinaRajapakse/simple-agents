@@ -114,12 +114,12 @@ def _refuse_a_directory_of_evaluations(given: Path) -> None:
     An evaluation writes its rollouts into `<run_dir>/eval/<eval_id>/`, so a caller who
     passes `run_dir` gets no rollouts and a report saying nothing differed.
     """
-    if rollouts_under(given) or not runs(given, nested=True):
+    if rollouts_under(given) or not runs(given, nested=True, scripted=None):
         return
     found = sorted(
         {
             handle.evaluation.eval_id if handle.evaluation is not None else handle.path.parent.name
-            for handle in runs(given, nested=True)
+            for handle in runs(given, nested=True, scripted=None)
         }
     )
     raise ConfigurationError(

@@ -949,8 +949,12 @@ def _same_but(pipeline: Pipeline, nodes: Sequence[Any]) -> Pipeline:
     fetch policy and the concurrency groups of the pipeline it was derived from, at every level
     of nesting. An arm that dropped a group would run one after another what the baseline ran
     at the same time, which is a second difference in a comparison meant to hold one.
+
+    The registered ``name`` travels too, so a sweep's runs say which pipeline they are arms of.
+    They declare ``role="variant"``, which is what keeps them out of every check that reads the
+    agent's runs.
     """
-    return Pipeline(
+    arm = Pipeline(
         nodes,
         budget=pipeline.budget,
         node_id=pipeline.node_id,
@@ -964,6 +968,8 @@ def _same_but(pipeline: Pipeline, nodes: Sequence[Any]) -> Pipeline:
         retry=pipeline.retry,
         suspend_before=pipeline.suspend_before,
     )
+    arm.name = pipeline.name
+    return arm
 
 
 def _refuse_own_defect(baseline: Pipeline, arm: Pipeline, node_id: str, *, removed: bool) -> None:

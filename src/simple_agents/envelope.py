@@ -290,6 +290,35 @@ class RunHandle:
         return str(recorded) if recorded else DEFAULT_ROLE
 
     @property
+    def pipeline(self) -> str | None:
+        """Which registered pipeline this run is, or ``None`` where it records none.
+
+        ``None`` on a run of a pipeline built outside a ``@pipeline_factory``, and on a run
+        written before the manifest carried the field::
+
+            mornings = [run for run in runs("runs/") if run.pipeline == "freshen"]
+
+        A run of a slice records the name of the pipeline it was sliced from, so this and
+        ``manifest["slice"]`` together say what ran.
+        """
+        recorded = self.manifest.get("pipeline")
+        return str(recorded) if recorded else None
+
+    @property
+    def scripted(self) -> bool:
+        """Whether every model this run called answered from a script rather than a backend.
+
+        True where the run was made with ``FakeModelClient``, or with a project's own client
+        declaring ``scripted``. False on a run written before the manifest carried the field::
+
+            paid = [run for run in runs("runs/", scripted=None) if not run.scripted]
+
+        :func:`runs` leaves these out by default, since a scripted run spent nothing and its
+        answers were written by whoever wrote the script.
+        """
+        return bool(self.manifest.get("scripted"))
+
+    @property
     def live(self) -> bool:
         """Whether an end user was on the other end of this run.
 
@@ -473,6 +502,8 @@ def runs(
     nested: bool = False,
     role: str | None = None,
     live: bool | None = None,
+    pipeline: str | None = None,
+    scripted: bool | None = False,
     since: str | None = None,
     last: int | None = None,
 ) -> list[RunHandle]:
@@ -492,34 +523,41 @@ def runs(
 
     **An evaluation's rollouts are left out**, and ``nested=True`` includes them::
 
-        rollouts = runs("runs/eval/eval_e5a1bbef5a22")
+        rollouts = runs("runs/eval/eval_e5a1bbef5a22", nested=True)
 
-    A rollout is one whose manifest says so. One written before format ``0.35`` says nothing,
-    and is a rollout where it sits more than one directory below ``run_dir``.
-
-    ``role`` returns only the runs written through an envelope declaring it, which is how the
-    project's own agent is separated from work it did for itself, and ``live`` separates the
-    runs an end user made from the runs made building it (``docs/shipping.md`` §2)::
+    ``role`` separates the project's own agent from work it did for itself, ``live`` the runs
+    an end user made from the runs made building it (``docs/shipping.md`` §2), ``pipeline`` the
+    runs of one registered pipeline (``docs/pipeline.md`` §1.15), ``since`` the runs that
+    started at or after an ISO timestamp, matched as text, and ``last`` the newest that many of
+    what the others left::
 
         agent_runs = runs("runs/", role="agent")
-        label_runs = runs("runs/", role="labelling")
         real = runs("runs/", live=True)
-
-    A run written before the manifest carried those fields counts as ``agent`` and as not live.
-
-    ``since`` keeps the runs that started at or after an ISO timestamp, matched as text, and
-    ``last`` keeps the newest that many of what the other filters left::
-
+        mornings = runs("runs/", pipeline="freshen")
         recent = runs("runs/", nested=True, since="2026-08-14", last=500)
 
-    ``run_dir`` that does not exist gives an empty list, which is what a project has before its
-    first run.
+    A run written before the manifest carried those fields counts as ``agent``, as not live and
+    as a rollout where it sits below ``run_dir``; a ``run_dir`` that is not there is empty.
+
+    **A run whose model answered from a script is left out**: it spent nothing and its answers
+    were written rather than produced. ``scripted=None`` includes them, ``scripted=True``
+    returns only those::
+
+        every = runs("runs/", scripted=None)
     """
     root = Path(run_dir)
     found = [_handle(path) for path in sorted(root.glob(f"**/{MANIFEST_NAME}"))]
     if not nested:
         found = [handle for handle in found if not is_a_rollout(handle.path, handle.manifest, root)]
-    return narrowed(found, role=role, live=live, since=since, last=last)
+    return narrowed(
+        found,
+        role=role,
+        live=live,
+        pipeline=pipeline,
+        scripted=scripted,
+        since=since,
+        last=last,
+    )
 
 
 def is_a_rollout(run_root: Path, manifest: Mapping[str, Any], under: Path) -> bool:
@@ -607,9 +645,15 @@ def rollouts_under(eval_dir: str | os.PathLike[str]) -> list[Any]:
 
     Only the directories directly inside are returned, so a path holding evaluations rather
     than rollouts gives an empty list rather than every rollout of every evaluation under it.
+
+    A rollout made by a scripted client is returned like any other. The caller named one
+    evaluation's directory, so what is in it is the answer; leaving scripted runs out is what
+    a reader summarising a project's runs does.
     """
     root = Path(eval_dir)
-    return [handle for handle in runs(root, nested=True) if handle.path.parent == root]
+    return [
+        handle for handle in runs(root, nested=True, scripted=None) if handle.path.parent == root
+    ]
 
 
 def find_run(run_dir: str | os.PathLike[str], run_id: str) -> Path | None:
@@ -645,24 +689,33 @@ def narrowed(
     *,
     role: str | None = None,
     live: bool | None = None,
+    pipeline: str | None = None,
+    scripted: bool | None = False,
     since: str | None = None,
     last: int | None = None,
 ) -> list[RunHandle]:
     """The runs of ``found`` these filters leave, newest first.
 
     What :func:`runs` applies, over handles already read, for a caller that reads a directory
-    once and reports over more than one selection of it::
+    once and reports over more than one selection of it. Read everything to select from::
 
-        every = runs("runs/", nested=True)
+        every = runs("runs/", nested=True, scripted=None)
         recent = narrowed(every, role="agent", last=500)
+        paid = narrowed(every, scripted=False)
 
-    Every filter left unset keeps everything, so this with no arguments sorts and nothing else.
+    ``scripted`` is the one filter that narrows when it is left unset, matching :func:`runs`:
+    a scripted run is left out unless ``None`` or ``True`` is passed. Every other filter left
+    unset keeps everything.
     """
     kept = list(found)
     if role is not None:
         kept = [handle for handle in kept if handle.role == role]
     if live is not None:
         kept = [handle for handle in kept if handle.live is live]
+    if pipeline is not None:
+        kept = [handle for handle in kept if handle.pipeline == pipeline]
+    if scripted is not None:
+        kept = [handle for handle in kept if handle.scripted is scripted]
     if since is not None:
         kept = [handle for handle in kept if str(handle.manifest.get("started_at") or "") >= since]
     ordered = sorted(kept, key=_started_at, reverse=True)

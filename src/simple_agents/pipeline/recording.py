@@ -421,6 +421,33 @@ def _stream_waivers(clients: Iterable[Any]) -> list[str]:
     return found
 
 
+def _declares_scripted(client: Any) -> bool:
+    """Whether this client, or anything it wraps, answers from a script.
+
+    Read through the wrappers for the same reason ``_stream_waivers`` is: the declaration sits
+    on the client that answers, and a ``PacedClient`` or a project's own wrapper stands in
+    front of it.
+    """
+    seen: set[int] = set()
+    while client is not None and id(client) not in seen:
+        seen.add(id(client))
+        if getattr(client, "scripted", False):
+            return True
+        client = getattr(client, "inner", None)
+    return False
+
+
+def _scripted_run(clients: Iterable[Any]) -> bool:
+    """Whether every model this run could call answers from a script.
+
+    A run that could reach one scripted client and one backend called a backend, so it spent
+    what it spent and is not marked. False where the run could call no model at all, which is
+    a pipeline of ``Deterministic`` nodes rather than a scripted one.
+    """
+    reachable = [client for client in clients if client is not None]
+    return bool(reachable) and all(_declares_scripted(client) for client in reachable)
+
+
 def _what_a_run_was_given(directory: Path) -> tuple[Any, int | None]:
     """The inputs and seed a run recorded for itself, off its `run_start` record.
 
@@ -635,6 +662,9 @@ def _new_manifest(
     from .. import __version__
 
     nodes, prompts, tools, containers = _node_entries(pipeline)
+    # One walk of the nodes that can call a model, read twice: which clients waive the token
+    # counts on a streamed call, and whether every one of them answers from a script.
+    calling = [client for _, _, client in pipeline._calling_nodes(model)]
     return Manifest(
         run_id=run_id,
         started_at=utc_now(),
@@ -642,6 +672,8 @@ def _new_manifest(
         concurrency=concurrency,
         budget=pipeline.budget.to_record(),
         library_version=__version__,
+        pipeline=getattr(pipeline, "name", None),
+        scripted=_scripted_run(calling),
         role=envelope.role,
         live=envelope.live,
         end_user=_end_user_entry(envelope.end_user),
@@ -672,7 +704,7 @@ def _new_manifest(
         constants=pipeline.manifest_constants(),
         graph_fingerprint=pipeline.graph_fingerprint(),
         behaviour_fingerprint=pipeline.behaviour_fingerprint(model),
-        stream_waivers=_stream_waivers(client for _, _, client in pipeline._calling_nodes(model)),
+        stream_waivers=_stream_waivers(calling),
     )
 
 
