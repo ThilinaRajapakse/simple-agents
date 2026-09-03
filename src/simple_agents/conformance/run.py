@@ -10,15 +10,15 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from ..envelope import EVAL_BUCKET
-from .artifacts import DEFAULT_RUNS, Artifacts, read_json
+from .artifacts import DEFAULT_RUNS, Artifacts, read_json, the_run_to_compare
 from .brief import Brief
 from .checks import (
     CHECKS,
     Context,
     DeclaredPipelines,
-    current_fingerprint,
     entries_about_the_pipeline,
 )
 from .elicitation import QUESTIONS
@@ -113,15 +113,15 @@ def run_checks(
                 found.reading_a_live_run(),
                 _what_the_live_runs_did(found, stage),
                 _stages_the_tier_drops(declared.tier, found),
-                _the_pipeline_moved(declared, found, stage),
-                _the_number_came_from_elsewhere(found, stage),
+                _the_pipeline_moved(declared, ctx, stage),
+                _the_number_came_from_elsewhere(ctx, stage),
                 _rollouts_the_results_file_does_not_describe(found),
                 _answers_no_decision_rests_on(declared, stage),
                 _dependencies_no_research_rests_under(declared, stage),
                 _produced_by_no_decision(declared, ctx.produced, stage),
                 _spend_that_produced_nothing(ctx.unfinished),
                 _comments_awaiting(found, declared),
-                _no_step_carries_a_figure(declared, found, ctx.produced, stage),
+                _no_step_carries_a_figure(declared, ctx, ctx.produced, stage),
             )
             if note
         ),
@@ -129,13 +129,13 @@ def run_checks(
 
 
 def _what_the_checks_read(found: Artifacts) -> str | None:
-    """Which pipeline the run-reading checks read, named by its nodes, for the report's header.
+    """Which run the run-reading checks read, named by its pipeline and its nodes.
 
     Each check names the path it opened, and a path does not say what was in it. A project
     whose corpus build, labelling pass or batch script goes through the envelope with no
-    ``role`` writes those runs beside the agent's, and the newest of them is what every
-    run-reading check then reads. Naming the nodes is what makes that visible: `write_summary
-    → keep_summaries` under a recommender's conformance report is not the recommender.
+    ``role`` writes those runs beside the agent's. Naming the nodes is what makes that visible:
+    `write_summary → keep_summaries` under a recommender's conformance report is not the
+    recommender.
 
     The library cannot tell a batch pass from the agent, which is what
     ``RunEnvelope(role=...)`` is for (`docs/run-envelope.md` §2.1).
@@ -145,6 +145,9 @@ def _what_the_checks_read(found: Artifacts) -> str | None:
     manifest, reason = read_json(found.run_dir / "manifest.json")
     if reason is not None or not isinstance(manifest, dict):
         return None
+    named = manifest.get("pipeline")
+    # Why this run and not another: it is the newest of the pipeline the number is about.
+    of_it = f" the newest run of {named!r}," if isinstance(named, str) and named else ""
     nodes = [
         str(node.get("node_id"))
         for node in (manifest.get("nodes") or [])
@@ -156,9 +159,9 @@ def _what_the_checks_read(found: Artifacts) -> str | None:
     if len(nodes) > _NODES_NAMED:
         shape += f" and {len(nodes) - _NODES_NAMED} more"
     return (
-        f"reading {found.relative(found.run_dir)}, {len(nodes)} node(s): {shape}. A pass the "
-        f"project makes for itself declares RunEnvelope(role=...) so it is not read as the "
-        f"agent (docs/run-envelope.md §2.1)."
+        f"reading {found.relative(found.run_dir)},{of_it} {len(nodes)} node(s): {shape}. A "
+        f"pass the project makes for itself declares RunEnvelope(role=...) so it is not read "
+        f"as the agent (docs/run-envelope.md §2.1)."
     )
 
 
@@ -196,7 +199,8 @@ def _comments_awaiting(found: Artifacts, brief: Brief) -> str | None:
 def _what_the_live_runs_did(found: Artifacts, stage: str) -> str | None:
     """What the runs an end user made were, on a project that has shipped.
 
-    Every check but FT-31 reads a run that is not live, and a shipped project accumulates both.
+    Every check but FT-31 prefers a run that is not live, and a shipped project accumulates
+    both.
     A live run is the end user's material and may be sampled down to no payloads, so it is not
     what the suite certifies; it is also the only artifact the project produces after the last
     gate, so a report that never mentions one leaves that road unnamed.
@@ -207,39 +211,52 @@ def _what_the_live_runs_did(found: Artifacts, stage: str) -> str | None:
         return None
     when = _text_in(found.live_run / "manifest.json", "started_at")
     started = f", started {when}" if when else ""
+    # The run the checks read is the measured pipeline's newest, which is a run made while
+    # building wherever that pipeline has one. Where it has only live runs it is a live run of
+    # a different pipeline from this one, and calling it a run made while building is false.
+    read, _ = read_json(found.run_dir / "manifest.json")
+    live = isinstance(read, dict) and read.get("live")
+    what = "another run an end user made" if live else "a run made while building"
     return (
         f"The newest run an end user made is {found.relative(found.live_run)}{started}, and "
-        f"the checks above read {found.relative(found.run_dir)}, which is a run made while "
-        f"building. Live runs are what this project does now, and they are not certified here: "
-        f"a live run carries the end user's material and can be sampled down to no payloads. "
+        f"the checks above read {found.relative(found.run_dir)}, which is {what}. Live runs "
+        f"are what this project does now, and they are not certified here: a live run carries "
+        f"the end user's material and can be sampled down to no payloads. "
         f'FT-31 reads one, and `runs("runs/", live=True)` reads them all.'
     )
 
 
-def _the_number_came_from_elsewhere(found: Artifacts, stage: str) -> str | None:
+def _the_number_came_from_elsewhere(ctx: Context, stage: str) -> str | None:
     """FT-37 before the project has reached `ship`, where that check does not fire yet.
 
     The same comparison, reported rather than failed. A pipeline moves several times an hour
     while it is being built, and what clears the failure is another evaluation, so the gate
     waits for `ship` and this covers the ground until then.
     """
+    found = ctx.artifacts
     if stage == "ship" or found.results is None or found.run_dir is None:
         return None
     measured = _text_in(found.results, "config", "behaviour_fingerprint")
-    current, _ = current_fingerprint(found)
-    if measured is None or current is None or current == measured:
+    against = the_run_to_compare(found, _config_of(ctx), whole=False)
+    if measured is None or against.stamp is None or against.stamp == measured:
         return None
     return (
         f"The number in {found.relative(found.results)} was measured over "
-        f"{measured}, and the newest run under runs/ was made by {current}. A prompt, a node's "
-        f"version, a sampling parameter, a tool, the model or a budget has moved since that "
-        f"file was written. FT-37 fails on this from stage ship; until then it is reported, "
-        f"because what clears it is another evaluation."
+        f"{measured}, and the newest run of that pipeline was made by {against.stamp}. A "
+        f"prompt, a node's version, a sampling parameter, a tool, the model or a budget has "
+        f"moved since that file was written. FT-37 fails on this from stage ship; until then "
+        f"it is reported, because what clears it is another evaluation."
     )
 
 
+def _config_of(ctx: Context) -> Any:
+    """The `config` of the results file the checks read, or ``None`` where there is none."""
+    results, _ = ctx.results()
+    return results.get("config") if isinstance(results, dict) else None
+
+
 def _no_step_carries_a_figure(
-    brief: Brief, found: Artifacts, produced: Produced, stage: str
+    brief: Brief, ctx: Context, produced: Produced, stage: str
 ) -> str | None:
     """FT-08, as a note: every figure this project reports is end to end.
 
@@ -256,9 +273,10 @@ def _no_step_carries_a_figure(
     """
     if stage == "shape" or not Tier(str(brief.tier)).covers(Tier("evaluated")):
         return None
+    found = ctx.artifacts
     if found.results is None or found.run_dir is None:
         return None
-    if _the_number_came_from_elsewhere(found, stage) is not None:
+    if _the_number_came_from_elsewhere(ctx, stage) is not None:
         return None
     results, reason = read_json(found.results)
     if reason is not None or not isinstance(results, dict):
@@ -398,7 +416,7 @@ def _started_after(manifest_path: Path, written: str) -> bool:
         return False
 
 
-def _the_pipeline_moved(brief: Brief, found: Artifacts, stage: str) -> str | None:
+def _the_pipeline_moved(brief: Brief, ctx: Context, stage: str) -> str | None:
     """The entries due for re-reading, where the pipeline has moved under them.
 
     Every gate fires when a project reaches a point. What makes a brief entry wrong is a
@@ -415,7 +433,9 @@ def _the_pipeline_moved(brief: Brief, found: Artifacts, stage: str) -> str | Non
     """
     if stage == "ship":
         return None
-    current, _ = current_fingerprint(found)
+    found = ctx.artifacts
+    against = the_run_to_compare(found, _config_of(ctx), whole=True)
+    current = against.stamp
     if current is None:
         return None
 
@@ -431,12 +451,14 @@ def _the_pipeline_moved(brief: Brief, found: Artifacts, stage: str) -> str | Non
         )
     if brief.confirmed_against == current:
         return None
+    where = found.relative(against.where.parent) if against.where else None
     return (
         f"The pipeline has moved since the brief was confirmed at "
-        f"{brief.confirmed_against}, and the run at {found.relative(found.run_dir)} recorded "
-        f"{current}. These entries describe the pipeline and are due for re-reading against "
-        f"the code, and so is design.md; correct what has gone stale, then record "
-        f'confirmed_against = "{current}": {due}.'
+        f"{brief.confirmed_against}, and the run at {where or 'runs/'} recorded {current}. "
+        f"These entries describe the pipeline and are due for re-reading against the code, and "
+        f"so is design.md; correct what has gone stale, then record "
+        f'confirmed_against = "{current}": {due}. `simple-agents record read-against` writes '
+        f"that value."
     )
 
 
@@ -603,8 +625,9 @@ def _produced_by_no_decision(brief: Brief, produced: Produced, stage: str) -> st
     be cleared by naming them rather than by reading them.
 
     Each name carries the day of the newest run that recorded it, shown where that is earlier
-    than the day of the newest run read, so a step the project removed reads as removed.
-    Addressed to the coding agent.
+    than the day of the newest run read, so a step the project removed reads as removed. A name
+    that only a run the project made for itself recorded says which role, since a corpus pass
+    and the agent are two things to decide about. Addressed to the coding agent.
     """
     if STAGES.index(stage) < STAGES.index("shape") or not produced.runs_read:
         return None
@@ -617,7 +640,7 @@ def _produced_by_no_decision(brief: Brief, produced: Produced, stage: str) -> st
     parts = [
         found
         for word, held in produced.by_kind()
-        if (found := _unnamed_of_one_kind(word, held, named, produced.newest_day))
+        if (found := _unnamed_of_one_kind(word, held, named, produced.newest_day, produced))
     ]
     # Manifests carry `constants` from format 0.33. Saying nothing where none of the runs read
     # carried one would read as a project whose code defines no number. A project with no run
@@ -641,7 +664,7 @@ def _produced_by_no_decision(brief: Brief, produced: Produced, stage: str) -> st
 
 
 def _unnamed_of_one_kind(
-    word: str, held: dict[str, str], named: set[str], newest_day: str
+    word: str, held: dict[str, str], named: set[str], newest_day: str, produced: Produced
 ) -> str | None:
     """One kind's sentence: how many no decision names, which, and which were last seen earlier."""
     unnamed = sorted(
@@ -651,13 +674,21 @@ def _unnamed_of_one_kind(
     if not unnamed:
         return None
     shown = [
-        name if held[name] >= newest_day else f"{name} (last seen {held[name]})"
-        for name in unnamed[:_PRODUCED_NAMED]
+        _one_name(name, held[name], newest_day, produced) for name in unnamed[:_PRODUCED_NAMED]
     ]
     rest = f" and {len(unnamed) - _PRODUCED_NAMED} more" if len(unnamed) > _PRODUCED_NAMED else ""
     stale = sum(1 for name in unnamed if held[name] < newest_day)
     trailing = f" {stale} of them were last seen before {newest_day}." if stale else ""
     return f"{len(unnamed)} of {len(held)} {word}(s): {', '.join(shown)}{rest}.{trailing}"
+
+
+def _one_name(name: str, day: str, newest_day: str, produced: Produced) -> str:
+    """One name as the note prints it: when it was last seen, and which runs recorded it."""
+    said = [] if day >= newest_day else [f"last seen {day}"]
+    where = produced.where_from(name)
+    if where:
+        said.append(where)
+    return f"{name} ({', '.join(said)})" if said else name
 
 
 def _pipelines_in_the_code(root: Path) -> DeclaredPipelines:

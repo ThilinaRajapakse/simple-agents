@@ -231,16 +231,22 @@ def record_shape(path: str | os.PathLike[str], pipeline: str, fingerprint: str) 
 
 
 def newest_run_fingerprints(root: str | os.PathLike[str]) -> tuple[str, str, Path]:
-    """The newest agent run's ``behaviour_fingerprint`` and ``graph_fingerprint``, and its path.
+    """The ``behaviour_fingerprint`` and ``graph_fingerprint`` FT-38 reads, and the run's path.
 
-    What FT-38 compares ``confirmed_against`` to, read the way the checks read it::
+    What ``confirmed_against`` is compared to, read the way the check reads it::
 
         stamp, shape, run = newest_run_fingerprints(".")
 
-    Raises :class:`~simple_agents.errors.ConfigurationError` where no agent run is on disk
-    or the newest carries no stamp.
+    **The pipeline the results file measured**, rather than whichever pipeline ran last: on a
+    project running a background pass every morning those are different runs, and a stamp
+    written off the wrong one would never clear the check the command exists to clear
+    (`docs/conformance.md` §3.8). A project whose runs predate the name falls back to the
+    newest run of any pipeline, which is what this always read.
+
+    Raises :class:`~simple_agents.errors.ConfigurationError` where no run answers for that
+    pipeline, or where the run it found carries no stamp.
     """
-    from .artifacts import Artifacts, read_json
+    from .artifacts import Artifacts, read_json, the_run_to_compare
 
     found = Artifacts.discover(Path(root))
     if found.run_dir is None:
@@ -248,15 +254,23 @@ def newest_run_fingerprints(root: str | os.PathLike[str]) -> tuple[str, str, Pat
             f"No run of the project's agent under {Path(root) / 'runs'}, so nothing records "
             f"what the code is. Run the pipeline once, and the stamp is on its manifest."
         )
-    manifest, reason = read_json(found.run_dir / "manifest.json")
+    results, _ = read_json(found.results) if found.results else (None, None)
+    config = results.get("config") if isinstance(results, dict) else None
+    against = the_run_to_compare(found, config, whole=True)
+    if against.where is None:
+        raise ConfigurationError(
+            f"{against.reason or 'No run answers for the pipeline this project measured.'}\n"
+            f"Run the pipeline once, and the stamp is on its manifest."
+        )
+    manifest, reason = read_json(against.where)
     stamp = (manifest or {}).get("behaviour_fingerprint") if isinstance(manifest, dict) else None
     shape = (manifest or {}).get("graph_fingerprint") if isinstance(manifest, dict) else None
     if reason is not None or not isinstance(stamp, str) or not isinstance(shape, str):
         raise ConfigurationError(
-            f"The newest run, {found.run_dir}, carries no readable behaviour_fingerprint, so "
+            f"The run at {against.where.parent} carries no readable behaviour_fingerprint, so "
             f"it was written before the field existed. Run the pipeline once more."
         )
-    return stamp, shape, found.run_dir
+    return stamp, shape, against.where.parent
 
 
 def _check_key(target: Path, key: str, value: Any) -> None:

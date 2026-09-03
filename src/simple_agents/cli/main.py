@@ -168,7 +168,14 @@ def _check(args: argparse.Namespace) -> int:
         brief=args.brief,
         run_dir=args.run,
         results=args.results,
-        scope=Scope(role=args.role, live=args.live, since=args.since, last=args.last),
+        scope=Scope(
+            role=args.role,
+            live=args.live,
+            pipeline=args.pipeline,
+            scripted=None if args.scripted else False,
+            since=args.since,
+            last=args.last,
+        ),
     )
     if args.json:
         print(json.dumps(report.to_record(), indent=2))
@@ -297,7 +304,13 @@ def _report(args: argparse.Namespace) -> int:
 
     where = path if _holds_runs(path) else path / "runs"
     report = report_over_runs(
-        where, role=args.role, live=args.live, since=args.since, last=args.last
+        where,
+        role=args.role,
+        live=args.live,
+        pipeline=args.pipeline,
+        scripted=None if args.scripted else False,
+        since=args.since,
+        last=args.last,
     )
     if not report.read and not report.found:
         print(
@@ -820,6 +833,16 @@ def _scoping(command: argparse.ArgumentParser, *, reads: str) -> None:
         "--since", default=None, help="runs that started at or after an ISO timestamp"
     )
     command.add_argument("--last", type=int, default=None, help="the newest N runs of what is left")
+    command.add_argument(
+        "--pipeline",
+        default=None,
+        help="one registered pipeline, by the name it is registered under",
+    )
+    command.add_argument(
+        "--scripted",
+        action="store_true",
+        help="include runs whose model answered from a script, which are left out by default",
+    )
 
 
 def _entry_point() -> None:

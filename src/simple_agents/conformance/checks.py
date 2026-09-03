@@ -1,9 +1,10 @@
-"""The twenty-seven checks the suite runs, each reading the artifacts the project produced.
+"""The twenty-eight checks the suite runs, each reading the artifacts the project produced.
 
 Every check here is `artifact` surface: it reads files and executes nothing. The order below
-is the order they run in, which puts the ones that need no evaluation first. All but FT-35,
-FT-41 and FT-42 read the newest run. FT-35 reads every run the pipeline as it stands has made,
-and FT-41 and FT-42 every run under the directory whatever made it.
+is the order they run in, which puts the ones that need no evaluation first. All but four read
+one run: the newest of the pipeline the results file measured. FT-25 reads the newest run of
+each pipeline, FT-35 every run the pipeline as it stands has made, and FT-41 and FT-42 every
+run there is (`docs/conformance.md` §3.8).
 
 | Entry | Reads | Fires when |
 |---|---|---|
@@ -16,28 +17,29 @@ and FT-41 and FT-42 every run under the directory whatever made it.
 | FT-31 | the run's manifest, and a live run's consultations | a shipped project's consultations reach a stand-in |
 | FT-25 | the brief's `consultation` answer, the manifest's tools, and the results file | the answer names something to ask and no tool reaches a node |
 | FT-32 | the brief's `tool_effects` answer, and the manifest's tools | the run declares a side-effect class the answer never mentions |
-| FT-33 | `BUILD-LOG.md`, and when the newest run started | the log was last written before that run |
+| FT-33 | `BUILD-LOG.md`, and when the run it read ended | the log was last written before that run |
 | FT-34 | `design.md`, and the stage it was last confirmed at | a section is empty, the builder is not quoted, or it is stale |
 | FT-35 | every run this pipeline made, through their manifests | a node spent an allowance without calling a tool |
 | FT-36 | `research.md`, and the stage it was last confirmed at | a section is empty, a candidate has no outcome, or it is stale |
 | FT-01 | the results file | no evaluation, at tier `evaluated` |
+| FT-45 | the results file's `config.pipeline` | the number was measured over a pipeline no `@pipeline_factory` registers |
 | FT-02 | the results file | one split, or a held-out split that is empty |
 | FT-03 | the results file | the contamination report holds a pair spanning the splits |
 | FT-04 | the results file | no held-out example expects absence, in its answer or in a condition of its key |
 | FT-06 | the results file | a metric reported with no interval and no reason |
 | FT-07 | the results file and the trajectories | a rollout or a sampling node with no seed |
-| FT-37 | the results file's stamp, against the newest run's | the reported number came from a pipeline that has since moved |
-| FT-38 | the brief's `confirmed_against`, against the newest run's stamp | the entries describing the pipeline were never re-read |
+| FT-37 | the results file's stamp, against the newest run of that same pipeline | the reported number came from a pipeline that has since moved |
+| FT-38 | the brief's `confirmed_against`, against that pipeline's newest whole run | the entries describing the pipeline were never re-read |
 | FT-39 | `comments.toml`, and the brief's `comments_block_gates` | a comment the builder left is still open and the brief says open comments block |
 | FT-40 | the pipelines `agent.py` declares, else the run directory's manifest | a step is still `NotBuilt`: counted at every stage, a failure from `ship` |
 | FT-41 | every run under the run directory, through their manifests | a run stopped to ask and is still waiting, and none was ever resumed |
 | FT-42 | the brief's `produces`, against the node ids, tools and constants of every agent run | a decision names something no run recorded: counted at every stage, a failure from `ship` |
-| FT-43 | the newest run's `mcp`, one entry per MCP server it declared tools from | a server offers something other than what the project declared |
+| FT-43 | the `mcp` of the run it read, one entry per MCP server it declared tools from | a server offers something other than what the project declared |
 | FT-44 | every `recorded_at` in the brief, against the clock the suite runs on | a stamp is ahead of the clock, so it was composed rather than read |
 
 **FT-37 and FT-38 read a change rather than an arrival.** Every other check fires when a
 project reaches a point and passes forever after. These two compare what an artifact records
-against what the newest run was made by, so they fire again each time the pipeline moves. Both
+against what that pipeline's newest run was made by, so they fire again each time it moves. Both
 name stage `ship`, and a stage a project has reached it stays at, so both go on firing.
 
 Each returns a ``CheckResult`` carrying the taxonomy's own message, never one written here.
@@ -72,8 +74,10 @@ from .artifacts import (
     read_json,
     read_jsonl,
     rows_with_no_outcome,
+    slice_nodes,
     survey_rows,
     tables_under,
+    the_run_to_compare,
 )
 from .brief import Brief, BriefEntry
 from .elicitation import QUESTIONS, Question, required_at
@@ -216,7 +220,19 @@ def _result(ctx: Context, entry_id: str, outcome: Outcome, **kwargs: Any) -> Che
     )
 
 
-def _failure(ctx: Context, entry_id: str, read: tuple[str, ...], **values: Any) -> CheckResult:
+def _failure(
+    ctx: Context,
+    entry_id: str,
+    read: tuple[str, ...],
+    *,
+    detail: str | None = None,
+    **values: Any,
+) -> CheckResult:
+    """One failure, with the taxonomy's own message and anything the check has to add.
+
+    ``detail`` is for what the reader needs beside the message and the message cannot carry,
+    such as which run was read where the check had to widen its read.
+    """
     entry = ctx.entry(entry_id)
     return _result(
         ctx,
@@ -224,6 +240,7 @@ def _failure(ctx: Context, entry_id: str, read: tuple[str, ...], **values: Any) 
         Outcome.FAILED,
         findings=(Finding(entry.id, entry.render(**values)),),
         read=read,
+        detail=detail,
     )
 
 
@@ -268,6 +285,14 @@ def _elsewhere(ctx: Context) -> str | None:
 
 
 def _no_run_directory(ctx: Context) -> str:
+    scripted = _scripted_under(ctx.artifacts.root)
+    if scripted:
+        return (
+            f"no run of the agent under runs/, and {scripted} whose model answered from a "
+            f"script. A scripted run spent nothing and its answers were written rather than "
+            f"produced, so the checks leave it out; run the agent against a backend, or a "
+            f"cassette, and the run it writes is one these read"
+        )
     others = other_roles(ctx.artifacts.root)
     if others:
         listed = ", ".join(f"{count} {role}" for role, count in sorted(others.items()))
@@ -283,6 +308,17 @@ def _no_run_directory(ctx: Context) -> str:
         f"no run directory under runs/, and a run was found at {where}. The checks read runs/; "
         f"pass --run {where} to read that one, or set RunEnvelope(run_dir='runs')"
     )
+
+
+def _scripted_under(root: Path) -> int:
+    """How many runs under ``runs/`` answered from a script, which the checks leave out.
+
+    A project whose every run is scripted has runs, and a check reporting none would be
+    telling it something untrue about its own directory.
+    """
+    from ..envelope import runs
+
+    return len(runs(root / DEFAULT_RUNS, nested=True, scripted=True))
 
 
 def _payload_note(ctx: Context, records: list[Any]) -> str | None:
@@ -894,30 +930,105 @@ def ft_25(ctx: Context) -> CheckResult:
             detail="The `consultation` answer records that there is nothing to ask.",
         )
 
-    tools, where, reason = _manifest_tools(ctx)
+    found, where, reason = _consultation_across_the_pipelines(ctx)
     if reason is not None:
         return _result(ctx, "FT-25", Outcome.BLOCKED, read=_read(ctx, where), detail=reason)
 
-    channels = [tool for tool in tools if tool.get("answered_by")]
     read = (ctx.artifacts.relative(ctx.brief.path) or "brief.toml", *_read(ctx, where))
-    if not channels:
+    if not found.registered:
         return _failure(
-            ctx, "FT-25", read, reason="no consultation tool is registered on the run's manifest"
+            ctx,
+            "FT-25",
+            read,
+            reason=(
+                f"no consultation tool is registered by any of the {found.pipelines} "
+                f"pipeline(s) this project has run"
+                if found.pipelines > 1
+                else "no consultation tool is registered on the run's manifest"
+            ),
         )
-    if not any(tool.get("offered") for tool in channels):
-        named = ", ".join(sorted(str(tool.get("name")) for tool in channels))
+    if not found.offered:
+        named = ", ".join(sorted(str(tool.get("name")) for tool in found.registered))
         return _failure(
             ctx,
             "FT-25",
             read,
             reason=f"the consultation tool {named} is registered and no node was given it",
         )
-    note, also_read = _was_it_ever_reached(ctx, channels)
+    note, also_read = _was_it_ever_reached(ctx, found.offered, where)
     return _result(ctx, "FT-25", Outcome.PASSED, read=(*read, *also_read), detail=note)
 
 
+@dataclass(frozen=True, slots=True)
+class _Consultation:
+    """The consultation tools the project's pipelines register, across all of them."""
+
+    registered: list[dict[str, Any]] = field(default_factory=list)
+    offered: list[dict[str, Any]] = field(default_factory=list)
+    pipelines: int = 0
+
+
+def _consultation_across_the_pipelines(
+    ctx: Context,
+) -> tuple[_Consultation, Path | None, str | None]:
+    """Every consultation tool the newest run of each pipeline registered, and where to cite.
+
+    Whether the agent can ask a person is a question about the project rather than about one
+    pipeline. A project whose corpus pass ran this morning registers no channel on that run
+    and registers one on the pipeline the end user meets, and reading the newest run of any
+    pipeline reports the first as the whole answer.
+
+    ``where`` is the manifest to cite: the newest run of a pipeline that offers a channel
+    where one does, and the newest run of any pipeline where none does.
+    """
+    newest = ctx.artifacts.by_pipeline.newest
+    if not newest:
+        return _consultation_on_the_newest_run(ctx)
+    registered: list[dict[str, Any]] = []
+    offered: list[dict[str, Any]] = []
+    cite: Path | None = None
+    for handle in newest.values():
+        channels = _channels_in(handle.manifest)
+        registered.extend(channels)
+        given = [tool for tool in channels if tool.get("offered")]
+        offered.extend(given)
+        if given and cite is None:
+            cite = handle.path / "manifest.json"
+    if cite is None:
+        cite = ctx.artifacts.run_dir / "manifest.json" if ctx.artifacts.run_dir else None
+    return _Consultation(registered, offered, len(newest)), cite, None
+
+
+def _channels_in(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    """The consultation tools one manifest records, which are the ones naming an answerer."""
+    return [
+        tool
+        for tool in (manifest.get("tools") or [])
+        if isinstance(tool, dict) and tool.get("answered_by")
+    ]
+
+
+def _consultation_on_the_newest_run(
+    ctx: Context,
+) -> tuple[_Consultation, Path | None, str | None]:
+    """What FT-25 reads on a project whose runs group into no pipeline, or that has none."""
+    if ctx.artifacts.run_dir is None:
+        return (
+            _Consultation(),
+            None,
+            "No run directory under runs/, so no manifest names a tool (FT-13).",
+        )
+    tools, where, reason = _manifest_tools(ctx)
+    channels = [tool for tool in tools if tool.get("answered_by")]
+    return (
+        _Consultation(channels, [tool for tool in channels if tool.get("offered")], 1),
+        where,
+        reason,
+    )
+
+
 def _was_it_ever_reached(
-    ctx: Context, channels: list[dict[str, Any]]
+    ctx: Context, channels: list[dict[str, Any]], where: Path | None = None
 ) -> tuple[str | None, tuple[str, ...]]:
     """What the run and the evaluation this check read did with the consultation tool.
 
@@ -933,9 +1044,9 @@ def _was_it_ever_reached(
     ``Unavailable``, and an evaluation is the repeated execution a project watches most. A
     consultation that no rollout reached was measured by none of it.
     """
-    named = ", ".join(sorted(str(tool.get("name")) for tool in channels))
+    named = ", ".join(sorted({str(tool.get("name")) for tool in channels}))
     said, also_read = [], []
-    if _the_run_asked_nothing(ctx):
+    if _the_run_asked_nothing(where or (ctx.artifacts.run_dir or Path()) / "manifest.json"):
         said.append("The run read here asked nothing through it")
     asked, rollouts = _consultations_in_the_results(ctx)
     if rollouts and not asked:
@@ -951,11 +1062,13 @@ def _was_it_ever_reached(
     ), tuple(also_read)
 
 
-def _the_run_asked_nothing(ctx: Context) -> bool:
-    """Whether the run this check read recorded a consultation count of zero."""
-    if ctx.artifacts.run_dir is None:
-        return False
-    manifest, _ = read_json(ctx.artifacts.run_dir / "manifest.json")
+def _the_run_asked_nothing(where: Path) -> bool:
+    """Whether the run whose manifest this is recorded a consultation count of zero.
+
+    ``where`` is the run the tool was found on rather than whichever ran last, so the note
+    describes a run that had the tool to ask through.
+    """
+    manifest, _ = read_json(where)
     counts = manifest.get("counts") if isinstance(manifest, dict) else None
     return isinstance(counts, dict) and counts.get("consultation") == 0
 
@@ -1054,7 +1167,7 @@ def ft_32(ctx: Context) -> CheckResult:
 
 
 def _manifest_tools(ctx: Context) -> tuple[list[dict[str, Any]], Path | None, str | None]:
-    """The `tools` the newest run's manifest declares, or a reason there are none to read."""
+    """The `tools` the run the checks read declares, or a reason there are none to read."""
     if ctx.artifacts.run_dir is None:
         return [], None, "No run directory under runs/, so no manifest names a tool (FT-13)."
     path = ctx.artifacts.run_dir / "manifest.json"
@@ -1075,7 +1188,7 @@ BUILD_LOG = "BUILD-LOG.md"
 
 
 def ft_33(ctx: Context) -> CheckResult:
-    """A build log the project keeps was written no earlier than its newest run started."""
+    """A build log the project keeps was written no earlier than the run the checks read ended."""
     log = ctx.artifacts.root / BUILD_LOG
     if not log.is_file():
         return _result(
@@ -1104,7 +1217,7 @@ def ft_33(ctx: Context) -> CheckResult:
             "FT-33",
             Outcome.BLOCKED,
             read=_read(ctx, log),
-            detail="The newest run's manifest carries no timestamp, so nothing dates the work.",
+            detail="The run this read carries no timestamp on its manifest, so nothing dates the work.",
         )
     written = datetime.fromtimestamp(log.stat().st_mtime, tz=timezone.utc)
     if written >= started:
@@ -1148,7 +1261,7 @@ def _run_finished_at(path: Path) -> datetime | None:
 def ft_35(ctx: Context) -> CheckResult:
     """Whether any node spent a whole allowance without acting, over the runs one pipeline made.
 
-    The one check that reads more than the newest run. A project spending a quarter of its
+    One of the four that read more than one run. A project spending a quarter of its
     calls this way can have nine runs in ten come back clean, so a figure over one run says
     nothing, and the counts come from each run's manifest rather than its trajectory.
     """
@@ -1218,6 +1331,13 @@ def _nothing_to_read(found: UnfinishedAcross) -> str:
             f"{found.found:,} run(s) under {found.where}/ and none left to read after "
             f"{narrowed}. Nothing is measured, so nothing is reported."
         )
+    if found.scripted and found.scripted == found.found:
+        return (
+            f"{found.found:,} run(s) under {found.where}/ and every one of them answered from "
+            f"a script. A node that spent nothing on a scripted answer is not a node that "
+            f"spent an allowance without acting, so these are left out; run the agent against "
+            f"a backend, or a cassette, and this reads what it wrote (FT-13)."
+        )
     return (
         f"{found.found:,} run(s) under {found.where}/ and none declaring role={found.role!r}. "
         f"A run declares what it is for through RunEnvelope(role=...), and only role='agent' "
@@ -1237,7 +1357,8 @@ def _what_was_read(found: UnfinishedAcross) -> str:
     # what the check is for. The scope is right, since a figure over a pipeline that has changed
     # is a stale figure, so the line names where the rest can be read instead.
     elsewhere = (
-        f" `simple-agents report {found.where}/` reads every run under it, including those."
+        f" `simple-agents report {found.where}/` reads those, and `--scripted` adds the runs "
+        f"whose model answered from a script."
         if found.other_pipeline or found.other_role or found.without_counts
         else ""
     )
@@ -1259,6 +1380,57 @@ def ft_01(ctx: Context) -> CheckResult:
     if not results.get("rollouts") or not example_set.get("content_hash"):
         return _failure(ctx, "FT-01", read)
     return _result(ctx, "FT-01", Outcome.PASSED, read=read)
+
+
+# -- FT-45: the number came from a pipeline the project declares nowhere ----------------------
+
+
+def ft_45(ctx: Context) -> CheckResult:
+    """The results file names a registered pipeline.
+
+    Read off the results file alone, so nothing is imported and a project whose ``agent.py``
+    will not import is still told. A rung taken with ``Pipeline.slice`` keeps the name of the
+    pipeline it came from, so evaluating one step at a time passes.
+    """
+    results, _ = ctx.results()
+    read = _read(ctx, ctx.artifacts.results)
+    if not isinstance(results, dict):
+        return _blocked_on_results(ctx, "FT-45")
+    config = results.get("config") or {}
+    if not isinstance(config, dict):
+        return _blocked_on_results(ctx, "FT-45")
+    if "pipeline" not in config:
+        return _result(
+            ctx,
+            "FT-45",
+            Outcome.BLOCKED,
+            read=read,
+            detail=(
+                "This results file records no `pipeline` key: it was written before the "
+                "field existed, so which pipeline the number describes is unknown. Results "
+                "files carry it from format 0.31, and re-running the evaluation writes one."
+            ),
+        )
+    named = config.get("pipeline")
+    if isinstance(named, str) and named:
+        nodes = slice_nodes(config.get("slice"))
+        return _result(
+            ctx,
+            "FT-45",
+            Outcome.PASSED,
+            read=read,
+            detail=(
+                f"Measured over {named!r}, the {len(nodes)} node(s) of it this evaluation sliced."
+                if nodes
+                else f"Measured over {named!r}."
+            ),
+        )
+    return _failure(
+        ctx,
+        "FT-45",
+        read,
+        results=ctx.artifacts.relative(ctx.artifacts.results) or "the results file",
+    )
 
 
 # -- FT-02: no held-out split ---------------------------------------------------------------
@@ -1607,7 +1779,14 @@ def current_fingerprint(artifacts: Artifacts) -> tuple[str | None, str | None]:
 
     The manifest rather than the pipeline, because the suite reads artifacts and never imports
     the project's code. ``(stamp, None)`` where it is on disk, ``(None, reason)`` where it is
-    not.
+    not::
+
+        stamp, reason = current_fingerprint(Artifacts.discover(Path(".")))
+
+    **This reads the newest run of any pipeline.** A project with more than one runs whichever
+    it was asked for, so FT-37 and FT-38 read the newest run of the one the results file
+    measured, through ``the_run_to_compare`` (``docs/conformance.md`` §3.8). This is what those
+    fall back to where nothing names a pipeline.
     """
     if artifacts.run_dir is None:
         return None, "No run directory under runs/. The pipeline is unrecorded (FT-13)."
@@ -1627,7 +1806,7 @@ def current_fingerprint(artifacts: Artifacts) -> tuple[str | None, str | None]:
 
 
 def ft_37(ctx: Context) -> CheckResult:
-    """The stamp on the results file against the stamp on the newest run.
+    """The stamp on the results file against the stamp on the newest run of the same pipeline.
 
     Fails from stage `ship` and is a note before it. A pipeline moves several times an hour
     while it is being built, and what clears this is another evaluation.
@@ -1637,7 +1816,8 @@ def ft_37(ctx: Context) -> CheckResult:
     if not isinstance(results, dict):
         return _blocked_on_results(ctx, "FT-37")
 
-    measured = (results.get("config") or {}).get("behaviour_fingerprint")
+    config = results.get("config") or {}
+    measured = config.get("behaviour_fingerprint")
     if not isinstance(measured, str) or not measured:
         return _result(
             ctx,
@@ -1650,18 +1830,19 @@ def ft_37(ctx: Context) -> CheckResult:
                 "suite.run() records it, and suite.rescore() copies it off the rollouts."
             ),
         )
-    current, reason = current_fingerprint(ctx.artifacts)
-    if current is None:
-        return _result(ctx, "FT-37", Outcome.BLOCKED, read=read, detail=reason)
-    if current == measured:
-        return _result(ctx, "FT-37", Outcome.PASSED, read=read)
+    against = the_run_to_compare(ctx.artifacts, config, whole=False)
+    if against.stamp is None:
+        return _result(ctx, "FT-37", Outcome.BLOCKED, read=read, detail=against.reason)
+    if against.stamp == measured:
+        return _result(ctx, "FT-37", Outcome.PASSED, read=read, detail=against.note)
     return _failure(
         ctx,
         "FT-37",
-        (*read, *_read(ctx, ctx.artifacts.run_dir / "manifest.json")),
+        (*read, *_read(ctx, against.where)),
+        detail=against.note,
         results=ctx.artifacts.relative(ctx.artifacts.results) or "the results file",
         measured=measured,
-        current=current,
+        current=against.stamp,
     )
 
 
@@ -1671,7 +1852,10 @@ def ft_37(ctx: Context) -> CheckResult:
 def ft_38(ctx: Context) -> CheckResult:
     """Whether the entries describing the pipeline were read against it since it last moved.
 
-    Reads whether the value was recorded, never whether anyone read the entries.
+    Reads whether the value was recorded, never whether anyone read the entries. The pipeline
+    is the one the results file measured, which is the one the brief's figures describe, so a
+    project whose background pass runs every morning is not asked to re-read its brief every
+    morning.
     """
     read = (ctx.artifacts.relative(ctx.brief.path) or "brief.toml",)
     due = entries_about_the_pipeline(ctx.brief)
@@ -1686,25 +1870,27 @@ def ft_38(ctx: Context) -> CheckResult:
                 "moves."
             ),
         )
-    current, reason = current_fingerprint(ctx.artifacts)
-    if current is None:
-        return _result(ctx, "FT-38", Outcome.BLOCKED, read=read, detail=reason)
+    against = the_run_to_compare(ctx.artifacts, (ctx.results()[0] or {}).get("config"), whole=True)
+    if against.stamp is None:
+        return _result(ctx, "FT-38", Outcome.BLOCKED, read=read, detail=against.reason)
 
     confirmed = ctx.brief.confirmed_against
-    if confirmed == current:
+    if confirmed == against.stamp:
+        detail = f"{len(due)} entry(s) describing the pipeline, read against {against.stamp}."
         return _result(
             ctx,
             "FT-38",
             Outcome.PASSED,
             read=read,
-            detail=f"{len(due)} entry(s) describing the pipeline, read against {current}.",
+            detail=f"{detail} {against.note}" if against.note else detail,
         )
     return _failure(
         ctx,
         "FT-38",
-        (*read, *_read(ctx, ctx.artifacts.run_dir / "manifest.json")),
+        (*read, *_read(ctx, against.where)),
+        detail=against.note,
         confirmed=confirmed or "nothing recorded",
-        current=current,
+        current=against.stamp,
         due=", ".join(due),
     )
 
@@ -1775,7 +1961,7 @@ def ft_39(ctx: Context) -> CheckResult:
 
 
 def _planned_from_the_manifest(ctx: Context) -> tuple[list[str], tuple[str, ...], str | None]:
-    """The steps the newest run recorded as planned, for a project whose code was not read.
+    """The steps the run the checks read recorded as planned, for a project whose code was not read.
 
     A manifest only ever holds the steps of the pipeline that ran, so this is the narrower
     answer and is used where the code could not be imported.
@@ -1785,7 +1971,7 @@ def _planned_from_the_manifest(ctx: Context) -> tuple[list[str], tuple[str, ...]
     manifest, reason = read_json(ctx.artifacts.run_dir / "manifest.json")
     read = (f"{ctx.artifacts.relative(ctx.artifacts.run_dir)}/manifest.json",)
     if reason is not None or not isinstance(manifest, dict):
-        return [], read, "the newest run's manifest could not be read either, which FT-13 reports"
+        return [], read, "the run's manifest could not be read either, which FT-13 reports"
     return RecordedNodes(manifest).planned(), read, None
 
 
@@ -1794,7 +1980,7 @@ def ft_40(ctx: Context) -> CheckResult:
 
     Read from ``agent.py`` where the code imports, since that is where a step is declared and
     a project at `shape` has no run to record one. A project whose code could not be imported
-    falls back to the newest run's manifest and says which it read.
+    falls back to the manifest of the run the checks read and says which it used.
     """
     declared = ctx.declared
     if declared is not None and declared.imported:
@@ -1861,14 +2047,15 @@ class Resumptions:
 def _resumptions(run_dir: Path) -> Resumptions:
     """Read every manifest under ``run_dir`` for what it says about stopping and continuing.
 
-    Every run, whatever role or pipeline it declares: a labelling pass that stopped to ask a
-    person is a run that stopped, and a project resuming one of those has written the half
-    this check is looking for.
+    Every run, whatever role or pipeline it declares, and whatever answered its model: a
+    labelling pass that stopped to ask a person is a run that stopped, so is a run made
+    against a scripted client, and a project resuming one of those has written the half this
+    check is looking for.
     """
     if not run_dir.is_dir():
         return Resumptions()
     read = stopped = open_ = resumed = 0
-    for handle in runs(run_dir, nested=True):
+    for handle in runs(run_dir, nested=True, scripted=None):
         read += 1
         entries = handle.manifest.get("suspensions")
         if not isinstance(entries, list) or not entries:
@@ -1930,9 +2117,9 @@ def ft_41(ctx: Context) -> CheckResult:
 
 
 def _newest_manifest(ctx: Context) -> tuple[dict[str, Any] | None, tuple[str, ...], str | None]:
-    """The newest agent run's manifest, or a reason there is none to read."""
+    """The manifest of the run the checks read, or a reason there is none to read."""
     if ctx.artifacts.run_dir is None:
-        return None, (), "No run directory under runs/, so no manifest is readable (FT-13)."
+        return None, (), f"No run the checks read: {_no_run_directory(ctx)} (FT-13)."
     path = ctx.artifacts.run_dir / "manifest.json"
     manifest, reason = read_json(path)
     read = _read(ctx, path)
@@ -1953,7 +2140,7 @@ def _servers_read(servers: list[dict[str, Any]]) -> str:
 
 
 def ft_43(ctx: Context) -> CheckResult:
-    """No MCP server the newest run declared tools from has moved since it was recorded.
+    """No MCP server the run the checks read declared tools from has moved since it was recorded.
 
     Reads the `drift` a live run recorded against the listing already on file. A replayed run
     records none, because it is being served the recording rather than compared against it.
@@ -2014,11 +2201,27 @@ def _only_a_constant_names(ctx: Context) -> set[str]:
     return {name for name, kinds in by_kind.items() if kinds == {"constant"}}
 
 
+def _recorded_elsewhere(ctx: Context, named: dict[str, list[str]]) -> str:
+    """Which of the names a run other than the agent's recorded, where any did.
+
+    A decision about the corpus a project builds names the nodes of the pipeline that builds
+    it, and that pipeline declares its own role. Saying which runs carried a name is what
+    separates it from a node of the agent, since the join itself does not care.
+    """
+    found = sorted((name, where) for name in named if (where := ctx.produced.where_from(name)))
+    if not found:
+        return ""
+    spelt = ", ".join(f"{name} ({where})" for name, where in found)
+    return f" {len(found)} of them by runs the project made for itself: {spelt}."
+
+
 def ft_42(ctx: Context) -> CheckResult:
     """Every name under `produces` against what the runs recorded: reported, a failure at `ship`.
 
     Read across every run rather than the newest, since a project with more than one pipeline
-    runs whichever it was asked for and the newest describes one of them.
+    runs whichever it was asked for and the newest describes one of them. Every role is read,
+    because a decision the builder agreed to can be about a pipeline the project runs for
+    itself, and a name it recorded is a name the project built.
     """
     named = _named_under_produces(ctx)
     read = (ctx.artifacts.relative(ctx.brief.path) or "brief.toml", f"{DEFAULT_RUNS}/")
@@ -2041,8 +2244,8 @@ def ft_42(ctx: Context) -> CheckResult:
             read=read,
             detail=(
                 f"{len(named)} name(s) are recorded under `produces` and no run under "
-                f"{DEFAULT_RUNS}/ has a role of `agent`, so there is nothing to read them "
-                f"against. FT-13 reports the same absence."
+                f"{DEFAULT_RUNS}/ could be read, so there is nothing to read them against. "
+                f"FT-13 reports the same absence."
             ),
         )
 
@@ -2063,7 +2266,7 @@ def ft_42(ctx: Context) -> CheckResult:
             read=read,
             detail=(
                 f"{len(named) - len(unread)} name(s) under `produces` were all recorded by "
-                f"runs under {DEFAULT_RUNS}/.{aside}"
+                f"runs under {DEFAULT_RUNS}/.{_recorded_elsewhere(ctx, named)}{aside}"
             ),
         )
     spelt = ", ".join(f"{name} ({', '.join(named[name])})" for name in missing)
@@ -2140,6 +2343,7 @@ CHECKS: tuple[tuple[str, Callable[[Context], CheckResult]], ...] = (
     ("FT-35", ft_35),
     ("FT-36", ft_36),
     ("FT-01", ft_01),
+    ("FT-45", ft_45),
     ("FT-02", ft_02),
     ("FT-03", ft_03),
     ("FT-04", ft_04),

@@ -16,15 +16,21 @@ from __future__ import annotations
 import json
 import re
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ..envelope import runs
+from ..envelope import RunHandle, runs
 from ..records.manifest import DEFAULT_ROLE
 
 __all__ = [
     "Artifacts",
+    "ByPipeline",
+    "TheOneRead",
+    "runs_by_pipeline",
+    "measured_pipeline",
+    "slice_nodes",
+    "the_run_to_compare",
     "IDEA_SECTIONS",
     "PRODUCT_SECTION",
     "empty_sections",
@@ -115,6 +121,12 @@ class Artifacts:
     """The newest run an end user made, and ``None`` where the project has none. FT-31 reads
     it, and its presence is what shows the project reached stage ``ship``."""
 
+    by_pipeline: ByPipeline = field(default_factory=lambda: ByPipeline())
+    """The newest run of each registered pipeline, read once for every check that needs it.
+
+    Every manifest under ``runs/`` is opened to build it, so it is read here rather than per
+    check. ``run_dir`` is chosen out of it."""
+
     @classmethod
     def discover(
         cls,
@@ -129,23 +141,34 @@ class Artifacts:
         A project with several results files says which one it reports through ``results`` in
         the brief, and that one is read. Without it the most recent by ``created_at`` is read,
         which on a project that measured a variant last is the variant.
+
+        **The run is the newest run of the pipeline that results file measured**, so a project
+        running a background pass every morning is not read by that pass
+        (``docs/conformance.md`` §3.8). ``run_dir`` given explicitly wins over all of it.
         """
         root = Path(root)
         found_brief = brief if brief is not None else _first_existing(root / DEFAULT_BRIEF)
         declared = _declared_results(found_brief)
+        found_results = (
+            results
+            if results is not None
+            else (root / declared if declared else _latest_results(root))
+        )
+        grouped = runs_by_pipeline(root)
         return cls(
             root=root,
             brief=found_brief,
-            run_dir=run_dir if run_dir is not None else _latest_run(root),
-            results=(
-                results
-                if results is not None
-                else (root / declared if declared else _latest_results(root))
+            run_dir=(
+                run_dir
+                if run_dir is not None
+                else _latest_run(root, grouped, _config_in(found_results))
             ),
+            results=found_results,
             idea=_first_existing(root / DEFAULT_IDEA),
             design=_first_existing(root / DEFAULT_DESIGN),
             research=_first_existing(root / DEFAULT_RESEARCH),
             live_run=_latest_live_run(root),
+            by_pipeline=grouped,
         )
 
     def relative(self, path: Path | None) -> str | None:
@@ -158,21 +181,26 @@ class Artifacts:
             return str(path)
 
     def reading_a_live_run(self) -> str | None:
-        """A note where the checks had no run but a live one to read.
+        """A note where the pipeline the checks read has nothing but live runs.
 
-        ``None`` where the project has a run made while building, which is what the checks are
-        about. A project that shipped and kept nothing else still gets its checks run, against
-        a run an end user made.
+        ``None`` where that pipeline has a run made while building, which is what the checks
+        are about. A project that shipped and kept nothing else still gets its checks run,
+        against a run an end user made. It names the pipeline rather than the directory: the
+        checks read one pipeline's runs, and another may have plenty made while building
+        (`docs/conformance.md` §3.8).
         """
         if self.run_dir is None or self.live_run is None:
             return None
         if self.run_dir != self.live_run:
             return None
+        manifest, _ = read_json(self.run_dir / "manifest.json")
+        named = (manifest or {}).get("pipeline") if isinstance(manifest, dict) else None
+        whose = f"Every run of {named!r}" if isinstance(named, str) and named else "Every run"
         return (
-            f"Every run under {DEFAULT_RUNS}/ is marked live, so the checks read one an end "
-            f"user made: {self.relative(self.run_dir)}. These checks are about what the "
-            f"project built, and a live run can be sampled down to no payloads. A run made "
-            f"while building is what they usually read."
+            f"{whose} the checks could read is marked live, so they read one an end user "
+            f"made: {self.relative(self.run_dir)}. These checks are about what the project "
+            f"built, and a live run can be sampled down to no payloads. A run made while "
+            f"building is what they usually read."
         )
 
     def different_evaluations(self) -> str | None:
@@ -420,33 +448,288 @@ def _first_existing(path: Path) -> Path | None:
     return path if path.exists() else None
 
 
-def _latest_run(root: Path) -> Path | None:
-    """The most recent run of the project's agent that finished, by the manifest's start time.
+def _config_in(results: Path | None) -> Any:
+    """The ``config`` of a results file, or ``None`` where there is none to read."""
+    if results is None:
+        return None
+    held, reason = read_json(results)
+    if reason is not None or not isinstance(held, dict):
+        return None
+    return held.get("config")
 
-    `nested=True` because an evaluation writes a directory per rollout under one for the
-    evaluation, and a project that only ever evaluated has its runs there and nowhere else.
 
-    **Only runs whose role is `agent` are read.** A project's labelling pass, judge or ablation
-    goes through the same envelope and writes the same directory, and the checks are about the
-    agent, so a run declaring another role is not one of them.
+def _latest_run(root: Path, grouped: ByPipeline, config: Any = None) -> Path | None:
+    """The run every check that reads one run reads, or ``None`` where the project has none.
 
-    **A run marked live is read only where the project has no other.** These checks are about
-    what the project built, and a live run belongs to an end user: it can be sampled down to no
-    payloads and it carries their material. A project whose every run is live has still
-    recorded everything, so the newest is read and the report says which it was.
+    **The newest run of the pipeline the results file measured** (`docs/conformance.md` §3.8).
+    A project runs whichever pipeline it was asked for, so the newest run of any of them is
+    usually a pipeline the project reports no number about: on one running a background pass
+    every morning it is that pass, and a check reading it reads a graph with no model call, no
+    prompt and no tool. Where nothing names a pipeline, the newest run of any is read, which is
+    what this always did.
 
-    A run that is still executing, or that crashed on its first node, writes a manifest and a
-    trajectory like any other, so picking the newest by start time alone reads whichever run
-    began last rather than the one the project has to show. Runs that finished are preferred,
-    and where none did the newest is returned so the checks report what is wrong with it rather
-    than reporting no run at all.
+    **Only runs whose role is `agent` are read**, and a run whose model answered from a script
+    is left out: a labelling pass, a judge, an ablation and a stand-in are not the agent
+    (`docs/run-envelope.md` §2.1).
+
+    **A run marked live is read only where the pipeline has no other**, and a run that finished
+    is preferred to one still executing or one that crashed on its first node. A live run
+    belongs to an end user: it can be sampled down to no payloads and it carries their
+    material. Where a pipeline has nothing else, the newest is read anyway, so the checks
+    report what is wrong with it rather than reporting no run at all.
     """
+    wanted, _nodes = measured_pipeline(config)
+    if wanted is not None and grouped.names_recorded:
+        held = grouped.for_pipeline(wanted)
+        if held is not None:
+            return held.path
     found = runs(root / DEFAULT_RUNS, nested=True, role=DEFAULT_ROLE)
     pool = [handle for handle in found if not handle.live] or found
     if not pool:
         return None
     finished = [handle for handle in pool if handle.finished]
     return (finished or pool)[0].path
+
+
+@dataclass(frozen=True, slots=True)
+class ByPipeline:
+    """The newest run of each registered pipeline, read once for the checks that need it.
+
+    ``newest`` is keyed by the name a run recorded under ``pipeline``, with ``None`` holding
+    the newest run that recorded no name. ``names_recorded`` is false where no run read
+    carries the field at all, which is every project whose runs predate manifest format
+    ``0.41``, and the checks fall back to reading the newest run of any pipeline and say so.
+    """
+
+    newest: dict[str | None, RunHandle] = field(default_factory=dict)
+    matching: dict[tuple[str | None, tuple[str, ...] | None], RunHandle] = field(
+        default_factory=dict
+    )
+    """The newest run of each (pipeline, slice) pair, which is what identifies what ran."""
+
+    names_recorded: bool = False
+    runs_read: int = 0
+
+    def named(self) -> tuple[str, ...]:
+        """Every pipeline name a run recorded, in the order a report reads them."""
+        return tuple(sorted(name for name in self.newest if name))
+
+    def of(self, name: str | None, nodes: tuple[str, ...] | None) -> RunHandle | None:
+        """The newest run of one pipeline that held these nodes, or ``None`` where none did.
+
+        ``nodes`` is what the results file's ``slice`` held, and ``None`` for a whole pipeline.
+        A rung of ``recommend`` and the whole of it record one name, so the nodes are what
+        separate them: without that a project whose evaluation measured a rung reads its figure
+        against the whole pipeline's stamp, and the two never agree.
+        """
+        return self.matching.get((name, nodes))
+
+    def for_pipeline(self, name: str) -> RunHandle | None:
+        """The run that speaks for one pipeline: its newest whole run, else its newest rung.
+
+        What every reader that wants "this project's `recommend`" takes, so the run the checks
+        read and the run a stamp is compared against cannot drift apart. ``None`` where nothing
+        has run it.
+        """
+        return self.of(name, None) or self.newest.get(name)
+
+
+def slice_nodes(record: Any) -> tuple[str, ...] | None:
+    """The nodes a ``slice`` record held, and ``None`` where the pipeline was whole.
+
+    Reads the same shape from a manifest and from a results file's ``config``, since
+    ``SliceOf.to_record`` writes both. A slice holds at least one node, so a record naming
+    none is read as a whole pipeline rather than as a slice of nothing: a run and a results
+    file that disagree about that would never match each other.
+    """
+    if not isinstance(record, dict):
+        return None
+    held = record.get("nodes")
+    if not isinstance(held, list) or not held:
+        return None
+    return tuple(str(node) for node in held)
+
+
+def runs_by_pipeline(root: Path) -> ByPipeline:
+    """Read every run under ``root/runs`` for the newest of each registered pipeline.
+
+    Read once for the whole suite rather than per check, for the reason ``produced_across``
+    is: it opens every manifest, and FT-25, FT-37 and FT-38 all want it.
+
+    **A run made by a scripted client is left out**, and so is one whose role is not ``agent``:
+    these checks are about what the project's own agent recorded. Within one pipeline, a run
+    that finished is read before one still executing, and a run made while building before a
+    live one, since a live run belongs to an end user and carries their material.
+    """
+    found = runs(root / DEFAULT_RUNS, nested=True, role=DEFAULT_ROLE)
+    readable = [handle for handle in found if handle.unreadable is None]
+    newest: dict[str | None, RunHandle] = {}
+    matching: dict[tuple[str | None, tuple[str, ...] | None], RunHandle] = {}
+    for handle in _preferred(readable):
+        newest.setdefault(handle.pipeline, handle)
+        matching.setdefault((handle.pipeline, slice_nodes(handle.manifest.get("slice"))), handle)
+    return ByPipeline(
+        newest=newest,
+        names_recorded=any(handle.pipeline for handle in readable),
+        runs_read=len(readable),
+        matching=matching,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class TheOneRead:
+    """Which run the checks that read within one pipeline compare against, and how it was chosen.
+
+    ``stamp`` is that run's ``behaviour_fingerprint`` and ``where`` the manifest it came from.
+    ``reason`` is set where no run could be chosen, and is what a check reports as blocked.
+    ``note`` says the read was widened to the newest run of any pipeline, and is ``None`` where
+    the pipeline was named.
+    """
+
+    stamp: str | None = None
+    where: Path | None = None
+    reason: str | None = None
+    note: str | None = None
+
+
+def measured_pipeline(config: Any) -> tuple[str | None, tuple[str, ...] | None]:
+    """Which pipeline a results file's ``config`` measured, and which nodes of it.
+
+    ``(None, None)`` where it names none, which is a file written before the field existed.
+    """
+    if not isinstance(config, dict):
+        return None, None
+    named = config.get("pipeline")
+    if not isinstance(named, str) or not named:
+        return None, None
+    return named, slice_nodes(config.get("slice"))
+
+
+def the_run_to_compare(artifacts: Artifacts, config: Any, *, whole: bool) -> TheOneRead:
+    """The newest run of the pipeline a results file measured, for FT-37 and FT-38.
+
+    ``whole=True`` reads the pipeline rather than the rung, which is what FT-38 wants: the
+    brief's entries describe the agent. FT-37 passes ``False`` and matches the nodes too, so a
+    number is compared against the run it was measured over. Both fall back to the newest run
+    of any pipeline where nothing names one, which is what these checks read before the name
+    existed.
+
+    `simple-agents record read-against` writes what this returns, so the command that clears
+    FT-38 and the check that reports it read one run.
+    """
+    grouped = artifacts.by_pipeline
+    wanted, nodes = measured_pipeline(config)
+    if wanted is None or not grouped.names_recorded:
+        return _the_newest_run_of_any(artifacts, wanted)
+    handle = grouped.of(wanted, None if whole else nodes)
+    if handle is not None:
+        return _made_by(handle, wanted)
+    if not whole:
+        return TheOneRead(reason=_nothing_has_run(grouped, wanted, sliced=bool(nodes)))
+    only_rungs = grouped.for_pipeline(wanted)
+    if only_rungs is None:
+        return TheOneRead(reason=_nothing_has_run(grouped, wanted, sliced=False))
+    found = _made_by(only_rungs, wanted)
+    return TheOneRead(
+        stamp=found.stamp,
+        where=found.where,
+        reason=found.reason,
+        note=(
+            f"Every run of {wanted!r} on disk is of a slice of it, so these entries are read "
+            f"against the newest of those. Running the whole pipeline once is what gives the "
+            f"brief the stamp it describes."
+        ),
+    )
+
+
+def _made_by(handle: RunHandle, wanted: str) -> TheOneRead:
+    """One run's stamp, or a reason it carries none."""
+    where = handle.path / "manifest.json"
+    stamp = handle.manifest.get("behaviour_fingerprint")
+    if not isinstance(stamp, str) or not stamp:
+        return TheOneRead(
+            where=where,
+            reason=(
+                f"The newest run of {wanted!r} carries no behaviour_fingerprint, so it was "
+                f"written before the field existed and what it was made by is unrecorded."
+            ),
+        )
+    return TheOneRead(stamp=stamp, where=where)
+
+
+def _nothing_has_run(grouped: ByPipeline, wanted: str, *, sliced: bool) -> str:
+    """Why no run answers for this pipeline, naming the ones that do."""
+    named = ", ".join(grouped.named()) or "none"
+    of_it = " over the nodes this evaluation measured" if sliced else ""
+    return (
+        f"Nothing under {DEFAULT_RUNS}/ has run the pipeline {wanted!r}{of_it}, so no run "
+        f"says whether it has moved since this results file was written. The pipelines the "
+        f"runs record are: {named}. Run {wanted!r} once, or re-run the evaluation over the "
+        f"pipeline the project now has."
+    )
+
+
+def _the_newest_run_of_any(artifacts: Artifacts, wanted: object) -> TheOneRead:
+    """What these checks read before a pipeline name was on either artifact."""
+    where = artifacts.run_dir / "manifest.json" if artifacts.run_dir else None
+    if artifacts.run_dir is None:
+        return TheOneRead(
+            reason="No run directory under runs/. The pipeline is unrecorded (FT-13)."
+        )
+    manifest, reason = read_json(where)
+    if reason is not None or not isinstance(manifest, dict):
+        return TheOneRead(
+            where=where, reason="The newest run's manifest could not be read, which FT-13 reports."
+        )
+    stamp = manifest.get("behaviour_fingerprint")
+    if not isinstance(stamp, str) or not stamp:
+        return TheOneRead(
+            where=where,
+            reason=(
+                "The newest run's manifest carries no behaviour_fingerprint, so it was written "
+                "before the field existed, and the pipeline it describes is unrecorded."
+            ),
+        )
+    return TheOneRead(stamp=stamp, where=where, note=_why_it_widened(artifacts.by_pipeline, wanted))
+
+
+def _why_it_widened(grouped: ByPipeline, wanted: object) -> str | None:
+    """Why the read fell back to the newest run of any pipeline, or ``None`` where it did not.
+
+    Two projects reach this. One evaluated before the results file carried a pipeline name;
+    the other has runs that all predate the manifest field. Both read as they did before, and
+    the difference is worth naming, since on a project with more than one pipeline the run that
+    answers may be one nothing reported a number for.
+    """
+    if not grouped.names_recorded and grouped.runs_read:
+        return (
+            f"No run under {DEFAULT_RUNS}/ records which pipeline it is, so this read the "
+            f"newest run of any of them. Runs record it from manifest format 0.41."
+        )
+    named = len(grouped.named())
+    if (not isinstance(wanted, str) or not wanted) and named > 1:
+        return (
+            f"The results file records no pipeline name, so this read the newest run of any of "
+            f"the {named} pipelines the runs record. A results file written by this version "
+            f"records which pipeline it measured."
+        )
+    return None
+
+
+def _preferred(found: list[RunHandle]) -> list[RunHandle]:
+    """The runs in the order these checks read them: finished before unfinished, built before live.
+
+    ``runs`` returns newest first and this is stable, so the newest of each group keeps its
+    place within it. A run still executing, or one that crashed on its first node, writes a
+    manifest like any other, and a live run carries an end user's material, so both are read
+    where a pipeline has nothing else and not before.
+    """
+    return (
+        [handle for handle in found if handle.finished and not handle.live]
+        + [handle for handle in found if handle.finished and handle.live]
+        + [handle for handle in found if not handle.finished and not handle.live]
+        + [handle for handle in found if not handle.finished and handle.live]
+    )
 
 
 def _latest_live_run(root: Path) -> Path | None:

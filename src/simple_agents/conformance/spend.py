@@ -1,6 +1,6 @@
 """What the runs a project has made spent and produced nothing with.
 
-Every other check reads the newest run. This reads every run the pipeline as it now stands has
+Every other check reads one run. This reads every run the pipeline as it now stands has
 made, because one run does not show this: a project spending a quarter of its calls on
 executions that produce nothing can have nine runs in ten come back clean.
 
@@ -38,24 +38,46 @@ _FIGURES = (
 class Scope:
     """Which of a project's runs a check reads, as the command line narrows it.
 
-    ``role`` and ``live`` filter the way :func:`~simple_agents.runs` does, ``since`` takes runs
-    that started at or after an ISO timestamp, and ``last`` keeps the newest that many::
+    ``role``, ``live``, ``pipeline`` and ``scripted`` filter the way
+    :func:`~simple_agents.runs` does, ``since`` takes runs that started at or after an ISO
+    timestamp, and ``last`` keeps the newest that many::
 
         Scope(since="2026-08-14", last=500)
 
-    Everything left unset reads every run of the project's agent.
+    Everything left unset reads every run of the project's agent that called a backend. A run
+    whose model answered from a script is left out, since a node that spent nothing on a
+    scripted answer is not a node that spent an allowance without acting.
     """
 
     role: str | None = None
     live: bool | None = None
+    pipeline: str | None = None
+    scripted: bool | None = False
     since: str | None = None
     last: int | None = None
+
+    def as_filters(self) -> dict[str, Any]:
+        """What this scope passes to :func:`~simple_agents.envelope.narrowed`, less ``role``.
+
+        ``role`` is resolved by the caller, which defaults it to ``agent`` where the scope
+        names none, so it is not one of these.
+        """
+        return {
+            "live": self.live,
+            "pipeline": self.pipeline,
+            "scripted": self.scripted,
+            "since": self.since,
+            "last": self.last,
+        }
 
     def narrowed_by(self) -> dict[str, Any]:
         """What was passed, for the report to name. Empty where nothing narrowed it."""
         declared = {
             "role": self.role,
             "live": self.live,
+            "pipeline": self.pipeline,
+            # Leaving scripted runs out is the default, so naming it would be on every report.
+            "scripted": self.scripted if self.scripted is not False else None,
             "since": self.since,
             "last": self.last,
         }
@@ -88,6 +110,10 @@ class UnfinishedAcross:
     scoped: int = 0
     read: int = 0
     other_role: int = 0
+    scripted: int = 0
+    """Runs whose model answered from a script, which these figures leave out. A node that
+    spent nothing on a scripted answer is not a node that spent an allowance without acting."""
+
     unreadable: int = 0
     still_running: int = 0
     abandoned: int = 0
@@ -110,6 +136,8 @@ class UnfinishedAcross:
         # Noun phrases, so a count of one reads the same as a count of many.
         if self.other_role:
             parts.append(f"{self.other_role:,} under another role")
+        if self.scripted:
+            parts.append(f"{self.scripted:,} whose model answered from a script")
         if self.unreadable:
             parts.append(f"{self.unreadable:,} whose manifest nothing could read (FT-13)")
         if self.still_running:
@@ -162,6 +190,7 @@ def _nothing_finished(
     selected: list[Any],
     parsed: list[Any],
     other_role: int,
+    scripted: int,
     scope: Any,
 ) -> UnfinishedAcross:
     """The report for a scope where no run recorded an outcome.
@@ -176,6 +205,7 @@ def _nothing_finished(
         found=len(every),
         scoped=len(selected),
         other_role=other_role,
+        scripted=scripted,
         unreadable=len(selected) - len(parsed),
         still_running=len(parsed) - len(gone),
         abandoned=len(gone),
@@ -205,15 +235,17 @@ def unfinished_across(run_dir: str | Path, scope: Scope = _EVERY_RUN) -> Unfinis
     role = scope.role or DEFAULT_ROLE
     # Read once and narrow, rather than reading every manifest twice: a project can hold
     # thousands, and both figures below are over the same directory.
-    every = runs(root, nested=True)
-    selected = narrowed(every, role=role, live=scope.live, since=scope.since, last=scope.last)
+    every = runs(root, nested=True, scripted=None)
+    selected = narrowed(every, role=role, **scope.as_filters())
     other_role = sum(1 for handle in every if handle.role != role)
+    scripted = sum(1 for handle in every if handle.scripted) if scope.scripted is False else 0
     if not selected:
         return UnfinishedAcross(
             where=where,
             role=role,
             found=len(every),
             other_role=other_role,
+            scripted=scripted,
             narrowed_by=scope.narrowed_by(),
         )
 
@@ -232,6 +264,7 @@ def unfinished_across(run_dir: str | Path, scope: Scope = _EVERY_RUN) -> Unfinis
             selected=selected,
             parsed=parsed,
             other_role=other_role,
+            scripted=scripted,
             scope=scope,
         )
 
@@ -262,6 +295,7 @@ def unfinished_across(run_dir: str | Path, scope: Scope = _EVERY_RUN) -> Unfinis
         scoped=len(selected),
         read=len(readable),
         other_role=other_role,
+        scripted=scripted,
         unreadable=len(selected) - len(parsed),
         still_running=len(parsed) - len(finished) - len(gone),
         abandoned=len(gone),

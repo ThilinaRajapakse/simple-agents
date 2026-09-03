@@ -60,6 +60,14 @@ class RunsReport:
     `reach` and every count over it a different figure with the same name."""
 
     live: int = 0
+    scripted_left_out: int = 0
+    """How many runs under the directory answered from a script rather than from a backend.
+
+    Left out of every figure by default, since they spent nothing and their answers were
+    written rather than produced. One project's report counted 1,846 such calls as spend and
+    read 318 of their fan-out items as work that produced nothing. ``--scripted`` includes
+    them and this is what says how many are being left out."""
+
     nodes: dict[str, NodeMetrics] = field(default_factory=dict)
     spend: dict[str, float] = field(default_factory=dict)
     spend_is_floor: bool = False
@@ -95,6 +103,7 @@ class RunsReport:
                 "roles": self.roles,
                 "sliced": self.sliced,
                 "live": self.live,
+                "scripted_left_out": self.scripted_left_out,
                 "unread": list(self.unread),
             },
             "totals": {
@@ -184,10 +193,7 @@ class RunsReport:
         narrowed = ", ".join(f"{name} {value}" for name, value in self.narrowed_by.items())
         lines = [f"  {self.read:,}{of} run(s){when}" + (f", {narrowed}" if narrowed else "")]
         if not self.read:
-            lines.append(
-                "  No figure here is over anything. `simple-agents report <path>` reads a run "
-                "directory, a directory of runs, or an evaluation's results file."
-            )
+            lines.append(self._why_nothing_was_read())
             return lines
         lines.append(self._activity_line())
         if self.outcomes:
@@ -211,7 +217,36 @@ class RunsReport:
             )
         if self.live:
             lines.append(f"  {self.live:,} of them made by an end user")
+        if self.scripted_left_out:
+            lines.append(
+                f"  {self.scripted_left_out:,} run(s) whose model answered from a script are "
+                f"left out, and `--scripted` includes them"
+            )
         return lines
+
+    def _why_nothing_was_read(self) -> str:
+        """The line under a report over no runs at all.
+
+        A project whose runs were scripted has runs, and a report saying only that it read none
+        sends a reader to check the path they gave.
+        """
+        if self.scripted_left_out == self.found and self.found:
+            return (
+                "  Every run under this path answered from a script, so no figure here is "
+                "over anything. `--scripted` reads them: "
+                "`simple-agents report <path> --scripted`."
+            )
+        if self.scripted_left_out:
+            return (
+                f"  No figure here is over anything: {self.scripted_left_out:,} of the "
+                f"{self.found:,} run(s) under this path answered from a script and "
+                f"`--scripted` reads those, and the rest were left out by the filters or "
+                f"could not be read."
+            )
+        return (
+            "  No figure here is over anything. `simple-agents report <path>` reads a run "
+            "directory, a directory of runs, or an evaluation's results file."
+        )
 
     def _cost(self, node: NodeMetrics) -> str:
         """What this node's model calls cost, or why no figure is derived for it.
@@ -263,6 +298,8 @@ def report_over_runs(
     *,
     role: str | None = None,
     live: bool | None = None,
+    pipeline: str | None = None,
+    scripted: bool | None = False,
     since: str | None = None,
     last: int | None = None,
 ) -> RunsReport:
@@ -275,15 +312,21 @@ def report_over_runs(
         print(report_over_runs("runs/", role="agent").text())
 
     Reads runs at any depth, so a directory holding evaluations is read as the rollouts inside
-    them. ``role``, ``live``, ``since`` and ``last`` narrow it the way :func:`~simple_agents.runs`
-    does, and the report names what they left out.
+    them. ``role``, ``live``, ``pipeline``, ``scripted``, ``since`` and ``last`` narrow it the
+    way :func:`~simple_agents.runs` does, and the report names what they left out. A run whose
+    model answered from a script is left out unless ``scripted`` says otherwise, and the
+    report says how many those were.
 
     Cost is derived against the basis the runs recorded, where every run read recorded the same
     one. Where they differ, each node's cost reports unknown and the report says why.
     """
     root = Path(run_dir)
-    found = runs_under(root, nested=True)
-    selected = narrowed(found, role=role, live=live, since=since, last=last)
+    # Everything, so `found` counts what is under the directory and the scripted runs can be
+    # counted before they are left out. `narrowed` is what applies the filters.
+    found = runs_under(root, nested=True, scripted=None)
+    selected = narrowed(
+        found, role=role, live=live, pipeline=pipeline, scripted=scripted, since=since, last=last
+    )
     # Every figure below is over the runs this could read, so a run whose trajectory is
     # unreadable is in none of them rather than in some, and the basis is the one those runs
     # were priced against rather than one a run contributing no figure declared.
@@ -299,12 +342,15 @@ def report_over_runs(
         root=str(root),
         read=len(readable),
         found=len(found),
-        narrowed_by=_narrowed_by(role=role, live=live, since=since, last=last),
+        narrowed_by=_what_narrowed_it(role, live, pipeline, scripted, since, last),
         started=(started[0], started[-1]) if started else None,
         outcomes=_counted(_ended(handle) for handle in readable),
         roles=_counted(handle.role for handle in readable),
         sliced=sum(1 for handle in readable if handle.manifest.get("slice")),
         live=sum(1 for handle in readable if handle.live),
+        scripted_left_out=(
+            sum(1 for handle in found if handle.scripted) if scripted is False else 0
+        ),
         nodes=nodes,
         spend=_spend(readable),
         spend_is_floor=_is_floor(readable),
@@ -423,6 +469,30 @@ def _shared_basis(selected: Iterable[RunHandle]) -> tuple[CostBases | None, str 
 def _narrowed_by(**filters: Any) -> dict[str, Any]:
     """The filters that were applied, named for the report, with the ones left off dropped."""
     return {name: value for name, value in filters.items() if value is not None}
+
+
+def _what_narrowed_it(
+    role: str | None,
+    live: bool | None,
+    pipeline: str | None,
+    scripted: bool | None,
+    since: str | None,
+    last: int | None,
+) -> dict[str, Any]:
+    """The filters the report names, which is every one the caller set.
+
+    Leaving scripted runs out is the default and the header says how many those were on its
+    own line, so naming it here too would put `scripted False` on every report that narrowed
+    nothing.
+    """
+    return _narrowed_by(
+        role=role,
+        live=live,
+        pipeline=pipeline,
+        scripted=scripted if scripted is not False else None,
+        since=since,
+        last=last,
+    )
 
 
 def _ended(handle: RunHandle) -> str:
