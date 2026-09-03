@@ -467,7 +467,9 @@ class TestPacedClient:
         with pytest.warns(SimpleAgentsWarning, match="published a rate-limit allowance"):
             paced.stream(req, lambda piece: None)
 
-    def test_a_backend_that_never_publishes_one_says_nothing(self):
+    def test_a_client_that_declares_nothing_either_way_says_nothing(self):
+        """Whether a backend publishes an allowance is read off the adapter, so a client the
+        library did not write is left alone."""
         from simple_agents import SimpleAgentsWarning
 
         paced = PacedClient(StreamingFake([fake_response(content=ANSWER)]))

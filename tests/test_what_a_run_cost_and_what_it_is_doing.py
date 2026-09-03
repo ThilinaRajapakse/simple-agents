@@ -45,6 +45,10 @@ SPEND_CAP = json.loads(
     (Path(__file__).parent / "fixtures/wire/gemini/error_spend_cap.json").read_text()
 )
 
+PREPAID_SPENT = json.loads(
+    (Path(__file__).parent / "fixtures/wire/gemini/error_prepaid_spent.json").read_text()
+)
+
 
 def call(*, priced: bool = True) -> dict[str, object]:
     """One `model_call` record, priced at 1.00 USD or reporting no input count."""
@@ -182,7 +186,15 @@ class TestARefusalThatRetryingCannotClear:
     publishes no rate-limit headers at all, so the message was what said which kind it was.
     """
 
-    def backend(self, status: int, body: dict, *, headers: dict | None = None, **retry):
+    def backend(
+        self,
+        status: int,
+        body: dict,
+        *,
+        headers: dict | None = None,
+        publishes_allowance: bool = True,
+        **retry,
+    ):
         calls = {"n": 0}
 
         def handle(request: httpx.Request) -> httpx.Response:
@@ -190,7 +202,12 @@ class TestARefusalThatRetryingCannotClear:
             return httpx.Response(status, json=body, headers=headers or {})
 
         client = httpx.Client(transport=httpx.MockTransport(handle), base_url="https://backend/v1")
-        made = HTTPBackend(base_url="https://backend/v1", client=client, retry=Retry(**retry))
+        made = HTTPBackend(
+            base_url="https://backend/v1",
+            client=client,
+            retry=Retry(**retry),
+            publishes_allowance=publishes_allowance,
+        )
         slept: list[float] = []
         made.sleep = slept.append
         return made, calls, slept
@@ -218,6 +235,79 @@ class TestARefusalThatRetryingCannotClear:
         # The backend said the cap was reached and not when it lifts, and a guessed date would
         # refuse a resume that would have worked.
         assert stop.value.resume_not_before is None
+
+    def test_a_depleted_prepaid_balance_is_recognised_too(self):
+        """Dogfood #6 retried this one six times on each of 150 items, three times over.
+
+        The phrase was not in `QUOTA_PHRASES`, so `P3-50`'s stop never fired.
+        """
+        assert _is_spent_quota(PREPAID_SPENT["response"]["error"]["message"])
+
+    def test_it_stops_the_run_rather_than_retrying(self):
+        backend, calls, slept = self.backend(429, PREPAID_SPENT["response"])
+
+        with pytest.raises(Suspend) as stop:
+            backend.post_json("/chat", {})
+
+        assert (calls["n"], slept) == (1, [])
+        assert "prepayment credits are depleted" in stop.value.waiting_for
+
+    def test_a_wording_the_library_has_not_met_is_named_by_the_project(self):
+        """`Retry(spent_quota_phrases=...)` adds to the shipped phrases rather than replacing
+        them, so a project that names one does not lose the stop on the others."""
+        body = {"error": {"message": "The account balance is too low to serve requests."}}
+
+        climbed, calls, slept = self.backend(429, body, max_attempts=3)
+        with pytest.raises(CallerFacingError):
+            climbed.post_json("/chat", {})
+        assert calls["n"] == 3
+
+        stopped, calls, slept = self.backend(
+            429, body, spent_quota_phrases=("account balance is too low",)
+        )
+        with pytest.raises(Suspend):
+            stopped.post_json("/chat", {})
+        assert (calls["n"], slept) == (1, [])
+
+        shipped, calls, _ = self.backend(
+            429, SPEND_CAP["response"], spent_quota_phrases=("account balance is too low",)
+        )
+        with pytest.raises(Suspend):
+            shipped.post_json("/chat", {})
+        assert calls["n"] == 1
+
+    def test_the_advice_names_a_paced_client_where_the_backend_publishes_an_allowance(self):
+        backend, _, _ = self.backend(
+            429, {"error": {"message": "rate limit exceeded"}}, max_attempts=2
+        )
+
+        with pytest.raises(CallerFacingError) as refusal:
+            backend.post_json("/chat", {})
+
+        assert "PacedClient(client)" in str(refusal.value)
+
+    def test_the_advice_names_fewer_calls_where_the_backend_publishes_none(self):
+        """Dogfood #6 put a PacedClient in front of Gemini because this message said to, and
+        Gemini reports no allowance on any response for it to read."""
+        backend, _, _ = self.backend(
+            429,
+            {"error": {"message": "rate limit exceeded"}},
+            max_attempts=2,
+            publishes_allowance=False,
+        )
+
+        with pytest.raises(CallerFacingError) as refusal:
+            backend.post_json("/chat", {})
+
+        assert "publishes no allowance" in str(refusal.value)
+        assert "EvalSuite.run(concurrency=...)" in str(refusal.value)
+
+    def test_one_phrase_written_as_a_bare_string_is_refused(self):
+        """It would read as a phrase per character, and every 429 would stop the run."""
+        with pytest.raises(ValueError) as refusal:
+            Retry(spent_quota_phrases="account balance is too low")
+
+        assert "one string" in str(refusal.value)
 
     def test_a_per_minute_refusal_still_climbs_the_ladder(self):
         backend, calls, slept = self.backend(

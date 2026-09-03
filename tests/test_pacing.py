@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import threading
+from types import SimpleNamespace
 import warnings
 from dataclasses import replace
 
@@ -137,6 +138,49 @@ def test_a_backend_that_publishes_no_allowance_is_never_paced(slept) -> None:
     assert slept == []
     assert client.waits == 0
     assert backend.calls == 3
+
+
+class _Declaring:
+    """An adapter shaped like the shipped ones, saying what its backend publishes."""
+
+    def __init__(self, publishes: bool) -> None:
+        self._backend = SimpleNamespace(publishes_allowance=publishes)
+        self.inner = Backend([None])
+
+    def identity(self):
+        return self.inner.identity()
+
+    def complete(self, req):
+        return self.inner.complete(req)
+
+
+def test_an_adapter_declaring_no_allowance_says_so_when_it_is_wrapped(slept) -> None:
+    """Read off the adapter rather than a response, and before the first call: a response
+    carrying no allowance says only that this call carried none."""
+    with pytest.warns(SimpleAgentsWarning) as raised:
+        PacedClient(_Declaring(publishes=False))
+
+    assert len(raised) == 1
+    assert "concurrency=" in str(raised[0].message)
+
+
+def test_an_adapter_that_publishes_one_is_wrapped_in_silence(slept) -> None:
+    """Mistral publishes an allowance and carries none on a streamed response, so inferring
+    from the first response would have called it a backend that publishes nothing."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", SimpleAgentsWarning)
+        PacedClient(_Declaring(publishes=True))
+        PacedClient(Backend([None]))
+
+
+def test_a_backend_that_published_and_stopped_still_says_so(slept) -> None:
+    """The stopped-publishing warning is the one a streamed Mistral call needs, and nothing
+    said earlier suppresses it."""
+    client = PacedClient(Backend([RateLimit(remaining_requests=40, remaining_tokens=40_000), None]))
+
+    client.complete(request())
+    with pytest.warns(SimpleAgentsWarning, match="published a rate-limit allowance"):
+        client.complete(request())
 
 
 def test_something_that_is_not_a_model_client_is_refused() -> None:

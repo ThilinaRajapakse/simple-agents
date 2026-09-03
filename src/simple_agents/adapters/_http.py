@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass, field, replace
 from datetime import timezone
 from email.utils import parsedate_to_datetime
-from typing import Any, Callable, Iterable, Iterator, Mapping
+from typing import Any, Callable, Iterable, Iterator, Mapping, Sequence
 
 import httpx
 
@@ -57,9 +57,17 @@ CREDENTIAL_PHRASES = ("api key not valid",)
 # and no rate-limit headers, so the message is what says which kind of 429 it is. The body is
 # `tests/fixtures/wire/gemini/error_spend_cap.json`.
 #
+# Gemini's depleted-prepayment refusal was measured on 2026-09-02 across a 150-item fan-out
+# retried six times each, three times over, none of which cleared it. The body is
+# `tests/fixtures/wire/gemini/error_prepaid_spent.json`.
+#
 # Only phrases that were observed are matched, as with OVERFLOW_PHRASES above. A backend
-# phrasing it differently falls through to the retry ladder, which is what happens today.
-QUOTA_PHRASES = ("monthly spending cap",)
+# phrasing it differently falls through to the retry ladder. A project that meets such a
+# backend names the wording itself with `Retry(spent_quota_phrases=...)`, which adds to these.
+QUOTA_PHRASES = (
+    "monthly spending cap",  # Mistral
+    "prepayment credits are depleted",  # Gemini
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,17 +106,32 @@ class Retry:
     **A 429 whose message says the allowance does not reset inside a retry window is not
     retried at all.** It raises ``Suspend``, so the run writes its state and can be continued
     once the allowance is back (``docs/model-clients.md`` §4).
+
+    ``spent_quota_phrases`` names more such wordings, for a backend whose phrasing the library
+    has not met. They add to the ones it ships and are matched the same way, case-insensitively
+    anywhere in the refusal's message::
+
+        GeminiClient(model="gemini-3.1-flash-lite",
+                     retry=Retry(spent_quota_phrases=("account balance is too low",)))
     """
 
     max_attempts: int = 6
     initial_backoff_s: float = 1.0
     max_backoff_s: float = 60.0
+    spent_quota_phrases: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.max_attempts < 1:
             raise ValueError(
                 f"Retry(max_attempts={self.max_attempts}) makes no request at all. Pass 1 for "
                 f"a single attempt with no retries."
+            )
+        if isinstance(self.spent_quota_phrases, str):
+            raise ValueError(
+                f"Retry(spent_quota_phrases={self.spent_quota_phrases!r}) is one string, which "
+                f"reads as a phrase per character, so every 429 carrying any of those letters "
+                f"would stop the run.\n"
+                f"Pass a sequence: spent_quota_phrases=({self.spent_quota_phrases!r},)."
             )
 
 
@@ -129,6 +152,11 @@ class HTTPBackend:
     transport, or a test that serves recorded responses. The backend then uses it as given and
     does not close it. ``headers`` are sent on every request either way, so a client supplied
     here authenticates without having to be built with the credentials itself.
+
+    ``publishes_allowance`` says whether this backend reports a rate-limit allowance on a
+    response. An adapter that sets ``ModelResponse.rate_limit`` to ``None`` on every call sets
+    this ``False``, and a rate-limit refusal then advises fewer calls at once rather than a
+    ``PacedClient``, which has nothing to read.
     """
 
     base_url: str
@@ -137,6 +165,7 @@ class HTTPBackend:
     retry: Retry = Retry()
     client: httpx.Client | None = None
     sleep: Callable[[float], None] = time.sleep
+    publishes_allowance: bool = True
 
     def post_json(self, path: str, payload: Mapping[str, Any]) -> HttpResult:
         """POST ``payload`` as JSON and return the decoded body with the response headers.
@@ -201,7 +230,12 @@ class HTTPBackend:
                 ) as response:
                     if response.status_code >= 300:
                         response.read()
-                        _stop_if_spent(response, f"{self.base_url}{path}", waited)
+                        _stop_if_spent(
+                            response,
+                            f"{self.base_url}{path}",
+                            waited,
+                            self.retry.spent_quota_phrases,
+                        )
                         if (
                             response.status_code in RETRYABLE_STATUSES
                             and attempt < self.retry.max_attempts
@@ -287,7 +321,9 @@ class HTTPBackend:
                 return replace(self._decode(response), held_back_ms=int(waited * 1000))
 
             last_status, last_body = response.status_code, response.text[:600]
-            _stop_if_spent(response, f"{self.base_url}{path}", waited)
+            _stop_if_spent(
+                response, f"{self.base_url}{path}", waited, self.retry.spent_quota_phrases
+            )
             if response.status_code in RETRYABLE_STATUSES and attempt < self.retry.max_attempts:
                 waited += self._wait(attempt, response.headers.get("retry-after"))
                 continue
@@ -386,15 +422,29 @@ class HTTPBackend:
                 f"{where} rate-limited the run and {attempts} attempt(s) did not clear it "
                 f"({status}: {detail}).\n"
                 f"Those attempts waited {waited:.0f}s in total and the window had not reset. "
-                f"Pace the calls against the backend's published allowance: "
-                f"PacedClient(client) waits once for every caller sharing it. Raising "
-                f"Retry(max_attempts=...) waits longer inside this one call instead."
+                f"{_pacing_advice(self.publishes_allowance)}"
             )
         return CallerFacingError(
             f"{where} returned {status} after {attempts} attempt(s): {detail}\n"
             f"The run made no usable model call. A 5xx that persists is a backend outage "
             f"rather than a fault in the request."
         )
+
+
+def _pacing_advice(publishes_allowance: bool) -> str:
+    """What to do about a rate limit, which depends on whether there is an allowance to read."""
+    if publishes_allowance:
+        return (
+            "Pace the calls against the backend's published allowance: PacedClient(client) "
+            "waits once for every caller sharing it. Raising Retry(max_attempts=...) waits "
+            "longer inside this one call instead."
+        )
+    return (
+        "This backend publishes no allowance on a response, so a PacedClient in front of it "
+        "has nothing to read. Make fewer calls at once with EvalSuite.run(concurrency=...) or "
+        "Pipeline.run(concurrency=...), or wait longer inside one call with "
+        "Retry(max_attempts=...)."
+    )
 
 
 def _sse_events(lines: Iterable[str]) -> Iterator[dict[str, Any]]:
@@ -420,9 +470,11 @@ def _sse_events(lines: Iterable[str]) -> Iterator[dict[str, Any]]:
             yield event
 
 
-def _stop_if_spent(response: httpx.Response, where: str, waited: float) -> None:
+def _stop_if_spent(
+    response: httpx.Response, where: str, waited: float, declared: Sequence[str] = ()
+) -> None:
     """Stop the run where a 429 says its allowance does not reset inside a retry window."""
-    if response.status_code == 429 and _is_spent_quota(_message_from(response)):
+    if response.status_code == 429 and _is_spent_quota(_message_from(response), declared):
         raise _spent_quota(response, where, waited)
 
 
@@ -449,10 +501,13 @@ def _spent_quota(response: httpx.Response, where: str, waited: float) -> Suspend
     return stop
 
 
-def _is_spent_quota(detail: str) -> bool:
-    """Whether a 429's message says its allowance resets on a scale retries cannot reach."""
+def _is_spent_quota(detail: str, declared: Sequence[str] = ()) -> bool:
+    """Whether a 429's message says its allowance resets on a scale retries cannot reach.
+
+    ``declared`` is what the caller's ``Retry`` names, which adds to the shipped phrases.
+    """
     lowered = detail.lower()
-    return any(phrase in lowered for phrase in QUOTA_PHRASES)
+    return any(phrase.lower() in lowered for phrase in (*QUOTA_PHRASES, *declared))
 
 
 def retry_after_seconds(value: str | None, now: float | None = None) -> float | None:

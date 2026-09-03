@@ -98,7 +98,7 @@ results = suite.run(envelope=env, model=client, split="held_out", k=5, concurren
 
 A wait can be long: `max_wait_s` caps one at 65 seconds by default, which covers a per-minute window. `max_wall_clock_ms` is elapsed time while the run is executing, so the wait is charged to it, and a run behind a busy quota can stop on that axis having made few calls. `totals.held_back_ms` is what separates that from a run that was doing work slowly (`docs/pipeline.md` §5).
 
-Every caller sharing the client waits for the same instant, so parallel rollouts pause once rather than once each. A backend that publishes no allowance leaves it a passthrough, since there is nothing to pace against.
+Every caller sharing the client waits for the same instant, so parallel rollouts pause once rather than once each. A backend that publishes no allowance leaves it a passthrough, and wrapping an adapter that declares it publishes none warns as the wrapper is built. Gemini is one (`docs/model-clients/gemini.md` §5).
 
 **The two floors are what decide when a call waits.** `min_remaining_requests` is the request count at or below which the next call waits; left unset it is the number of callers sharing the client, and `EvalSuite.run` sets that from its concurrency. A window reporting one request left will carry one call, and the other three of four rollouts in flight come back rate limited. `min_remaining_tokens` is the same for tokens, and left unset it is the largest number of tokens any single call has used so far, so the floor grows to fit the work rather than being guessed at.
 

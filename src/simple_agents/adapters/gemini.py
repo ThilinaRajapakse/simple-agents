@@ -104,6 +104,9 @@ class GeminiClient:
             timeout_s=self.timeout_s,
             retry=self.retry,
             client=self.http_client,
+            # No Gemini response carries a rate-limit header, so `rate_limit` is None on every
+            # call and a PacedClient in front of this adapter is a passthrough.
+            publishes_allowance=False,
         )
 
     def identity(self) -> ModelIdentity:

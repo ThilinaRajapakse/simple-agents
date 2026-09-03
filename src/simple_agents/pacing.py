@@ -40,6 +40,13 @@ __all__ = ["PacedClient", "warn_unpaced_wait"]
 # longer than one is waiting for something that has already happened.
 DEFAULT_MAX_WAIT_S = 65.0
 
+NO_ALLOWANCE = (
+    "This backend publishes no rate-limit allowance on a response, so PacedClient has nothing "
+    "to read and every call goes straight through. Gemini is one: `docs/model-clients/"
+    "gemini.md` §5. Make fewer calls at once with EvalSuite.run(concurrency=...) or "
+    "Pipeline.run(concurrency=...), and wait longer inside one call with Retry(max_attempts=...)."
+)
+
 ALLOWANCE_STOPPED = (
     "This backend published a rate-limit allowance and has stopped, so PacedClient has "
     "nothing to pace the calls that stopped it against and they go straight through. Mistral "
@@ -47,6 +54,18 @@ ALLOWANCE_STOPPED = (
     "non-streamed one carries. Drop stream=True from the node, or pace those calls some other "
     "way."
 )
+
+
+def _declares_no_allowance(inner: Any) -> bool:
+    """Whether the wrapped adapter says its backend publishes no rate-limit allowance.
+
+    Read off the adapter rather than inferred from a response: a response carrying none says
+    only that this call carried none, and a streamed Mistral response carries none while the
+    backend publishes an allowance on every other call. An adapter that says nothing either
+    way reads as ``False``, so a client the library did not write is left alone.
+    """
+    backend = getattr(inner, "_backend", None)
+    return getattr(backend, "publishes_allowance", True) is False
 
 
 class PacedClient:
@@ -97,6 +116,9 @@ class PacedClient:
         self.min_remaining_tokens = min_remaining_tokens
         self.max_wait_s = max_wait_s
         self._callers = 1
+
+        if _declares_no_allowance(inner):
+            warnings.warn(NO_ALLOWANCE, SimpleAgentsWarning, stacklevel=2)
 
         if hasattr(inner, "stream"):
             self.stream = (
@@ -201,9 +223,7 @@ class PacedClient:
 
         Measured against Mistral on 2026-08-04: a non-streamed response carries five
         ``x-ratelimit-*`` headers and a streamed one carries none, so a node declaring
-        ``stream=True`` gives this client nothing to pace against. A backend that never
-        publishes an allowance is a passthrough and says nothing, because there is nothing to
-        report; one that published and then stopped is a control that has quietly gone dead.
+        ``stream=True`` gives this client nothing to pace against.
         """
         if self._warned:
             return

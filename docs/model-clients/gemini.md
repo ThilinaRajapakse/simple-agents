@@ -61,7 +61,7 @@ The same listing publishes the context window, as `inputTokenLimit`. A pre-fligh
 
 ## 5. The allowance, and what an evaluation does without one
 
-**No Gemini response carries a rate-limit header.** `ModelResponse.rate_limit` is `None` on every call, so there is no published allowance to pace against and `PacedClient` in front of this adapter is a passthrough. The provider's rate-limit page directs to its own console for the figures rather than publishing them per model.
+**No Gemini response carries a rate-limit header.** `ModelResponse.rate_limit` is `None` on every call, so there is no published allowance to pace against and `PacedClient` in front of this adapter is a passthrough, which it warns about as it is built. The provider's rate-limit page directs to its own console for the figures rather than publishing them per model.
 
 `docs/model-clients.md` §4 covers the retry policy and what a per-minute quota does to a batch. An evaluation running rollouts at once through a client that does not pace warns. Against this backend the remedy is `concurrency` on the evaluation, since the wrapper has no allowance to read.
 

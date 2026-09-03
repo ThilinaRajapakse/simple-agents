@@ -1,0 +1,22 @@
+{
+  "status": 429,
+  "request": {
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "hi"
+          }
+        ]
+      }
+    ]
+  },
+  "response": {
+    "error": {
+      "code": 429,
+      "message": "Your prepayment credits are depleted. Please top up your balance to continue using the API.",
+      "status": "RESOURCE_EXHAUSTED"
+    }
+  }
+}

@@ -128,6 +128,9 @@ class VLLMClient:
             timeout_s=self.timeout_s,
             retry=self.retry,
             client=self.http_client,
+            # A served model publishes no allowance: the ceiling is the server's own
+            # concurrency, which `docs/model-clients/vllm.md` covers.
+            publishes_allowance=False,
         )
 
     def identity(self) -> ModelIdentity:
