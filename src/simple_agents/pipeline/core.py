@@ -676,8 +676,7 @@ class Pipeline:
     ) -> RunResult:
         """Continue a suspended run, against the pipeline it was started with.
 
-        The run keeps its id, its trajectory and its manifest, so what comes out is one run
-        that stopped rather than two runs that have to be joined up::
+        The run keeps its id, its trajectory and its manifest, so what comes out is one run::
 
             try:
                 result = pipeline.run(inputs, envelope=env, model=client)
@@ -687,9 +686,8 @@ class Pipeline:
                                          answer=answer)
 
         ``answer`` is what the suspended call returns: the end user's reply to a ``consult``,
-        or whatever the tool that raised ``Suspend`` was waiting for. A run that stopped at a
-        node boundary takes none, and one that stopped in several nodes takes ``answers``,
-        keyed by node::
+        or what the tool that raised ``Suspend`` waited for. A run stopped at a node boundary
+        takes none; one stopped in several nodes takes ``answers``, keyed by node::
 
             answers = {stop["node_id"]: ask_someone(stop["waiting_for"], stop["options"])
                        for stop in suspended.stops}
@@ -701,8 +699,10 @@ class Pipeline:
             pipeline.resume(run_id, envelope=env, model=client, answer=reply,
                             memory_scope=f"user-{user_id}")
 
-        The suspension is claimed before anything runs, so two workers reading one run
-        directory cannot both continue the same run.
+        The suspension is claimed before anything runs, so two workers cannot both continue
+        one run. A resume that fails part-way leaves the suspension where it found it, so the
+        run is resumed again and the nodes the failed attempt completed write their records
+        twice.
 
         The pipeline is checked against what the run recorded before any state is restored.
         A change of shape is refused outright, and a change of prompt, route, tool version,
@@ -729,27 +729,16 @@ class Pipeline:
             manifest = self._restored_manifest(paths, state, envelope, model, accept_changed)
             refuse_another_scope(memory_scope, (manifest.memory or {}).get("scope_digest"))
             writer = TrajectoryWriter(paths.trajectory, redactor=envelope.redaction)
-            run = RunContext(
+            run = self._restored_context(
                 run_id=run_id,
-                writer=writer,
-                budget=self.budget,
-                workspace=paths.workspace,
-                seed=state.seed,
+                paths=paths,
+                state=state,
+                envelope=envelope,
                 manifest=manifest,
-                cassette=envelope.cassette,
-                cost_basis=envelope.cost_basis,
-                redaction=envelope.redaction,
-                memory=_scoped_memory(envelope, memory_scope),
-                end_user=envelope.end_user,
-                # Which conversation this run is a turn of comes from what it recorded when it
-                # started, so a resume continues the turn it stopped in rather than needing to
-                # be told again which chat it was.
-                conversation=_restored_conversation(envelope, manifest),
-                token_sink=on_token,
-                reasoning_sink=on_reasoning,
-                progress_sink=on_progress,
-                pool=WorkPool(ceiling=concurrency),
-                fetch_policy_declaration=self.fetch_policy,
+                writer=writer,
+                memory_scope=memory_scope,
+                concurrency=concurrency,
+                sinks=(on_token, on_reasoning, on_progress),
             )
             _pace_clients(self, model, concurrency, replaying=envelope.cassette.is_replaying)
             _warn_declarations_the_run_cuts(
@@ -771,8 +760,10 @@ class Pipeline:
             release_claim(root)
             raise
 
-        discard_claim(root)
-        return self._drive(
+        return self._drive_resumed(
+            root,
+            state,
+            envelope.redaction,
             inputs=restored_inputs,
             run=run,
             envelope=envelope,
@@ -785,6 +776,67 @@ class Pipeline:
             defaulted_cassette=defaulted_cassette,
             frame=frame,
             answers=for_nodes,
+        )
+
+    def _drive_resumed(
+        self, root: Path, state: SuspensionState, redaction: Any, **driving: Any
+    ) -> RunResult:
+        """Drive a resumed run, leaving its suspension where it was found if the run fails.
+
+        A resume that failed part-way is tried again rather than the run being started over.
+        The state is written back rather than renamed back, so nothing holds a claim while
+        the run executes and two workers still cannot both continue one run.
+        """
+        discard_claim(root)
+        try:
+            return self._drive(**driving)
+        except RunSuspended:
+            # The run stopped again and wrote its own state, which is later than this one.
+            raise
+        except BaseException:
+            write_state(root, state, redaction)
+            raise
+
+    def _restored_context(
+        self,
+        *,
+        run_id: str,
+        paths: RunPaths,
+        state: SuspensionState,
+        envelope: RunEnvelope,
+        manifest: Manifest,
+        writer: TrajectoryWriter,
+        memory_scope: str | None,
+        concurrency: int,
+        sinks: tuple[Any, Any, Any],
+    ) -> RunContext:
+        """The run context a resumed run continues in, off what the suspension recorded.
+
+        ``sinks`` are the token, reasoning and progress callbacks in that order. The spend and
+        the counters are restored by the caller, which holds the codec that decodes them.
+        """
+        token_sink, reasoning_sink, progress_sink = sinks
+        return RunContext(
+            run_id=run_id,
+            writer=writer,
+            budget=self.budget,
+            workspace=paths.workspace,
+            seed=state.seed,
+            manifest=manifest,
+            cassette=envelope.cassette,
+            cost_basis=envelope.cost_basis,
+            redaction=envelope.redaction,
+            memory=_scoped_memory(envelope, memory_scope),
+            end_user=envelope.end_user,
+            # Which conversation this run is a turn of comes from what it recorded when it
+            # started, so a resume continues the turn it stopped in rather than needing to be
+            # told again which chat it was.
+            conversation=_restored_conversation(envelope, manifest),
+            token_sink=token_sink,
+            reasoning_sink=reasoning_sink,
+            progress_sink=progress_sink,
+            pool=WorkPool(ceiling=concurrency),
+            fetch_policy_declaration=self.fetch_policy,
         )
 
     def _answers_for(

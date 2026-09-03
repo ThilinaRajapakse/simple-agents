@@ -145,6 +145,115 @@ class TestARefusedResumeKeepsTheRun:
         assert not run_path(tmp_path, RUN_ID, "suspension.claimed.json").exists()
 
 
+class TestAResumeThatFailedPartWay:
+    """The claim was discarded before the run was driven, so a failure inside a resumed run
+    left no suspension to claim and the run had to be started over.
+
+    Dogfood #6 carried it as an operational fact. What goes back is the state the resume
+    found, so the nodes the failed attempt completed run again.
+    """
+
+    def _falls_over_after_answering(self, fails: dict) -> Pipeline:
+        fn, tool = _asks("Which fit?", ["slim", "regular"])
+
+        def store(inputs, ctx):
+            if fails["still"]:
+                raise RuntimeError("the store was down")
+            return f"stored {inputs}"
+
+        return Pipeline(
+            [
+                Deterministic(fn, tools=[tool], node_id="ask", successors=["store"]),
+                Deterministic(store, node_id="store", successors=[]),
+            ],
+            budget=Budget.unbounded(),
+        )
+
+    def test_the_suspension_is_where_it_was_found_and_the_run_resumes_again(
+        self, envelope, tmp_path
+    ):
+        fails = {"still": True}
+        pipeline = self._falls_over_after_answering(fails)
+        with pytest.raises(RunSuspended):
+            pipeline.run({}, envelope=envelope, run_id=RUN_ID, seed=41)
+
+        with pytest.raises(RuntimeError):
+            pipeline.resume(RUN_ID, envelope=envelope, answer="slim")
+
+        assert run_path(tmp_path, RUN_ID, "suspension.json").exists()
+        assert not run_path(tmp_path, RUN_ID, "suspension.claimed.json").exists()
+        assert [state.run_id for state in Pipeline.suspensions(tmp_path)] == [RUN_ID]
+
+        fails["still"] = False
+        assert pipeline.resume(RUN_ID, envelope=envelope, answer="slim").output == "stored slim"
+
+    def test_a_resume_that_stops_again_keeps_its_own_state_rather_than_the_older_one(
+        self, envelope, tmp_path
+    ):
+        """The state written by the second stop is later than the one the resume claimed."""
+        fn, tool = _asks("Which fit?", ["slim", "regular"])
+        second, second_tool = _asks("Which colour?", ["red", "blue"])
+        pipeline = Pipeline(
+            [
+                Deterministic(fn, tools=[tool], node_id="ask", successors=["confirm"]),
+                Deterministic(second, tools=[second_tool], node_id="confirm", successors=[]),
+            ],
+            budget=Budget.unbounded(),
+        )
+        with pytest.raises(RunSuspended):
+            pipeline.run({}, envelope=envelope, run_id=RUN_ID, seed=41)
+        with pytest.raises(RunSuspended) as again:
+            pipeline.resume(RUN_ID, envelope=envelope, answer="slim")
+
+        assert [s["node_id"] for s in again.value.stops] == ["confirm"]
+        state = json.loads(run_path(tmp_path, RUN_ID, "suspension.json").read_text())
+        assert [s["node_id"] for s in state["stops"]] == ["confirm"]
+        assert not run_path(tmp_path, RUN_ID, "suspension.claimed.json").exists()
+        assert pipeline.resume(RUN_ID, envelope=envelope, answer="red").output == "red"
+
+    def test_the_second_attempt_runs_the_completed_nodes_again(self, envelope, tmp_path):
+        """What putting the found state back costs: those nodes write their records twice."""
+        fails = {"still": True}
+        ran: list = []
+        fn, tool = _asks("Which fit?", ["slim", "regular"])
+
+        def middle(inputs, ctx):
+            ran.append(inputs)
+            return inputs
+
+        def store(inputs, ctx):
+            if fails["still"]:
+                raise RuntimeError("the store was down")
+            return f"stored {inputs}"
+
+        pipeline = Pipeline(
+            [
+                Deterministic(fn, tools=[tool], node_id="ask", successors=["middle"]),
+                Deterministic(middle, node_id="middle", successors=["store"]),
+                Deterministic(store, node_id="store", successors=[]),
+            ],
+            budget=Budget.unbounded(),
+        )
+        with pytest.raises(RunSuspended):
+            pipeline.run({}, envelope=envelope, run_id=RUN_ID, seed=41)
+        with pytest.raises(RuntimeError):
+            pipeline.resume(RUN_ID, envelope=envelope, answer="slim")
+        fails["still"] = False
+        pipeline.resume(RUN_ID, envelope=envelope, answer="slim")
+
+        assert ran == ["slim", "slim"]
+        records = [
+            json.loads(line)
+            for line in run_path(tmp_path, RUN_ID, "trajectory.jsonl").read_text().splitlines()
+        ]
+        middles = [
+            r
+            for r in records
+            if r.get("record_type") == "node_execution" and r["node_id"] == "middle"
+        ]
+        assert len(middles) == 2
+
+
 class TestAResumedRunStillReadsWhatItWasGiven:
     def test_run_inputs_are_restored_from_the_suspension(self, envelope, tmp_path):
         """They are rebuilt through the codec, so they are set after the context is built."""
