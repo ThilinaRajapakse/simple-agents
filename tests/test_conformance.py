@@ -1,4 +1,4 @@
-"""The twenty-eight checks, against project fixtures produced by replaying a real evaluation.
+"""The twenty-nine checks, against project fixtures produced by replaying a real evaluation.
 
 `scripts/build_conformance_fixtures.py` writes them. `conforming/` passes them all, and every
 other fixture is that one with a single mutation, so a test that fires a check names the one
@@ -43,7 +43,7 @@ from simple_agents.conformance.checks import (
     _where_absence_is_declared,
 )
 from simple_agents.errors import ConfigurationError
-from simple_agents import Budget, Deterministic, LLMNode, Maybe, Pipeline
+from simple_agents import Budget, Deterministic, LLMNode, Maybe, Pipeline, Prompt
 from pydantic import BaseModel
 
 PROJECTS = Path(__file__).parent / "fixtures" / "projects"
@@ -84,7 +84,7 @@ class TestTheConformingProject:
         # project that declares no pipeline in code has declared no step it has not built,
         # FT-42 because every name under `produces` was recorded by a run, and FT-45 because
         # the results file names the pipeline its factory registers.
-        assert [c.outcome for c in report.checks].count(Outcome.PASSED) == 25
+        assert [c.outcome for c in report.checks].count(Outcome.PASSED) == 26
         assert [c.entry_id for c in report.checks if c.outcome is Outcome.NOT_APPLICABLE] == [
             "FT-31",
             "FT-37",
@@ -634,7 +634,7 @@ class TestTheTierGate:
     def test_an_inapplicable_check_is_reported_rather_than_dropped(self) -> None:
         report = run_checks(project("prototype"))
 
-        assert len(report.checks) == 28
+        assert len(report.checks) == 29
         assert "Fires at tier evaluated, and this project claims prototype." in report.text()
 
     def test_a_project_with_no_evaluation_fails_once_and_blocks_the_rest(self) -> None:
@@ -694,7 +694,7 @@ class _Out(BaseModel):
 
 
 def _a_prompt(inputs, ctx):
-    return [{"role": "user", "content": "hi"}]
+    return Prompt.user("hi")
 
 
 def _a_budget() -> Budget:
@@ -807,7 +807,7 @@ class TestTheTaxonomyIsTheSourceOfTheMessages:
     def test_every_entry_parses_out_of_the_shipped_document(self) -> None:
         entries = taxonomy()
 
-        assert len(entries) == 45
+        assert len(entries) == 46
         assert all(entry.message for entry in entries)
 
     def test_an_entry_naming_a_stage_carries_it_and_the_rest_carry_none(self) -> None:
@@ -908,8 +908,8 @@ class TestTheEnumerationsInTheDocument:
             line for line in self.document().splitlines() if line.startswith("| `prototype` |")
         ]
 
-        assert len(runs) == 20
-        assert "twenty of the twenty-eight" in row
+        assert len(runs) == 21
+        assert "twenty-one of the twenty-nine" in row
 
     def test_the_checks_prototype_drops_are_the_ones_it_does_not_run(self) -> None:
         """The ids moved out of the table on 2026-08-19 and into the sentence under it, which
@@ -941,9 +941,9 @@ class TestTheEnumerationsInTheDocument:
         entries = taxonomy()
         surfaces = {entries[i].surface for i in self.registered()}
 
-        assert len(self.registered()) == 28, "the document counts them in four places"
+        assert len(self.registered()) == 29, "the document counts them in four places"
         assert surfaces == {"artifact"}
-        assert "All twenty-eight are `artifact` surface" in self.document()
+        assert "All twenty-nine are `artifact` surface" in self.document()
 
     def test_the_table_of_what_each_check_reads_lists_every_check(self) -> None:
         """`docs/conformance.md` §3 is a row per check, and nothing compared it to the set."""
@@ -1106,8 +1106,8 @@ class TestTheSampleReportIsWhatTheSuitePrints:
 
         shown = re.findall(r"^\s*(?:pass|FAIL|blocked|n/a)  (FT-\d+)", self.documented(), re.M)
 
-        assert len(shown) == 28
-        assert len(set(shown)) == 28
+        assert len(shown) == 29
+        assert len(set(shown)) == 29
 
     def test_the_counts_on_the_last_line_add_up_to_the_rows_above_them(self) -> None:
         import re
@@ -1163,6 +1163,7 @@ class TestWhatTheSuiteDoesNotDo:
             25: "Twenty-five",
             26: "Twenty-six",
             28: "Twenty-eight",
+            29: "Twenty-nine",
             33: "thirty-three",
             34: "thirty-four",
             35: "thirty-five",
@@ -1175,6 +1176,7 @@ class TestWhatTheSuiteDoesNotDo:
             42: "forty-two",
             43: "forty-three",
             45: "forty-five",
+            46: "forty-six",
         }
 
         assert (
@@ -1287,7 +1289,7 @@ class TestTheCommand:
             # FT-41 reads nine manifests, none of which carries a suspension; FT-42 reads
             # every name under `produces` against them; FT-45 is blocked with the rest that
             # read a results file this fixture does not have.
-            "passed": 18,
+            "passed": 19,
             "failed": 1,
             "blocked": 6,
             "not_applicable": 3,  # FT-31, FT-37 and FT-38, which fire at `ship`

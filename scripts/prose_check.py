@@ -237,6 +237,7 @@ NUMBER_WORDS = {
     43: "forty-three",
     44: "forty-four",
     45: "forty-five",
+    46: "forty-six",
 }
 
 # noun -> what the code says the size is. A noun goes here only where every "the N <noun>" in a

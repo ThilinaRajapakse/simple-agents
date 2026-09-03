@@ -82,6 +82,21 @@ A check that fires on a project that never claimed its tier is a bug in the chec
 **Failure message.**
 > The number in `<results>` was measured over a pipeline this project registers nowhere. A pipeline is registered by `@pipeline_factory("<name>")` on the function that builds it, and the name then travels onto every run and into the results file. This file records none, so the graph it measured was built somewhere the project does not run: an evaluation script, or a node lifted out of the agent. Register the pipeline the figure is meant to be about and re-run the evaluation over it. Where the figure is about one step rather than the whole agent, take that step with `pipeline.slice(...)`, which keeps the name of the pipeline it came from.
 
+### FT-46: The prompt's instruction is different for every example
+
+*Surface: artifact · Tier: prototype*
+
+**What happens.** The prompt function formats the example into the text itself, with an f-string or `.format()`, and passes the result as the prompt's fixed text. The agent runs, the model reads a sensible instruction, and every check about how the run was recorded passes. What the run records is one piece of prompt text per example.
+
+**Why it's wrong.** An instruction is the thing a builder agrees to, a decision names, and a comparison holds fixed. Text that differs on every example is none of those: there is no sentence to read on the page, nothing for a `prompt_rule` decision to point at, and no way to tell an edited instruction from a different example. A regression traced to "the prompt changed" cannot be answered.
+
+**What the library provides.** A gap in the text is written `{name}` and filled by a keyword, so the instruction stays one piece of text and the data stays beside it: `Prompt.user("Answer using {notes}.", notes=notes)` (`docs/prompts.md` §1). The run then records the instruction once and the values separately, and the manifest says how many distinct instructions each step sent.
+
+**Check.** Each entry in the newest run's manifest `prompts` records `text`, which is `written` where the prompt's fixed text is a literal, a constant, or text the step chose or fetched whole, and `interpolated` where a value was formatted into it.
+
+**Failure message.**
+> The prompt for `<where>` builds its fixed text by interpolation, so this step sends a different instruction for every example and no instruction can be read, compared or agreed. Name the gaps instead: `Prompt.user("Answer using {notes}.", notes=notes)`, which sends the same text and records the values beside it. Text the step chooses or fetches whole, such as a template read from a store, is not this and passes.
+
 ### FT-02: No held-out split
 *Surface: artifact · Tier: evaluated*
 
@@ -860,8 +875,9 @@ Every check above verifies that a process was followed. None verifies that the r
 | FT-43 | The MCP server changed under the project | artifact | prototype |
 | FT-44 | A stamp the clock did not write | artifact | prototype |
 | FT-45 | The number was measured over a pipeline the project does not declare | artifact | evaluated |
+| FT-46 | The prompt's instruction is different for every example | artifact | prototype |
 
-**Counts.** 45 entries: 30 `prototype`, 14 `evaluated`, 1 `trained`. By surface: 34 artifact, 4 static, 2 static+artifact, 3 runtime, 2 runtime+static.
+**Counts.** 46 entries: 31 `prototype`, 14 `evaluated`, 1 `trained`. By surface: 35 artifact, 4 static, 2 static+artifact, 3 runtime, 2 runtime+static.
 
 Five entries name a stage as well as a tier. FT-31, FT-37 and FT-38 fire once a project has reached `ship`, FT-34 once it has reached `shape` and FT-36 once it has reached `research`, and each reports `n/a` before that. FT-37 and FT-38 read a change rather than an arrival, and a stage a project has reached it stays at, so those two go on firing on every later run of the suite.
 

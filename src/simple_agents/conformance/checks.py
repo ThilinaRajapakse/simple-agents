@@ -1,10 +1,9 @@
-"""The twenty-eight checks the suite runs, each reading the artifacts the project produced.
+"""The twenty-nine checks the suite runs, each reading the artifacts the project produced.
 
-Every check here is `artifact` surface: it reads files and executes nothing. The order below
-is the order they run in, which puts the ones that need no evaluation first. All but four read
-one run: the newest of the pipeline the results file measured. FT-25 reads the newest run of
-each pipeline, FT-35 every run the pipeline as it stands has made, and FT-41 and FT-42 every
-run there is (`docs/conformance.md` §3.8).
+Every check here is `artifact` surface: it reads files and executes nothing, in the order below.
+All but four read one run, the newest of the pipeline the results file measured. FT-25 reads the
+newest run of each pipeline, FT-35 every run the pipeline as it stands has made, and FT-41 and
+FT-42 every run there is (`docs/conformance.md` §3.8).
 
 | Entry | Reads | Fires when |
 |---|---|---|
@@ -23,6 +22,7 @@ run there is (`docs/conformance.md` §3.8).
 | FT-36 | `research.md`, and the stage it was last confirmed at | a section is empty, a candidate has no outcome, or it is stale |
 | FT-01 | the results file | no evaluation, at tier `evaluated` |
 | FT-45 | the results file's `config.pipeline` | the number was measured over a pipeline no `@pipeline_factory` registers |
+| FT-46 | `prompts` in the newest run's manifest | a prompt builds its fixed text by interpolation |
 | FT-02 | the results file | one split, or a held-out split that is empty |
 | FT-03 | the results file | the contamination report holds a pair spanning the splits |
 | FT-04 | the results file | no held-out example expects absence, in its answer or in a condition of its key |
@@ -375,28 +375,9 @@ def ft_15(ctx: Context) -> CheckResult:
     its source, so what fails here is a prompt whose source could not be read: one defined in a
     REPL or through ``eval``, which leaves an edit with nothing to trace it to.
     """
-    if ctx.artifacts.run_dir is None:
-        return _result(
-            ctx,
-            "FT-15",
-            Outcome.BLOCKED,
-            detail="No run directory under runs/, so no manifest names a prompt (FT-13).",
-        )
-    path = ctx.artifacts.run_dir / "manifest.json"
-    where = ctx.artifacts.relative(path) or str(path)
-    read = (where,)
-
-    manifest, reason = read_json(path)
-    if reason is not None or not isinstance(manifest, dict):
-        return _result(
-            ctx,
-            "FT-15",
-            Outcome.BLOCKED,
-            read=read,
-            detail=f"{reason or f'{where} is not an object'}, so no prompt version is readable.",
-        )
-
-    prompts = manifest.get("prompts") or {}
+    prompts, read, blocked = _prompts_of(ctx, "FT-15")
+    if blocked is not None:
+        return blocked
     if not prompts:
         return _result(
             ctx,
@@ -405,14 +386,10 @@ def ft_15(ctx: Context) -> CheckResult:
             read=read,
             detail="This run declared no prompt, so there is no version to record.",
         )
-    unreadable = sorted(
-        node_id
-        for node_id, entry in prompts.items()
-        if not isinstance(entry, dict) or not entry.get("version")
-    )
     findings = tuple(
         Finding(ctx.entry("FT-15").id, ctx.entry("FT-15").render(where=node_id))
-        for node_id in unreadable
+        for node_id, entry in sorted(prompts.items())
+        if not isinstance(entry, dict) or not entry.get("version")
     )
     if findings:
         return _result(ctx, "FT-15", Outcome.FAILED, findings=findings, read=read)
@@ -422,6 +399,89 @@ def ft_15(ctx: Context) -> CheckResult:
         Outcome.PASSED,
         read=read,
         detail=f"{len(prompts)} prompt(s), each with a version recorded.",
+    )
+
+
+def _prompts_of(
+    ctx: Context, entry_id: str
+) -> tuple[dict[str, Any], tuple[str, ...], CheckResult | None]:
+    """The newest run's `prompts`, or the result that says why it could not be read."""
+    if ctx.artifacts.run_dir is None:
+        return (
+            {},
+            (),
+            _result(
+                ctx,
+                entry_id,
+                Outcome.BLOCKED,
+                detail="No run directory under runs/, so no manifest names a prompt (FT-13).",
+            ),
+        )
+    path = ctx.artifacts.run_dir / "manifest.json"
+    where = ctx.artifacts.relative(path) or str(path)
+    read = (where,)
+    manifest, reason = read_json(path)
+    if reason is not None or not isinstance(manifest, dict):
+        return (
+            {},
+            read,
+            _result(
+                ctx,
+                entry_id,
+                Outcome.BLOCKED,
+                read=read,
+                detail=f"{reason or f'{where} is not an object'}, so no prompt is readable.",
+            ),
+        )
+    return manifest.get("prompts") or {}, read, None
+
+
+# -- FT-46: the prompt's fixed text is built by interpolation ----------------------------------
+
+
+def ft_46(ctx: Context) -> CheckResult:
+    """Whether every prompt the run recorded has fixed text that stays fixed.
+
+    Each prompt entry records ``text``. A run written before the field existed carries none and
+    reports blocked, which re-running clears.
+    """
+    prompts, read, blocked = _prompts_of(ctx, "FT-46")
+    if blocked is not None:
+        return blocked
+    if not prompts:
+        return _result(
+            ctx, "FT-46", Outcome.PASSED, read=read, detail="This run declared no prompt."
+        )
+    shapes = {
+        node_id: (entry or {}).get("text")
+        for node_id, entry in prompts.items()
+        if isinstance(entry, dict)
+    }
+    if not any(shapes.values()):
+        return _result(
+            ctx,
+            "FT-46",
+            Outcome.BLOCKED,
+            read=read,
+            detail=(
+                "This run's prompts record no `text`: it was written before the field existed, "
+                "so how each prompt was built is unknown. Manifests carry it from format 0.42, "
+                "and running the pipeline again writes one."
+            ),
+        )
+    findings = tuple(
+        Finding(ctx.entry("FT-46").id, ctx.entry("FT-46").render(where=node_id))
+        for node_id, shape in sorted(shapes.items())
+        if shape == "interpolated"
+    )
+    if findings:
+        return _result(ctx, "FT-46", Outcome.FAILED, findings=findings, read=read)
+    return _result(
+        ctx,
+        "FT-46",
+        Outcome.PASSED,
+        read=read,
+        detail=f"{len(shapes)} prompt(s), each with fixed text that stays fixed.",
     )
 
 
@@ -2332,6 +2392,7 @@ CHECKS: tuple[tuple[str, Callable[[Context], CheckResult]], ...] = (
     ("FT-13", ft_13),
     ("FT-14", ft_14),
     ("FT-15", ft_15),
+    ("FT-46", ft_46),
     ("FT-24", ft_24),
     ("FT-29", ft_29),
     ("FT-30", ft_30),

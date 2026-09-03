@@ -16,11 +16,11 @@ The command reads the files the project has already produced. It executes nothin
 
 | Tier | The project it describes | Its stages | Checks |
 |---|---|---|---|
-| `prototype` | built to find out whether the idea works, and reports no number about how well it does | every stage but `measure` | twenty of the twenty-eight |
-| `evaluated` | reports a measured number about how well it works | all six | all twenty-eight |
-| `trained` | an `evaluated` project that will also be trained on its own runs | all six | all twenty-eight |
+| `prototype` | built to find out whether the idea works, and reports no number about how well it does | every stage but `measure` | twenty-one of the twenty-nine |
+| `evaluated` | reports a measured number about how well it works | all six | all twenty-nine |
+| `trained` | an `evaluated` project that will also be trained on its own runs | all six | all twenty-nine |
 
-**`prototype` drops eight of the twenty-eight checks, the ones that read a results file**, as it does not produce one. They are FT-01, FT-02, FT-03, FT-04, FT-06, FT-07, FT-37 and FT-45 (§3).
+**`prototype` drops eight of the twenty-nine checks, the ones that read a results file**, as it does not produce one. They are FT-01, FT-02, FT-03, FT-04, FT-06, FT-07, FT-37 and FT-45 (§3).
 
 **`prototype` has no `measure` stage**, because it reports no number. Its `measure` questions are not required. A `prototype` project that produced a results file anyway gets a note suggesting `tier = "evaluated"`.
 
@@ -185,13 +185,14 @@ simple-agents record shape recommend                  # shape_confirmed, off the
 
 ## 3. What each check reads
 
-All twenty-eight are `artifact` surface: they read files and run nothing.
+All twenty-nine are `artifact` surface: they read files and run nothing.
 
 | Entry | Reads | Fires when |
 |---|---|---|
 | FT-13 | `runs/<latest>/trajectory.jsonl` | no trajectory, or a file nothing can read as one |
 | FT-14 | `runs/<latest>/manifest.json` | a model call happened and the identifier floats |
 | FT-15 | `prompts` in `runs/<latest>/manifest.json` | a prompt records no version, which is a prompt whose source could not be read |
+| FT-46 | `prompts` in `runs/<latest>/manifest.json` | a prompt builds its fixed text by interpolation, so the step sends a different instruction for every example |
 | FT-24 | `brief.toml`, against the stage the project is at | a question required at that stage has no answer |
 | FT-29 | `idea.md`, and `understanding_confirmed_at` in `brief.toml` | the file is missing, a section is empty, or it was last confirmed at an earlier stage |
 | FT-30 | `decisions` in `brief.toml` | a decision is still `proposed`, or one of the six kinds has no entry at all |
@@ -319,7 +320,7 @@ Each run records which registered pipeline it is (`docs/pipeline.md` §1.15), an
 
 | Check | Reads |
 |---|---|
-| FT-13, FT-14, FT-15, FT-32, FT-33, FT-43 | the newest run of the pipeline the results file measured |
+| FT-13, FT-14, FT-15, FT-32, FT-33, FT-43, FT-46 | the newest run of the pipeline the results file measured |
 | FT-07, FT-31, FT-40 | the same run, where the artifact each prefers does not answer |
 | FT-25 | the newest run of each pipeline, and passes where any of them registers a consultation tool that reaches a node |
 | FT-37 | the newest run of the pipeline the results file measured, over the same nodes |
@@ -353,6 +354,8 @@ project makes for itself declares RunEnvelope(role=...) so it is not read as the
      pass  FT-14  Model version unpinned                                                runs/run_7f2a/manifest.json
      pass  FT-15  Prompts unversioned                                                   runs/run_7f2a/manifest.json
         2 prompt(s), each with a version recorded.
+     pass  FT-46  The prompt's instruction is different for every example               runs/run_7f2a/manifest.json
+        2 prompt(s), each with fixed text that stays fixed.
      pass  FT-24  Elicitation skipped                                                   brief.toml
      pass  FT-29  The project has no current account of itself                          brief.toml, idea.md
      pass  FT-30  Design decisions the builder never saw                                brief.toml
@@ -406,7 +409,7 @@ project makes for itself declares RunEnvelope(role=...) so it is not read as the
      pass  FT-44  A stamp the clock did not write                                       brief.toml
         39 stamp(s), none ahead of the clock.
 
-1 failed, 18 passed, 6 blocked, 3 not applicable
+1 failed, 19 passed, 6 blocked, 3 not applicable
 ```
 
 | | Means |
@@ -416,7 +419,7 @@ project makes for itself declares RunEnvelope(role=...) so it is not read as the
 | `blocked` | the artifact this check reads is missing, and another check reports why |
 | `n/a` | the check does not apply: at a tier above the one this project claims, at a stage this project has not reached, or to what this project declared, and the line under it says which |
 
-**A missing artifact fails once.** A project claiming `evaluated` with no evaluation gets one failure from FT-01 and five blocked checks. All twenty-eight are printed either way, so the counts on the last line add up to twenty-eight.
+**A missing artifact fails once.** A project claiming `evaluated` with no evaluation gets one failure from FT-01 and five blocked checks. All twenty-nine are printed either way, so the counts on the last line add up to twenty-nine.
 
 The failure text is read out of `docs/failure-taxonomy.md` and is the same string that document specifies, so acting on the report and acting on the document are the same thing.
 
@@ -570,6 +573,6 @@ Manifests record constants from format `0.33`. A project whose runs all predate 
 
 ## 5. What the suite does not do
 
-Twenty-eight of the taxonomy's forty-five entries are checked here. The rest are the specification of correct practice and are not yet enforced, except the six the library enforces by construction: an output schema with no `unknown` branch (FT-09), a loop with no budget (FT-18), a tool with no side-effect class (FT-19), an evaluation over a tool that spends or cannot be undone (FT-20), a tool with no description (FT-23), and a node reading a type nothing reaching it can be (FT-28). Those refuse at author time rather than reporting at the end of a run.
+Twenty-nine of the taxonomy's forty-six entries are checked here. The rest are the specification of correct practice and are not yet enforced, except the six the library enforces by construction: an output schema with no `unknown` branch (FT-09), a loop with no budget (FT-18), a tool with no side-effect class (FT-19), an evaluation over a tool that spends or cannot be undone (FT-20), a tool with no description (FT-23), and a node reading a type nothing reaching it can be (FT-28). Those refuse at author time rather than reporting at the end of a run.
 
 **Every check verifies that a process was followed. Whether the result is correct cannot be verified by the library.** A project at full conformance measured something carefully. FT-24 establishes that the builder was asked what the right thing to measure is. Two checks read an answer's text and neither judges it: FT-25 reads whether the `consultation` answer opens on a negation, and FT-32 whether the `tool_effects` answer mentions each class of effect the run declares.
