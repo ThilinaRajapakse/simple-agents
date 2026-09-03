@@ -361,9 +361,8 @@ class Pipeline:
     ) -> "Pipeline":
         """Part of this pipeline as a pipeline of its own, for scoring one step at a time.
 
-        Back-to-front evaluation runs the last step alone on ideal inputs, then the last two,
-        and so on, so a figure that drops names the step it dropped at. A rung runs, writes a
-        trajectory and a manifest, and is evaluated like any other pipeline::
+        A rung runs, writes a trajectory and a manifest, and is evaluated like any other
+        pipeline::
 
             rung = pipeline.slice(start="judge")
             suite = EvalSuite(rung, examples.entering(rung), answer="answer", matches=exact)
@@ -383,8 +382,9 @@ class Pipeline:
 
         **An edge whose other end is outside the slice stays declared.** A node that took a
         :class:`~simple_agents.graph.Join` still receives one, with the cut arm in
-        ``Join.absent``. A route may still select an arm the slice does not hold, and the run
-        ends there, raising :class:`~simple_agents.errors.LeftTheSlice`.
+        ``Join.absent``. A route on an earlier node may select an arm the slice does not hold,
+        and the run ends there, raising :class:`~simple_agents.errors.LeftTheSlice`. The last
+        node is where the run finishes, and its output is what the run returns.
 
         The slice keeps this pipeline's budget, tools and fetch policy, its ``node_id`` is
         ``None``, and ``slice_of`` says what it is a slice of.

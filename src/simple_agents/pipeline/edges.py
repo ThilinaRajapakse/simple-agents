@@ -285,10 +285,16 @@ class _EdgeState:
         A slice keeps such an edge declared, so a route selects it exactly as it would in the
         pipeline the slice came from. Nothing runs on the other side, so the walk ends and the
         run says it reached the boundary rather than reporting no path to its final node.
+
+        The slice's own last node is where the run finishes. Its successor was cut to make
+        the slice, so a run reaching it returns that node's output. An error edge out of the
+        same node is a boundary, since a node that failed produced no output to return.
         """
         for target in chosen:
             if not self.graph.is_cut(node_id, target):
                 continue
+            if kind == "successor" and node_id == self.graph.terminal:
+                return False
             if self.left_the_slice is None:
                 self.left_the_slice = LeftTheSlice(node_id=node_id, target=target, kind=kind)
             return True

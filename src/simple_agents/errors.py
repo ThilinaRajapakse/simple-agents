@@ -228,7 +228,12 @@ class LeftTheSlice(CallerFacingError):
     Raised by ``Pipeline.run`` on a pipeline produced by ``Pipeline.slice``, in place of
     returning a ``RunResult``. A slice holds part of a graph, so a route may select an arm the
     slice does not hold, and a node may fail with its ``on_error`` handler outside it. The run
-    is not sent somewhere it would not have gone; it ends::
+    is not sent somewhere it would not have gone; it ends.
+
+    **The slice's own last node is where the run finishes rather than where it leaves.** A
+    slice taken with ``end=`` cuts that node's successor, and a run reaching it returns its
+    output like any other pipeline's. What raises here is a route out of an earlier node that
+    selects only cut arms, and a failure whose ``on_error`` handler the slice does not hold::
 
         try:
             result = rung.run(inputs, envelope=env, model=client)

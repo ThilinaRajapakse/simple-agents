@@ -180,6 +180,85 @@ class TestACutOutEdge:
         assert [r["node_id"] for r in ended] == ["select"]
 
 
+class TestTheSlicesLastNode:
+    """A slice taken with `end=` cuts its last node's successor, and the run finishes there.
+
+    Every run of this form raised `LeftTheSlice` until 2026-09-03. The mechanism ships in
+    `docs/pipeline.md` §1.14 and `docs/evaluation.md` §5.6 as `pipeline.slice(end="select")`,
+    and the example raised on itself: dogfood #6's first evaluation recorded 23 of 23 rollouts
+    as `left_the_slice` and an accuracy with no denominator.
+    """
+
+    def test_a_prefix_runs_and_returns_its_last_node(self, tmp_path: Path) -> None:
+        rung = recommender().slice(end="select")
+
+        assert rung.run({}, envelope=env(tmp_path)).output == {"picked": "a"}
+
+    def test_a_named_set_ending_short_of_the_terminal_runs_too(self, tmp_path: Path) -> None:
+        rung = recommender().slice(nodes=["pool", "select"])
+
+        assert rung.run({}, envelope=env(tmp_path)).output == {"picked": "a"}
+
+    def test_the_run_completed_rather_than_stopping_early(self, tmp_path: Path) -> None:
+        rung = recommender().slice(end="select")
+        rung.run({}, envelope=env(tmp_path))
+
+        manifest = json.loads(next((tmp_path / "runs").rglob("manifest.json")).read_text())
+        assert manifest["outcome"] == "completed"
+        assert manifest["stopped_early"] is None
+
+    def test_the_last_node_records_the_cut_arm_it_routed_to_and_no_termination(
+        self, tmp_path: Path
+    ) -> None:
+        rung = recommender().slice(end="select")
+        rung.run({}, envelope=env(tmp_path))
+
+        run = next((tmp_path / "runs").rglob("manifest.json")).parent
+        records = [json.loads(line) for line in (run / "trajectory.jsonl").read_text().splitlines()]
+        last = [
+            r
+            for r in records
+            if r.get("record_type") == "node_execution" and r["node_id"] == "select"
+        ]
+        assert [r["termination"] for r in last] == [None]
+        assert last[0]["route"] == ["judge"]
+
+    def test_an_earlier_node_routing_out_of_the_slice_still_leaves(self, tmp_path: Path) -> None:
+        """The rule is about the last node alone: `select` here is not it."""
+        rung = recommender(route=lambda output, ctx: "apologise").slice(
+            nodes=["select", "judge", "present"]
+        )
+
+        with pytest.raises(LeftTheSlice) as caught:
+            rung.run({"pool": ["a"]}, envelope=env(tmp_path))
+
+        assert (caught.value.node_id, caught.value.target) == ("select", "apologise")
+
+    def test_the_last_node_failing_into_a_cut_handler_still_leaves(self, tmp_path: Path) -> None:
+        """The node produced no output, so there is nothing for the run to return."""
+
+        def boom(value, ctx) -> dict:
+            raise RuntimeError("the tool was down")
+
+        fragile = Pipeline(
+            [
+                Deterministic(pool, node_id="prep", successors=["work"]),
+                Deterministic(boom, node_id="work", successors=["after"], on_error="rescue"),
+                Deterministic(judge, node_id="rescue", successors=["after"]),
+                Deterministic(pool, node_id="after", successors=[]),
+            ],
+            budget=Budget.unbounded(),
+        )
+        rung = fragile.slice(nodes=["prep", "work"])
+
+        assert rung.graph.terminal == "work"
+        with pytest.raises(LeftTheSlice) as caught:
+            rung.run({}, envelope=env(tmp_path))
+
+        assert (caught.value.node_id, caught.value.target) == ("work", "rescue")
+        assert caught.value.kind == "on_error"
+
+
 class TestWhatTheSliceRecords:
     def test_the_manifest_says_what_it_is_a_slice_of(self, tmp_path: Path) -> None:
         whole = recommender()
