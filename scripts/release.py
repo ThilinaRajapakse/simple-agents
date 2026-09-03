@@ -18,12 +18,13 @@ What it does, in order:
 
 1. Refuses a version that is not three numbers, is not above the current one, or already has
    a tag.
-2. Refuses when `CHANGELOG.md` has neither an `## Unreleased` section nor one already naming
-   this version. A release whose changelog says nothing about it is the failure this exists
-   to prevent.
+2. Refuses when `CHANGELOG.md` has neither an `## [Unreleased]` section nor one already
+   naming this version. A release whose changelog says nothing about it is the failure this
+   exists to prevent.
 3. Writes the version to `pyproject.toml` and `__init__.py`, which
    `tests/test_packaging.py` requires to agree.
-4. Dates the `## Unreleased` heading.
+4. Dates the `## [Unreleased]` heading and writes the link definition that makes it
+   resolvable, which is what `CHANGELOG.md`'s format asks for.
 5. Rebuilds the conformance fixtures. Every manifest records `library_version`, so a bump
    leaves 168 of them holding a version the library no longer writes.
 6. Re-locks, since `uv.lock` records the project's own version.
@@ -52,6 +53,14 @@ VERSION_SITES = (
         '__version__ = "{}"',
     ),
 )
+
+REPO_URL = "https://github.com/ThilinaRajapakse/simple-agents"
+
+# `CHANGELOG.md` follows Keep a Changelog: `## [Unreleased]` at the top, `## [x.y.z] - <date>`
+# below it, and one link definition per heading at the foot of the file.
+UNRELEASED = "## [Unreleased]"
+UNRELEASED_LINK = re.compile(r"^\[Unreleased\]: .*$", re.M)
+VERSION_HEADING = re.compile(r"^## \[(\d+\.\d+\.\d+)\] - \d{4}-\d{2}-\d{2}$", re.M)
 
 GATES = (
     ("the suite", ["uv", "run", "pytest", "-q"]),
@@ -120,11 +129,17 @@ def refusals(version: str) -> list[str]:
         )
 
     changelog = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-    if "## Unreleased" not in changelog and f"## {version} (" not in changelog:
+    if UNRELEASED not in changelog and f"## [{version}] - " not in changelog:
         found.append(
-            "CHANGELOG.md has no `## Unreleased` section, and none naming this version. "
-            "Write what changed under `## Unreleased` first: a release whose changelog says "
+            "CHANGELOG.md has no `## [Unreleased]` section, and none naming this version. "
+            "Write what changed under `## [Unreleased]` first: a release whose changelog says "
             "nothing about it is what this refuses."
+        )
+    elif UNRELEASED in changelog and not UNRELEASED_LINK.search(changelog):
+        found.append(
+            "CHANGELOG.md has an `## [Unreleased]` heading and no `[Unreleased]: ` link "
+            "definition at the foot of the file, so the heading resolves to nothing. Add "
+            f"`[Unreleased]: {REPO_URL}/compare/v{current_version()}...HEAD`."
         )
     return found
 
@@ -155,15 +170,36 @@ def set_version(version: str, write: bool) -> list[str]:
 
 
 def date_the_changelog(version: str, write: bool) -> str:
-    """``## Unreleased`` becomes ``## <version> (<today>)``."""
+    """``## [Unreleased]`` becomes ``## [<version>] - <today>``, and the link definitions at
+    the foot of the file gain a line for it::
+
+        [Unreleased]: <repo>/compare/v0.1.3...HEAD
+        [0.1.3]: <repo>/compare/v0.1.2...v0.1.3
+
+    The first version in a file gets a tag link instead of a comparison, since there is no
+    earlier tag to compare it against.
+    """
     path = REPO / "CHANGELOG.md"
     text = path.read_text(encoding="utf-8")
-    heading = f"## {version} ({datetime.date.today().isoformat()})"
-    if f"## {version} (" in text:
+    heading = f"## [{version}] - {datetime.date.today().isoformat()}"
+    if f"## [{version}] - " in text:
         return "CHANGELOG.md: already dated"
+    previous = VERSION_HEADING.search(text)
     if write:
-        path.write_text(text.replace("## Unreleased", heading, 1), encoding="utf-8")
-    return f"CHANGELOG.md: ## Unreleased -> {heading}"
+        text = text.replace(UNRELEASED, heading, 1)
+        written = _link_definitions(version, previous)
+        text = UNRELEASED_LINK.sub(lambda _: written, text, count=1)
+        path.write_text(text, encoding="utf-8")
+    return f"CHANGELOG.md: {UNRELEASED} -> {heading}"
+
+
+def _link_definitions(version: str, previous: re.Match[str] | None) -> str:
+    """The `[Unreleased]` line, moved on, followed by one for the version being released."""
+    if previous is None:
+        released = f"[{version}]: {REPO_URL}/releases/tag/v{version}"
+    else:
+        released = f"[{version}]: {REPO_URL}/compare/v{previous.group(1)}...v{version}"
+    return f"[Unreleased]: {REPO_URL}/compare/v{version}...HEAD\n{released}"
 
 
 def main(argv: list[str] | None = None) -> int:

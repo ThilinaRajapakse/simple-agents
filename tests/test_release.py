@@ -19,15 +19,20 @@ import pytest
 
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "release.py"
 
-CHANGELOG = """# Changelog
+REPO_URL = "https://github.com/ThilinaRajapakse/simple-agents"
 
-## Unreleased
+CHANGELOG = f"""# Changelog
+
+## [Unreleased]
 
 ### Fixed
 
 - Something.
 
-## 0.1.1 (2026-09-01)
+## [0.1.1] - 2026-09-01
+
+[Unreleased]: {REPO_URL}/compare/v0.1.1...HEAD
+[0.1.1]: {REPO_URL}/releases/tag/v0.1.1
 """
 
 
@@ -43,7 +48,7 @@ def load(repo: Path):
 
 @pytest.fixture
 def repo(tmp_path: Path) -> Path:
-    """A repository at `0.1.1` with an undated `## Unreleased` section."""
+    """A repository at `0.1.1` with an undated `## [Unreleased]` section."""
     (tmp_path / "pyproject.toml").write_text(
         '[project]\nname = "simple-llm-agents"\nversion = "0.1.1"\n', encoding="utf-8"
     )
@@ -72,15 +77,25 @@ class TestWhatItRefuses:
     def test_a_changelog_that_says_nothing_about_this_release(self, repo: Path) -> None:
         """The hole the release workflow leaves: it reads the tag and never the changelog."""
         (repo / "CHANGELOG.md").write_text(
-            "# Changelog\n\n## 0.1.1 (2026-09-01)\n", encoding="utf-8"
+            "# Changelog\n\n## [0.1.1] - 2026-09-01\n", encoding="utf-8"
         )
         said = load(repo).refusals("0.1.2")
         assert any("CHANGELOG.md has no" in one for one in said)
 
+    def test_an_unreleased_heading_with_no_link_definition(self, repo: Path) -> None:
+        """The heading is a link in this format, so one without a definition renders as
+        literal brackets and points nowhere."""
+        (repo / "CHANGELOG.md").write_text(
+            "# Changelog\n\n## [Unreleased]\n\n- Something.\n", encoding="utf-8"
+        )
+        said = load(repo).refusals("0.1.2")
+        assert any("resolves to nothing" in one for one in said)
+        assert any(f"[Unreleased]: {REPO_URL}/compare/v0.1.1...HEAD" in one for one in said)
+
     def test_a_changelog_already_naming_this_version_is_not_a_refusal(self, repo: Path) -> None:
         """Preparing the same release twice is not an error, so the run is repeatable."""
         (repo / "CHANGELOG.md").write_text(
-            "# Changelog\n\n## 0.1.2 (2026-09-01)\n\n- Something.\n", encoding="utf-8"
+            "# Changelog\n\n## [0.1.2] - 2026-09-01\n\n- Something.\n", encoding="utf-8"
         )
         assert load(repo).refusals("0.1.2") == []
 
@@ -106,9 +121,9 @@ class TestWhatItWrites:
         before = (repo / "pyproject.toml").read_text(encoding="utf-8")
 
         assert any("0.1.1 -> 0.1.2" in one for one in module.set_version("0.1.2", write=False))
-        assert "Unreleased ->" in module.date_the_changelog("0.1.2", write=False)
+        assert "[Unreleased] ->" in module.date_the_changelog("0.1.2", write=False)
         assert (repo / "pyproject.toml").read_text(encoding="utf-8") == before
-        assert "## Unreleased" in (repo / "CHANGELOG.md").read_text(encoding="utf-8")
+        assert "## [Unreleased]" in (repo / "CHANGELOG.md").read_text(encoding="utf-8")
 
     def test_the_changelog_heading_is_dated(self, repo: Path) -> None:
         import datetime
@@ -117,9 +132,32 @@ class TestWhatItWrites:
         module.date_the_changelog("0.1.2", write=True)
         held = (repo / "CHANGELOG.md").read_text(encoding="utf-8")
 
-        assert f"## 0.1.2 ({datetime.date.today().isoformat()})" in held
-        assert "## Unreleased" not in held
-        assert "## 0.1.1 (2026-09-01)" in held, "the sections below it are untouched"
+        assert f"## [0.1.2] - {datetime.date.today().isoformat()}" in held
+        assert "## [Unreleased]" not in held
+        assert "## [0.1.1] - 2026-09-01" in held, "the sections below it are untouched"
+
+    def test_the_new_heading_gets_a_link_definition(self, repo: Path) -> None:
+        """A heading in this format is a link, and `[Unreleased]` moves on to the new tag."""
+        module = load(repo)
+        module.date_the_changelog("0.1.2", write=True)
+        held = (repo / "CHANGELOG.md").read_text(encoding="utf-8")
+
+        assert f"[Unreleased]: {REPO_URL}/compare/v0.1.2...HEAD" in held
+        assert f"[0.1.2]: {REPO_URL}/compare/v0.1.1...v0.1.2" in held
+        assert f"[0.1.1]: {REPO_URL}/releases/tag/v0.1.1" in held, "the older ones stay"
+        assert held.count("[Unreleased]:") == 1
+
+    def test_the_first_version_in_a_file_links_to_its_tag(self, repo: Path) -> None:
+        """A comparison needs an earlier tag. The first release has none."""
+        (repo / "CHANGELOG.md").write_text(
+            f"# Changelog\n\n## [Unreleased]\n\n- Something.\n\n"
+            f"[Unreleased]: {REPO_URL}/compare/v0.1.1...HEAD\n",
+            encoding="utf-8",
+        )
+        load(repo).date_the_changelog("0.1.2", write=True)
+        held = (repo / "CHANGELOG.md").read_text(encoding="utf-8")
+
+        assert f"[0.1.2]: {REPO_URL}/releases/tag/v0.1.2" in held
 
     def test_dating_a_changelog_twice_leaves_it_alone(self, repo: Path) -> None:
         module = load(repo)
