@@ -22,8 +22,12 @@ def load_docs(inputs: dict, ctx: NodeContext) -> dict:
     docs = "\n\n".join(p.read_text() for p in Path(inputs["corpus"]).glob("*.txt"))
     return {"question": inputs["question"], "docs": docs}
 
-def build_prompt(inputs: dict, ctx: NodeContext) -> str:
-    return f"Answer using only these documents.\n\n{inputs['docs']}\n\n{inputs['question']}"
+def build_prompt(inputs: dict, ctx: NodeContext) -> Prompt:
+    return Prompt.user(
+        "Answer using only these documents.\n\n{docs}\n\n{question}",
+        docs=inputs["docs"],
+        question=inputs["question"],
+    )
 
 pipeline = Pipeline(
     [
@@ -790,7 +794,7 @@ node = Deterministic(read_library, version="characterised-2026-08")
 node = LLMNode(build_prompt, output_schema=Answer)
 ```
 
-The supplied function builds a prompt and returns it. The library makes the call and validates the response against `output_schema`. A step whose next action depends on what the model returned is an `AgentNode` instead.
+The supplied function builds a prompt and returns a `Prompt`, which is fixed text with named values (`docs/prompts.md`). The library makes the call and validates the response against `output_schema`. A step whose next action depends on what the model returned is an `AgentNode` instead.
 
 `temperature`, `max_output_tokens` and backend-specific options in `extra` are set per node. `prompt_version` records which version of the prompt ran (FT-15). `context=` sets what of the conversation is sent on each call, and defaults to sending all of it; `docs/context.md` covers it.
 
@@ -865,8 +869,12 @@ def look_up(query: str) -> str:
     """Search the document set. Returns matching passages."""
     return index.search(query)
 
-def build_prompt(inputs: dict, ctx: AgentContext) -> str:
-    return f"{inputs['question']} Available tools: {ctx.describe_tools()}"
+def build_prompt(inputs: dict, ctx: AgentContext) -> Prompt:
+    return Prompt.user(
+        "{question} Available tools: {tools}",
+        question=inputs["question"],
+        tools=ctx.describe_tools(),
+    )
 
 node = AgentNode(
     build_prompt,

@@ -170,7 +170,8 @@ class ModelHandle:
         @tool(side_effect_class=SideEffectClass.READ_ONLY)
         def summarise(model: ModelHandle, text: str) -> str:
             \"\"\"Summarise a passage in two sentences.\"\"\"
-            return model.complete(f"Summarise in two sentences:\\n{text}").content or ""
+            asked = Prompt.user("Summarise in two sentences:\\n{text}", text=text)
+            return model.complete(asked).content or ""
 
     The tool may reach the outside world only through this handle. A request written directly
     in the body is invisible to the library and is made again on every replay and on every
@@ -187,7 +188,7 @@ class ModelHandle:
         temperature: float | None = None,
         max_output_tokens: int | None = None,
     ) -> Any:
-        """Make one model call. ``prompt`` is a string or a list of message dicts.
+        """Make one model call. ``prompt`` is a `Prompt`, as a node's prompt function returns.
 
         Returns a ``ModelResponse``; its ``content`` is the text. The call is charged to the
         run's budget and emitted as a ``model_call`` record parented to this tool call.
@@ -365,7 +366,9 @@ class Reading:
 
         def read_the_answer(reading: Reading, answer: str, options: list[str]) -> str | None:
             \"\"\"Which offered option this answer meant, or None where it meant none.\"\"\"
-            response = reading.complete(client, f"Options: {options}\\nAnswer: {answer}")
+            asked = Prompt.user("Options: {options}\\nAnswer: {answer}",
+                                options=options, answer=answer)
+            response = reading.complete(client, asked)
             return response.content.strip() or None
 
         registry.add(consult(ask_in_chat, answered_by="end_user", read=read_the_answer))
@@ -392,7 +395,7 @@ class Reading:
         temperature: float | None = None,
         max_output_tokens: int | None = None,
     ) -> Any:
-        """Make one model call. ``prompt`` is a string or a list of message dicts.
+        """Make one model call. ``prompt`` is a `Prompt`, as a node's prompt function returns.
 
         ``client`` is a :class:`~simple_agents.ModelClient`. Returns a ``ModelResponse``; its
         ``content`` is the text.

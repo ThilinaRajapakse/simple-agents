@@ -67,7 +67,7 @@ An evaluation reuses one envelope across every rollout and varies the seed, whic
 
 The manifest is written when the run starts and rewritten when it ends. A run that crashed still has one, carrying `outcome: "error"` and the records that were written before the failure.
 
-**Current version: `0.41`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
+**Current version: `0.42`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
 
 ### 2.1 Fields
 
@@ -92,7 +92,7 @@ The manifest is written when the run starts and rewritten when it ends. A run th
 | `budget` | object | All four axes, `null` meaning unbounded. |
 | `cost_basis` | object \| null | `price`, `compute` or `device` with what each declares, or `by_model` holding one of those per model (§4). `null` means cost is unknown for this run. |
 | `models` | object | `configured` and `observed` (§2.2). |
-| `prompts` | object | Per node: `version` and `source` (§2.3). |
+| `prompts` | object | Per node: `version`, `source`, `text`, and the fixed text the run saw it send (§2.3). |
 | `slice` | object \| null | What this run's pipeline is a slice of, from `Pipeline.slice`, and `null` where the run is of a whole pipeline. Carries `of`, the source pipeline's `graph_fingerprint`; the `nodes` the slice holds; the `start` and `end` it was taken with, both `null` where the set was named; the ids it `dropped`; and one entry per cut edge under `cut_edges`, each a `from`, a `to` and a `kind`. Two evaluations of two rungs of one pipeline are joined on `of` (`docs/evaluation.md` §5.6). |
 | `nodes` | array | One entry per node that can emit a record: `node_id`, `node_kind`, the declared edges (§2.5), a `consultation_route` of what a route built by `on_reply` maps, a `schema` digest of what the node declared it produces, an `accepts` digest of what it reads, the `tools` it offered (§2.6), and on nodes that can call a model, `allow_unknown`, `context_builder` (§2.4), `stream`, `model`, `sampling`, `finish_check`, `node_budget`, `node_budget_per_item` and `fan_out` (§2.6). |
 | `containers` | array | One entry per pipeline used as a node: `node_id`, `node_kind`, `nodes` naming its direct children, its own declared edges, and its `budget` (§2.5). Empty where the pipeline nests none. |
@@ -172,12 +172,19 @@ FT-14 reads every identity that resolution produces, and reports one failure per
 
 ```json
 {
-  "extract_inseam": {"version": "v3", "source": "declared", "derived": "sha256:e08ba8d1f3e1"},
-  "summarise":      {"version": "sha256:9f2c1a4b0e77", "source": "derived"}
+  "extract_inseam": {"version": "v3", "source": "declared", "derived": "sha256:e08ba8d1f3e1",
+                     "text": "written", "observed": {"sha256:aa4d52b117e0": 40}, "distinct": 1},
+  "summarise":      {"version": "sha256:9f2c1a4b0e77", "source": "derived", "text": "written"}
 }
 ```
 
 `source` is `declared` where the node was constructed with `prompt_version="v3"`, and `derived` where it was not, in which case the version is a hash of the prompt function's source. `unavailable` means the source could not be read, which happens for a prompt defined in a REPL, and leaves a regression with nothing to trace it to (FT-15).
+
+`text` is `written` where the prompt's fixed text is a literal, a constant, or text the step chose or fetched whole, and `interpolated` where a value was formatted into the text itself, which FT-46 reports. `unreadable` where the source could not be read.
+
+`observed` is the fixed text this run saw that step send, as a digest and a count of the calls that used it, and `distinct` how many there were. A step whose instruction is written in the project's code records one. A step whose instruction arrives as data, which is a persona a user chose or a variant read from a store, records as many as it saw, capped at twenty entries with `distinct` carrying the true count. Both are absent on a step that made no call. `docs/prompts.md` §6 covers what each call records alongside this.
+
+**A prompt's version covers the text it names.** The hash is of the prompt function's source, what it closed over, and the module-level strings the function passes as fixed text, so moving a prompt into a constant beside the function keeps the edit inside the version.
 
 **`derived` is that hash where a version was declared**, and absent where it would repeat `version`. Only `version` decides what an evaluation directory is named and what `behaviour_fingerprint` covers, so declaring one means a cosmetic edit moves no figure. `derived` is what says the edit happened: a declared version that stayed put over a moved source is reported when rollouts are resumed or rescored, and `simple_agents.prompt_differences(run_dir, against=...)` names it across two evaluations (`docs/evaluation.md` §6.8).
 

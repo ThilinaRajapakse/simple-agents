@@ -52,7 +52,7 @@ __all__ = [
     "utc_now",
 ]
 
-FORMAT_VERSION = "0.29"
+FORMAT_VERSION = "0.30"
 
 RecordType = Literal[
     "run_start",

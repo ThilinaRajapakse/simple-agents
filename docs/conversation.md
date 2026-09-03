@@ -120,7 +120,9 @@ class Summary(BaseModel):
 
 def summarise(inputs, ctx):
     older = ctx.conversation.messages()[:-6]
-    return "Summarise this conversation for whoever continues it:\n" + str(older)
+    return Prompt.user(
+        "Summarise this conversation for whoever continues it:\n{older}", older=older
+    )
 
 def file_it(summary, ctx):
     ctx.call_tool("compact_conversation", summary=summary.summary)

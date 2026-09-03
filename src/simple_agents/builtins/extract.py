@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from ..prompting import Prompt
 from ..errors import ModelFacingError
 from ..schema import (
     json_schema_for_model,
@@ -83,7 +84,12 @@ def extract_to_schema(
     )
     def extract(model: ModelHandle, text: str) -> dict[str, Any]:
         response = model.complete(
-            f"{instructions}\n\nSchema:\n{rendered}\n\nPassage:\n{text}",
+            Prompt.user(
+                "{instructions}\n\nSchema:\n{schema}\n\nPassage:\n{passage}",
+                instructions=instructions,
+                schema=rendered,
+                passage=text,
+            ),
             output_schema=_json_schema(schema),
         )
         content = response.content or ""

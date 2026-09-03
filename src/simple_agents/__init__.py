@@ -288,7 +288,13 @@ def docs_path() -> Path:
     )
 
 
+from .prompting import Prompt, Section, Value
+
 __all__ = [
+    # Prompts
+    "Prompt",
+    "Value",
+    "Section",
     # The shape
     "Pipeline",
     "RunResult",

@@ -16,7 +16,7 @@ from ..records.trajectory import (
     ToolCallRecord,
     utc_now,
 )
-from .calls import _CallResult, _as_messages, _emit_failed_call_record
+from .calls import _CallResult, _emit_failed_call_record, _inputs, _prompt_of
 from .metering import (
     _Metered,
     _ToolOutcome,
@@ -514,12 +514,14 @@ def _reading_handle(
         temperature: float | None = None,
         max_output_tokens: int | None = None,
     ) -> ModelResponse:
+        asked = _prompt_of(prompt, where=f"The reader of a consultation in node {node_id!r}")
         return _call_reading_model(
             run=run,
             client=client,
             node_id=node_id,
             parent_id=parent_id,
-            messages=_as_messages(prompt),
+            messages=asked[0],
+            assembly=asked[1],
             output_schema=output_schema,
             temperature=temperature,
             max_output_tokens=max_output_tokens,
@@ -540,6 +542,7 @@ def _call_reading_model(
     temperature: float | None,
     max_output_tokens: int | None,
     item_index: int | None = None,
+    assembly: dict[str, Any] | None = None,
 ) -> ModelResponse:
     """One reading call: recorded, counted and charged like any other model call.
 
@@ -598,7 +601,7 @@ def _call_reading_model(
             response_model=response.response_model,
             params=request.params_for_record(run.manifest.register_schema),
             seed=request.seed,
-            inputs={"messages": request.messages},
+            inputs=_inputs(request.messages, assembly),
             outputs={
                 "content": response.content,
                 "tool_calls": [c.to_record() for c in response.tool_calls],

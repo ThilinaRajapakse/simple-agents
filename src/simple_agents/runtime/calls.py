@@ -11,6 +11,7 @@ from ..context_builder import ContextBuilder, ContextOverflow, locate_overflow, 
 from ..cost import Cost
 from ..errors import CallerFacingError, ConfigurationError, StreamUsageMissing
 from ..pacing import warn_unpaced_wait
+from ..prompting import Prompt
 from ..models import (
     ModelClient,
     ModelIdentity,
@@ -50,6 +51,7 @@ def _call_model(
     node_kind: str = "",
     call_index: int | None = None,
     item_index: int | None = None,
+    assembly: dict[str, Any] | None = None,
 ) -> _CallResult:
     """Make one model call, record it, and charge the run for it.
 
@@ -138,6 +140,7 @@ def _call_model(
         except BaseException as exc:
             _emit_failed_call_record(
                 run=run,
+                assembly=assembly,
                 request=request,
                 identity=identity,
                 parent_id=parent_id,
@@ -174,7 +177,7 @@ def _call_model(
             response_model=response.response_model,
             params=request.params_for_record(run.manifest.register_schema),
             seed=request.seed,
-            inputs={"messages": request.messages},
+            inputs=_inputs(request.messages, assembly),
             outputs={
                 "content": response.content,
                 "tool_calls": [c.to_record() for c in response.tool_calls],
@@ -195,6 +198,8 @@ def _call_model(
             stream=outcome.stream.to_record() if outcome.stream is not None else None,
             item_index=item_index,
         )
+        if assembly is not None:
+            run.manifest.observe_templates(node_id, assembly.get("templates") or [])
         run.emit(record)
 
         # What this call's prompt cost, for the next call's context builder to extrapolate from.
@@ -335,6 +340,7 @@ def _emit_failed_call_record(
     context: dict[str, Any],
     recorder: Any = None,
     item_index: int | None = None,
+    assembly: dict[str, Any] | None = None,
 ) -> None:
     """Record a model call that raised before returning a response.
 
@@ -373,7 +379,7 @@ def _emit_failed_call_record(
             response_model=None,
             params=request.params_for_record(run.manifest.register_schema),
             seed=request.seed,
-            inputs={"messages": request.messages},
+            inputs=_inputs(request.messages, assembly),
             outputs=(None if partial is None else {"content": partial, "tool_calls": []}),
             finish_reason=None,
             tokens=TokenUsage(
@@ -424,16 +430,48 @@ def _observation(call: Any, content: Any) -> dict[str, Any]:
     }
 
 
-def _as_messages(rendered: Any) -> list[dict[str, Any]]:
-    """Accept either a prompt string or an explicit message list."""
-    if isinstance(rendered, str):
-        return [{"role": "user", "content": rendered}]
-    if isinstance(rendered, list):
-        return list(rendered)
+def _inputs(messages: list[dict[str, Any]], assembly: dict[str, Any] | None) -> dict[str, Any]:
+    """What the call was sent, and how the prompt behind it was built.
+
+    ``assembly`` is absent on a call whose messages are a conversation rather than a prompt,
+    which is every turn of an agent loop after the first.
+    """
+    held: dict[str, Any] = {"messages": messages}
+    if assembly is not None:
+        held["assembly"] = assembly
+    return held
+
+
+def _prompt_of(built: Any, *, where: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """The messages one call sends, and the record of how they were built.
+
+    A prompt is fixed text with named values, so what the model was told is recorded apart
+    from the data that filled it. A string carries neither and is refused.
+    """
+    if isinstance(built, Prompt):
+        if not built.messages:
+            raise ConfigurationError(
+                f"{where} returned a Prompt with no messages, so the call would send nothing. "
+                f"Build at least one: Prompt.user('...')."
+            )
+        return built.to_messages(), built.to_record()
+    if isinstance(built, str):
+        raise ConfigurationError(
+            f"{where} returned a string, and a prompt is built from fixed text with named "
+            f"values:\n\n    return Prompt.user('Answer using {{notes}}.', notes=inputs['notes'])"
+            f"\n\nThe text already assembled goes through unchanged as the fixed text: "
+            f"Prompt.user(text). `docs/prompts.md` §1."
+        )
+    if isinstance(built, list):
+        raise ConfigurationError(
+            f"{where} returned a list of messages. Build them with Prompt, which records what "
+            f"each one was written from:\n\n    return Prompt.system('...') + "
+            f"Prompt.user('{{question}}', question=q)\n\nMessages a run already recorded are "
+            f"carried with Prompt.turns(messages). `docs/prompts.md` §1."
+        )
     raise ConfigurationError(
-        f"A prompt function returned {type(rendered).__name__}, but it must return either a "
-        f"string or a list of message dicts. Return the prompt text, or "
-        f"[{{'role': 'user', 'content': ...}}]."
+        f"{where} returned {type(built).__name__}, and a prompt function returns a Prompt: "
+        f"Prompt.user('...{{name}}...', name=value). `docs/prompts.md` §1."
     )
 
 

@@ -33,8 +33,8 @@ Nesting children inside their parent would make a single record unbounded in siz
 **What it looks like.** One `LLMNode` that made a single model call, abridged. The field tables in §2 to §5 define everything shown:
 
 ```jsonl
-{"format_version":"0.29","record_type":"node_execution","record_id":"r1","run_id":"run_7","parent_id":null,"sequence":1,"node_id":"extract_inseam","node_kind":"llm","seed":41,"inputs":{...},"outputs":{"inseam_cm":{"type":"unknown","reason":"not published"}},"budget":{"max_steps":1,"max_tokens":8000,"max_cost":null,"max_wall_clock_ms":30000},"termination":null,"route":[],"loop":null,"started_at":"2026-07-26T09:14:02.118Z","ended_at":"2026-07-26T09:14:04.902Z","error":null,"redactions":[],"omissions":[]}
-{"format_version":"0.29","record_type":"model_call","record_id":"r2","run_id":"run_7","parent_id":"r1","sequence":2,"backend":"self_hosted","request_model":"Qwen/Qwen3-8B","model_revision":"a1b2c3d","response_model":"Qwen/Qwen3-8B","params":{...},"seed":41,"inputs":{...},"outputs":{...},"finish_reason":"end_turn","tokens":{"input_uncached":1200,"input_cache_read":8400,"input_cache_write":0,"cache_ttl":null,"output":512},"concurrent_requests":4,"replayed":false,"cassette_key":"ck_9f2","context":{"context_builder":"AppendAll","dropped":[],"estimate":null},"recorded_duration_ms":null,"held_back_ms":0,"rate_limit":null,"provider":{},"stream":null,"item_index":null,"started_at":"2026-07-26T09:14:02.140Z","ended_at":"2026-07-26T09:14:04.880Z","error":null,"redactions":[],"omissions":[]}
+{"format_version":"0.30","record_type":"node_execution","record_id":"r1","run_id":"run_7","parent_id":null,"sequence":1,"node_id":"extract_inseam","node_kind":"llm","seed":41,"inputs":{...},"outputs":{"inseam_cm":{"type":"unknown","reason":"not published"}},"budget":{"max_steps":1,"max_tokens":8000,"max_cost":null,"max_wall_clock_ms":30000},"termination":null,"route":[],"loop":null,"started_at":"2026-07-26T09:14:02.118Z","ended_at":"2026-07-26T09:14:04.902Z","error":null,"redactions":[],"omissions":[]}
+{"format_version":"0.30","record_type":"model_call","record_id":"r2","run_id":"run_7","parent_id":"r1","sequence":2,"backend":"self_hosted","request_model":"Qwen/Qwen3-8B","model_revision":"a1b2c3d","response_model":"Qwen/Qwen3-8B","params":{...},"seed":41,"inputs":{...},"outputs":{...},"finish_reason":"end_turn","tokens":{"input_uncached":1200,"input_cache_read":8400,"input_cache_write":0,"cache_ttl":null,"output":512},"concurrent_requests":4,"replayed":false,"cassette_key":"ck_9f2","context":{"context_builder":"AppendAll","dropped":[],"estimate":null},"recorded_duration_ms":null,"held_back_ms":0,"rate_limit":null,"provider":{},"stream":null,"item_index":null,"started_at":"2026-07-26T09:14:02.140Z","ended_at":"2026-07-26T09:14:04.880Z","error":null,"redactions":[],"omissions":[]}
 ```
 
 Absent from the example: cost, total input tokens, and duration. All three are derived (§6).
@@ -62,11 +62,11 @@ Absent from the example: cost, total input tokens, and duration. All three are d
 
 ## 2. Common fields
 
-These fields are on all seven record types. Every record carries `format_version`, so a single line found on disk says how to interpret it. **Current version: `0.29`.**
+These fields are on all seven record types. Every record carries `format_version`, so a single line found on disk says how to interpret it. **Current version: `0.30`.**
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `format_version` | string | ✅ | `"0.29"`. Present on every record so a single line is interpretable in isolation. |
+| `format_version` | string | ✅ | `"0.30"`. Present on every record so a single line is interpretable in isolation. |
 | `record_type` | enum | ✅ | `node_execution` / `model_call` / `tool_call` / `consultation` / `delegation` |
 | `record_id` | string | ✅ | Unique within the run. |
 | `run_id` | string | ✅ | Identifies the run. Joins to the manifest. |
@@ -207,7 +207,7 @@ A node that declared `keep=` records what it carried past the fan-out under `kep
 | `response_model` | string \| null | ✅ | The model that actually served the response. |
 | `params` | object | ✅ | Configuration as sent: `seed`, `max_output_tokens`, `temperature`, the `extra` passthrough, and `tools_ref` and `output_schema_ref`. See §4.1.5. |
 | `seed` | integer \| null | ✅ | The seed sent to the backend for this call, derived from the run seed, the node id and the index of the call within the node (`docs/run-envelope.md` §5). `null` when the call was sent no seed. |
-| `inputs` | object | ✅ | The rendered request. |
+| `inputs` | object | ✅ | The rendered request: `messages`, and `assembly` where this call was built from a prompt. See §4.1.6. |
 | `outputs` | object \| null | ✅ | The response: `content`, `tool_calls`, and `reasoning`. See §4.1.4. |
 | `finish_reason` | string \| null | ✅ | Provider-reported reason the generation stopped. |
 | `tokens` | object | ✅ | See §4.1.2. |
@@ -259,6 +259,30 @@ pre-flight check against a token limit converts from characters. `chars_per_toke
 ratio the call named in `measured_on_call` exhibited, so a reader can tell an estimate from a
 count and can see what produced it. `docs/context.md` §2 states which quantities are
 measurable.
+
+#### 4.1.6 The `assembly` object
+
+How the prompt behind this call was built (`docs/prompts.md`). Present on the call a prompt
+function produced, absent where the messages are a conversation, which is every turn of an
+`AgentNode` loop after the first. `inputs` is a payload field, so redaction applies and sampling
+replaces the whole of it.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `messages` | array | ✅ | One entry per message, in order. |
+| `templates` | array | ✅ | A digest of each distinct piece of fixed text this prompt was built from, sorted. Two calls that sent the same instruction record the same digest whatever data filled it. |
+
+Each entry in `messages` carries `role`, and then either the fixed text and its values, or what
+was carried:
+
+| Field | Type | Notes |
+|---|---|---|
+| `template` | string | The fixed text, with `{name}` where each value went. |
+| `values` | array | One entry per value: `name`, `chars`, `capped_from` where a `cap` cut it, and `origin` where the prompt declared one. A value built from a section carries that section's own `template` and `values`. |
+| `parts` | integer | On a section built from a list: how many. `each` carries the text they share, where they share one. |
+| `blocks` | array | On a message whose content is not text: the text blocks as above, and `kind` for every other block. |
+| `carried` | boolean | `true` on a message carried in with `Prompt.turns`, which the project did not write. |
+| `extra` | array | The names of any backend fields set on the message, such as a cache marker. |
 
 #### 4.1.2 The `tokens` object
 

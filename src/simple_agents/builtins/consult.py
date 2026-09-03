@@ -23,6 +23,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Sequence
 
+from ..prompting import Prompt, Section
 from ..errors import CallerFacingError, ConfigurationError
 from ..grounding import normalise_text
 from ..tools import (
@@ -347,9 +348,10 @@ keeps that.
 """
 
 READING_FORMAT = (
-    '\n\nReply with JSON: {"chose": "<the option, copied exactly, or null>", '
-    '"reason": "<one sentence>"}.'
+    '\n\nReply with JSON: {{"chose": "<the option, copied exactly, or null>", '
+    '"reason": "<one sentence>"}}.'
 )
+"""Appended to the reading instructions. A brace is doubled because this is prompt text."""
 
 RETRY_RULE = (
     "That reply could not be read: {problem}\n"
@@ -428,7 +430,9 @@ class ModelReader:
                 f"{{answer}}\\n\\n...'."
             )
         try:
-            self.instructions.format(options="- an option", answer="an answer")
+            Prompt.user(
+                self.instructions + READING_FORMAT, options="- an option", answer="an answer"
+            ).to_messages()
         except Exception as exc:
             raise ConfigurationError(
                 f"ModelReader(instructions=...) cannot be filled in: {type(exc).__name__}: "
@@ -446,14 +450,15 @@ class ModelReader:
 
     def __call__(self, reading: Reading, answer: str, options: Sequence[str]) -> str | None:
         """Which option this answer meant, or ``None`` where it meant none of them."""
-        listed = "\n".join(f"- {option}" for option in options)
-        prompt = self.instructions.format(options=listed, answer=answer) + READING_FORMAT
-        messages: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
+        listed = Section.joined(
+            "options", [Section("option", "- {option}", option=option) for option in options]
+        )
+        asked = Prompt.user(self.instructions + READING_FORMAT, options=listed, answer=answer)
         problem = ""
         for _ in range(self.attempts):
             response = reading.complete(
                 self.model,
-                messages,
+                asked,
                 output_schema=READING_SCHEMA,
                 temperature=self.temperature,
                 max_output_tokens=self.max_output_tokens,
@@ -470,10 +475,11 @@ class ModelReader:
                     f"ceiling on its chain of thought as well as on the verdict.\n"
                     f"Raise it: ModelReader(model=..., max_output_tokens=2000)."
                 )
-            messages = messages + [
-                {"role": "assistant", "content": response.content or ""},
-                {"role": "user", "content": RETRY_RULE.format(problem=problem, options=listed)},
-            ]
+            asked = (
+                asked
+                + Prompt.assistant("{said}", said=response.content or "")
+                + Prompt.user(RETRY_RULE, problem=problem, options=listed)
+            )
         raise CallerFacingError(
             f"The model reading the end user's answer, "
             f"{self.model.identity().request_model}, did not name one of the options in "

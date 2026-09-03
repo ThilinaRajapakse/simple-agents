@@ -417,6 +417,7 @@ What this list names, the library ships. Check it before designing or building a
 - **Retrieval** (`docs/retrieval.md`): search by meaning as well as by words §1 · what an index costs, and adding to one that grows §2 · the embedding model, pinned §3 · fusion §4.1 · where the vectors live, on the CPU or the GPU §4.2 · reranking §5 · a custom embedding client §8.
 - **Memory** (`docs/memory.md`): a store the agent reads and writes across runs §1–2 · memory in an evaluation §3 · what redaction reaches §4.
 - **Conversation** (`docs/conversation.md`): a conversation that outlives the run §1 · what a turn is §3 · reading one back §4 · compaction §5 · in an evaluation §7 · two turns at once §9.
+- **Prompts** (`docs/prompts.md`): fixed text with named values §1 · capping a value and recording what was cut §2 · naming a part, and a list of parts §3 · more than one message, carrying a conversation in, content that is not text §4 · a model call from inside a tool §5 · what the run records about each prompt §6.
 - **Context** (`docs/context.md`): overflow and what happens at it §2–3 · a custom context builder §4.
 - **Model clients** (`docs/model-clients.md`): the three shipped backends §2 · retries and pacing, `PacedClient` §4 · streaming §5 · reasoning output §6 · a custom adapter §7.
 - **Run envelope** (`docs/run-envelope.md`): the manifest §2 · cassette record, replay and update §3 · cost, its three bases, and re-pricing an old run from its record §4 · seeds §5 · redaction §6 · reading runs back, and whether one with no outcome is still going §8.

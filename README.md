@@ -32,7 +32,7 @@ An agent that answers questions from your own documents, and says so when the an
 
 ```python
 from pydantic import BaseModel
-from simple_agents import AgentContext, AgentNode, Budget, Maybe, MistralClient, Pipeline
+from simple_agents import AgentNode, Budget, Maybe, MistralClient, Pipeline, Prompt
 from simple_agents.builtins import DocumentIndex, document_search
 
 class Answer(BaseModel):
@@ -41,9 +41,12 @@ class Answer(BaseModel):
 
 policies = DocumentIndex.from_directory("policies/", glob="*.md")
 
-def ask(inputs: dict, ctx: AgentContext) -> str:
-    return ("Answer the question from the policy documents, and name the document "
-            f"the answer came from.\n\n{inputs['question']}")
+def ask(inputs: dict, ctx) -> Prompt:
+    return Prompt.user(
+        "Answer the question from the policy documents, and name the document "
+        "the answer came from.\n\n{question}",
+        question=inputs["question"],
+    )
 
 pipeline = Pipeline(
     [AgentNode(ask, tools=[document_search(policies)], output_schema=Answer,
@@ -153,7 +156,7 @@ simple-agents record answer <key>       # your answer, into the brief, stamped b
 simple-agents check                     # the gate
 ```
 
-The questions are the ones only you can answer: what the agent is for, what a right answer looks like, what it must never do. The answers go into a brief, and the gate refuses to advance while one that stage needs is missing. `simple-agents check` runs the conformance suite over the project and reports what is not yet true of it. Behind it is a catalogue of 45 characteristic failures of agent building, and the twenty-eight checks that ship today read the project's own brief, runs and results. `docs/procedure.md` is the procedure itself, readable without installing anything.
+The questions are the ones only you can answer: what the agent is for, what a right answer looks like, what it must never do. The answers go into a brief, and the gate refuses to advance while one that stage needs is missing. `simple-agents check` runs the conformance suite over the project and reports what is not yet true of it. Behind it is a catalogue of 46 characteristic failures of agent building, and the twenty-nine checks that ship today read the project's own brief, runs and results. `docs/procedure.md` is the procedure itself, readable without installing anything.
 
 ## Full documentation
 
@@ -165,6 +168,7 @@ The questions are the ones only you can answer: what the agent is for, what a ri
 | [`docs/retrieval.md`](docs/retrieval.md) | Searching by meaning as well as by words: which model embeds a corpus, how lexical and semantic results combine, reranking, where the vectors live, how a corpus that changes is added to, and what a search costs. |
 | [`docs/memory.md`](docs/memory.md) | The memory store, the tools that reach it, what an evaluation does with it, and what redaction reaches. |
 | [`docs/conversation.md`](docs/conversation.md) | A conversation that outlives the run: how a node takes part, what a turn is, reading one back, and compaction. |
+| [`docs/prompts.md`](docs/prompts.md) | Writing a prompt as fixed text with named values, capping a value and recording what was cut, and what a run records about how each prompt was built. |
 | [`docs/context.md`](docs/context.md) | What the model is sent on each call, what overflow means, and how to replace the default. |
 | [`docs/model-clients.md`](docs/model-clients.md) | The model seam, the comparison between the three shipped adapters, a model per node, retries and pacing, streaming, reasoning output, and writing another. Each adapter has its own page: [`mistral.md`](docs/model-clients/mistral.md), [`gemini.md`](docs/model-clients/gemini.md), [`vllm.md`](docs/model-clients/vllm.md). |
 | [`docs/run-envelope.md`](docs/run-envelope.md) | The run directory, the manifest, cassette recording and replay, seeds, cost, redaction, and reading past runs back. |

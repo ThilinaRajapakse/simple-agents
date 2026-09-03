@@ -9,6 +9,7 @@ from ..context import NodeContext, RunContext
 from ..context_builder import AppendAll, ContextBuilder
 from ..errors import ConfigurationError, Suspend
 from ..graph import Loop, RetryPolicy
+from ..prompting import text_shape
 from ..records.manifest import source_version
 from ..models import ModelClient
 from ..schema import (
@@ -17,7 +18,7 @@ from ..schema import (
     warn_literal_absence_union,
 )
 from ..tools import Tool, ToolRegistry, normalized_touches
-from ..runtime.calls import _as_messages, _assistant_turn, _call_model, _json_schema, _validate
+from ..runtime.calls import _assistant_turn, _call_model, _json_schema, _prompt_of, _validate
 from ..runtime.suspending import _Suspending
 from ..runtime.tooling import _FixedPointCaller, _access_recorder
 from .base import (
@@ -36,15 +37,16 @@ from .fanout import _declare_fan_out, _fan_out
 class LLMNode:
     """A model call at a fixed point in fixed control flow. One call, one place, one shape.
 
-    The caller supplies a function that builds a prompt; the library makes the call and
-    validates the response against ``output_schema``. A step whose next action depends on what
-    the model returned is an ``AgentNode``::
+    The caller supplies a function returning a `Prompt`, which is fixed text with named values
+    (`docs/prompts.md`); the library makes the call and validates the response against
+    ``output_schema``. A step whose next action depends on what the model returned is an
+    ``AgentNode``::
 
         class Answer(BaseModel):
             answer: Maybe[str]
 
-        def build_prompt(inputs: dict, ctx: NodeContext) -> str:
-            return f"Answer using only these documents: {inputs['docs']}"
+        def build_prompt(inputs: dict, ctx: NodeContext) -> Prompt:
+            return Prompt.user("Answer using only these documents: {docs}", docs=inputs["docs"])
 
         node = LLMNode(build_prompt, output_schema=Answer)
 
@@ -55,7 +57,7 @@ class LLMNode:
         node = LLMNode(reduce_notes, output_schema=Notes, model=cheap)
 
     ``over`` names an input key holding a sequence and makes the same call once per item,
-    returning a :class:`FanOutResult`. A failed item is collected rather than ending the run::
+    returning a :class:`FanOutResult`::
 
         node = LLMNode(summarise, output_schema=Summary, over="documents")
 
@@ -74,7 +76,7 @@ class LLMNode:
 
         def build_prompt(inputs, ctx):
             page = ctx.call_tool("http_fetch", url=inputs["url"])
-            return f"Summarise this page: {page}"
+            return Prompt.user("Summarise this page: {page}", page=page)
 
         node = LLMNode(build_prompt, output_schema=Summary, tools=[http_fetch()])
 
@@ -84,8 +86,7 @@ class LLMNode:
 
         node = LLMNode(reply, output_schema=Answer, stream=True)
 
-    A run given no ``on_token`` makes an ordinary call whatever the node declares, so an
-    evaluation of a streaming pipeline sends what a non-streaming one sends. With an
+    A run given no ``on_token`` makes an ordinary call whatever the node declares. With an
     ``output_schema`` set the pieces are fragments of JSON rather than prose.
     """
 
@@ -124,7 +125,12 @@ class LLMNode:
         self.node_id = node_id if self.planned else (node_id or prompt.__name__)
         self.prompt_version = prompt_version
         self.prompt_entry = (
-            _not_built_entry(prompt) if self.planned else source_version(prompt, prompt_version)
+            _not_built_entry(prompt)
+            if self.planned
+            else {
+                **source_version(prompt, prompt_version, text=True),
+                "text": text_shape(prompt),
+            }
         )
         self.touches = normalized_touches(touches, where=f"LLMNode {self.node_id!r}")
         self.tools = _declared_tools(self, tools)
@@ -265,7 +271,9 @@ class LLMNode:
                     inputs=inputs,
                 ),
             )
-        messages = _as_messages(self.prompt(inputs, ctx))
+        messages, assembly = _prompt_of(
+            self.prompt(inputs, ctx), where=f"The prompt function of node {execution.node_id!r}"
+        )
         writer = _ThreadWriter(ctx.conversation, run, execution.node_id, item_index)
         writer.opened(messages)
         try:
@@ -276,6 +284,7 @@ class LLMNode:
                 parent_id=execution.record_id,
                 item_index=item_index,
                 messages=messages,
+                assembly=assembly,
                 context=self.context,
                 ctx=ctx,
                 temperature=self.temperature,

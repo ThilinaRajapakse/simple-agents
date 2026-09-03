@@ -22,6 +22,7 @@ from ..context import (
 from ..context_builder import AppendAll, ContextBuilder
 from ..errors import ConfigurationError, ModelFacingError, Suspend
 from ..graph import Loop, RetryPolicy
+from ..prompting import text_shape
 from ..records.manifest import source_version
 from ..models import ModelClient, ModelResponse, ToolCallRequest
 from ..schema import (
@@ -51,7 +52,7 @@ from ..runtime.budgets import (
     _refuse_over_budget,
     _spent_since,
 )
-from ..runtime.calls import _CallResult, _as_messages, _assistant_turn, _call_model, _observation
+from ..runtime.calls import _CallResult, _assistant_turn, _call_model, _observation, _prompt_of
 from ..runtime.consultation import _delivered_answer
 from ..runtime.handles import (
     _conversation_handle,
@@ -157,8 +158,12 @@ class AgentNode:
             \"\"\"Search the document set. Returns matching passages.\"\"\"
             return index.search(query)
 
-        def build_prompt(inputs: dict, ctx: AgentContext) -> str:
-            return f"{inputs['question']} Available tools: {ctx.describe_tools()}"
+        def build_prompt(inputs: dict, ctx: AgentContext) -> Prompt:
+            return Prompt.user(
+                "{question} Available tools: {tools}",
+                question=inputs["question"],
+                tools=ctx.describe_tools(),
+            )
 
         node = AgentNode(
             build_prompt,
@@ -244,7 +249,12 @@ class AgentNode:
         self.node_id = node_id if self.planned else (node_id or prompt.__name__)
         self.prompt_version = prompt_version
         self.prompt_entry = (
-            _not_built_entry(prompt) if self.planned else source_version(prompt, prompt_version)
+            _not_built_entry(prompt)
+            if self.planned
+            else {
+                **source_version(prompt, prompt_version, text=True),
+                "text": text_shape(prompt),
+            }
         )
         self.touches = normalized_touches(touches, where=f"AgentNode {self.node_id!r}")
         self.model = model
@@ -493,9 +503,15 @@ class AgentNode:
 
         writer = _ThreadWriter(ctx.conversation, run, node_id, item_index)
         if resume_state is None:
-            messages = _as_messages(self.prompt(inputs, ctx))
+            messages, assembly = _prompt_of(
+                self.prompt(inputs, ctx),
+                where=f"The prompt function of node {execution.node_id!r}",
+            )
             writer.opened(messages)
         else:  # noqa: PLR5501 - the resumed branch reads its state before it can open a turn
+            # A resumed execution never runs its prompt function again, so how the prompt was
+            # assembled is on the record of the run that ran it.
+            assembly = None
             messages = list(resume_state["messages"])
             made = [ToolCallSummary(**summary) for summary in resume_state["made"]]
             finish_attempts = [
@@ -580,6 +596,9 @@ class AgentNode:
                     # it is sent, and the loop keeps all of it either way, so a message left
                     # out of one call is still there for the next.
                     messages=list(messages),
+                    # Only the first call is a prompt. Every turn after it sends the
+                    # conversation, which the loop wrote rather than the project.
+                    assembly=assembly,
                     context=self.context,
                     ctx=replace(ctx, step=step),
                     temperature=self.temperature,
@@ -590,6 +609,7 @@ class AgentNode:
                     node_kind=self.node_kind,
                     item_index=item_index,
                 )
+                assembly = None
                 response = call.response
                 node_calls += 1
                 node_tokens += response.tokens.total
@@ -1165,12 +1185,14 @@ class AgentNode:
             temperature: float | None = None,
             max_output_tokens: int | None = None,
         ) -> ModelResponse:
+            nested = _prompt_of(prompt, where=f"A tool's model.complete() in node {ctx.node_id!r}")
             result = _call_model(
                 run=run,
                 model=model,
                 node_id=ctx.node_id,
                 parent_id=parent_id,
-                messages=_as_messages(prompt),
+                messages=nested[0],
+                assembly=nested[1],
                 context=self.context,
                 ctx=ctx,
                 # The item whose loop called the tool. Without it two items' nested calls

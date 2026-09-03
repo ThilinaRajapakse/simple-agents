@@ -26,12 +26,13 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Iterable
 
+from ..prompting import text_globals
 from .trajectory import RECORD_TYPES
 from .trajectory import FORMAT_VERSION as TRAJECTORY_FORMAT_VERSION
 
 __all__ = ["MANIFEST_FORMAT_VERSION", "Manifest", "source_version"]
 
-MANIFEST_FORMAT_VERSION = "0.41"
+MANIFEST_FORMAT_VERSION = "0.42"
 
 DEFAULT_ROLE = "agent"
 
@@ -212,6 +213,9 @@ class Manifest:
     _tool_spend: dict[str, Any] | None = field(default=None, init=False, repr=False)
     _charged_cost: float | None = field(default=None, init=False, repr=False)
     _schemas: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
+    _observed_templates: dict[str, dict[str, int]] = field(
+        default_factory=dict, init=False, repr=False
+    )
     _cassette_counts: dict[str, int] = field(
         default_factory=lambda: {"hits": 0, "misses": 0, "recorded": 0, "diverged": 0},
         init=False,
@@ -258,6 +262,42 @@ class Manifest:
                     )
                 elif isinstance(value, (int, float)):
                     self._tokens[name] = self._tokens.get(name, 0) + int(value)
+
+    def _prompts_record(self) -> dict[str, dict[str, Any]]:
+        """Each prompt as declared, with the fixed text this run saw it send.
+
+        ``observed`` holds one entry per distinct piece of text, ``{digest: calls}``, capped at
+        `MOST_TEMPLATES` with ``distinct`` carrying the true count. A step whose instruction is
+        data can send thousands, and the manifest is not where they belong.
+        """
+        held = {}
+        for node_id, entry in self.prompts.items():
+            seen = self._observed_templates.get(node_id) or {}
+            if not seen:
+                held[node_id] = entry
+                continue
+            ranked = sorted(seen.items(), key=lambda kv: (-kv[1], kv[0]))
+            held[node_id] = {
+                **entry,
+                "observed": dict(ranked[:MOST_TEMPLATES]),
+                "distinct": len(seen),
+            }
+        return held
+
+    def observe_templates(self, node_id: str, digests: list[str]) -> None:
+        """Note the fixed text one call was built from, by digest.
+
+        A step whose prompt is written in the project's code sends the same text every run, so
+        this is one digest and a count. A step whose instruction arrives as data, which is a
+        persona from a store or an end user's own words, sends a different one each time, and
+        the count is what says so.
+        """
+        if not digests:
+            return
+        with self._lock:
+            seen = self._observed_templates.setdefault(node_id, {})
+            for digest in digests:
+                seen[digest] = seen.get(digest, 0) + 1
 
     def observe_held_back(self, held_back_ms: int) -> None:
         """Add one call's waiting to the run total.
@@ -401,7 +441,7 @@ class Manifest:
                     )
                 ],
             },
-            "prompts": self.prompts,
+            "prompts": self._prompts_record(),
             "slice": self.slice,
             "nodes": self.nodes,
             "containers": self.containers,
@@ -617,8 +657,16 @@ def _closed_over(fn: Callable[..., Any]) -> str:
     return "\n".join(sorted(captured))
 
 
+MOST_TEMPLATES = 20
+"""How many distinct pieces of prompt text one step carries on the manifest."""
+
+
 def source_version(
-    fn: Callable[..., Any], declared: str | None = None, *, closure: bool = True
+    fn: Callable[..., Any],
+    declared: str | None = None,
+    *,
+    closure: bool = True,
+    text: bool = False,
 ) -> dict[str, Any]:
     """The version recorded for a function a node was given: its prompt, or its route.
 
@@ -626,9 +674,8 @@ def source_version(
     version is a hash of the function's source and of what it closed over, marked ``derived``,
     which changes when the function changes and identifies nothing else to a reader (FT-15).
 
-    **What a function closed over is part of the version**, because a function built by a
-    factory has the source of whatever the factory returns, which is the same text for every
-    call to it::
+    **What a function closed over is part of the version.** A function built by a factory has
+    the source of whatever the factory returns, the same text for every call to it::
 
         def road(mapping):
             def route(output, ctx):
@@ -637,12 +684,11 @@ def source_version(
 
         source_version(road({"a": "1"})) != source_version(road({"b": "2"}))
 
-    Without that, two routes sending a run to different nodes record one version and an edit to
-    the mapping is traced to nothing. Only captured data whose text is fixed by its value counts,
-    so a function closing over a client or another is versioned by its source alone.
+    Only captured data whose text is fixed by its value counts, so a function closing over a
+    client is versioned by its source alone.
 
-    A function defined where its source cannot be read, such as in a REPL, records
-    ``unavailable`` and leaves a regression with nothing to trace it to.
+    A function whose source cannot be read, such as one defined in a REPL, records
+    ``unavailable``.
 
     ``derived`` is the hash where a version was declared, and absent where it would equal
     ``version``, so an edit under a declaration is visible and named once::
@@ -652,8 +698,10 @@ def source_version(
 
     ``closure=False`` versions the source alone, which is how a `Deterministic` node's function
     is versioned: one holding state across its own calls would otherwise change version mid-run.
+    ``text=True`` also versions the strings the function passes as fixed text (`text_globals`),
+    which is how a prompt is versioned.
     """
-    digest = _source_digest(fn, closure=closure)
+    digest = _source_digest(fn, closure=closure, text=text)
     if declared:
         found = {"version": declared, "source": "declared"}
         return found if digest is None else {**found, "derived": digest}
@@ -663,14 +711,26 @@ def source_version(
     return {"version": digest, "source": "derived"}
 
 
-def _source_digest(fn: Callable[..., Any], *, closure: bool = True) -> str | None:
-    """A hash of a function's source and of what it closed over, or ``None`` where unreadable."""
+def _source_digest(
+    fn: Callable[..., Any], *, closure: bool = True, text: bool = False
+) -> str | None:
+    """A hash of a function's source, what it closed over and the text it names.
+
+    ``None`` where the source cannot be read. ``text`` adds the module-level strings the
+    function passes to `Prompt` or `Section` as fixed text, so a prompt written into a constant
+    beside the function is inside the version rather than outside it.
+    """
     try:
         source = inspect.getsource(fn)
     except (OSError, TypeError):
         return None
     captured = _closed_over(fn) if closure else ""
     material = f"{source}\n--closed-over--\n{captured}" if captured else source
+    if text:
+        named = text_globals(fn)
+        if named:
+            written = "\n".join(f"{name}={named[name]}" for name in sorted(named))
+            material = f"{material}\n--text--\n{written}"
     return f"sha256:{hashlib.sha256(material.encode('utf-8')).hexdigest()[:12]}"
 
 
