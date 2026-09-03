@@ -599,7 +599,8 @@ def _workspace(root: Path) -> dict[str, Any] | None:
     newest = next(
         (
             handle.path / "workspace"
-            for handle in runs(root_runs)
+            # Every run wrote a workspace, whatever answered its model.
+            for handle in runs(root_runs, scripted=None)
             if (handle.path / "workspace").is_dir()
         ),
         None,

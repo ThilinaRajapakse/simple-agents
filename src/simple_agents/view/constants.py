@@ -13,6 +13,11 @@ read the same as one the builder settled.
 
 What is here is read from what the project's own runs recorded, so a number added since the
 last run appears once something has run.
+
+**A name the newest run of its own pipeline no longer carries is marked gone**, and the page
+offers no agreement on it. A manifest is a record of what the code held when it ran, so a
+number deleted from the code stays in every older manifest: one project agreed to a constant
+that had been removed, and the decision answering it is in that brief.
 """
 
 from __future__ import annotations
@@ -36,20 +41,62 @@ def _across_the_runs(root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     An evaluation's rollouts are left out: a rollout is measurement, and the numbers it ran
     against are its own run's. A name recorded by more than one run keeps what the newest of
     them carried, which is what the code has now.
+
+    Each number carries ``last_seen``, the day of the newest run holding it, and ``gone``,
+    which is true where the newest run of every pipeline that ever recorded it no longer does.
+    **Nothing is gone on a project whose runs record no pipeline name**, which is every project
+    whose runs predate manifest format ``0.41``: a number missing from the newest run of any
+    pipeline is a number the pipeline that ran last does not reach, and which that was is
+    unrecorded.
+
+    A run whose model answered from a script is read here. It recorded the numbers the code
+    held as faithfully as a paid one, which is what this page is about.
     """
     from ..envelope import runs
 
     directory = root / "runs"
     if not directory.is_dir():
         return [], {}
+    read = runs(directory, scripted=None)[:MOST_RUNS]
     numbers: dict[str, dict[str, Any]] = {}
     prompts: dict[str, Any] = {}
-    for handle in runs(directory)[:MOST_RUNS]:
-        for held in handle.manifest.get("constants") or []:
-            numbers.setdefault(str(held.get("name") or ""), held)
-        for node_id, held in (handle.manifest.get("prompts") or {}).items():
-            prompts.setdefault(str(node_id), held)
-    return list(numbers.values()), prompts
+    for handle in read:
+        for one in _constants_of(handle):
+            numbers.setdefault(str(one.get("name") or ""), {**one, "last_seen": _day(handle)})
+        for node_id, one in (handle.manifest.get("prompts") or {}).items():
+            prompts.setdefault(str(node_id), one)
+    still_there = _what_the_code_still_has(read)
+    return [
+        {**held, "gone": still_there is not None and name not in still_there}
+        for name, held in numbers.items()
+    ], prompts
+
+
+def _constants_of(handle: Any) -> list[dict[str, Any]]:
+    """The ``constants`` array one run recorded, as a list whatever the manifest holds."""
+    held = handle.manifest.get("constants")
+    return [one for one in held if isinstance(one, dict)] if isinstance(held, list) else []
+
+
+def _what_the_code_still_has(read: list[Any]) -> set[str] | None:
+    """Every name the newest run of some pipeline still records, or ``None`` where nothing says.
+
+    ``None`` where no run read names a pipeline, which is every project whose runs predate
+    manifest format ``0.41``: a name missing from the newest run of any pipeline is a name the
+    pipeline that ran last does not reach, and which that was is unrecorded.
+    """
+    newest: dict[str, set[str]] = {}
+    for handle in read:
+        if handle.pipeline:
+            newest.setdefault(
+                handle.pipeline, {str(one.get("name") or "") for one in _constants_of(handle)}
+            )
+    return set().union(*newest.values()) if newest else None
+
+
+def _day(handle: Any) -> str:
+    """The day one run started, which is what a gone number is dated by."""
+    return str(handle.manifest.get("started_at") or "")[:10]
 
 
 def _decision_card(decision: Any) -> dict[str, Any]:
@@ -112,11 +159,21 @@ def read_constants(
         read_constants(".", pipelines, brief)[0]
         # {'name': 'MAX_AGE_DAYS', 'value': 90, 'module': 'agent',
         #  'reached_from': {'steps': ['policy_check'], 'through': ['policy_lookup']},
-        #  'decision': None}
+        #  'decision': None, 'gone': False, 'last_seen': '2026-09-03'}
 
     ``decision`` is ``None`` where no ``constant`` decision names the number, which is the
     page's **Unconfirmed**. Empty where the project has no run, since the numbers are read
     from what a run recorded.
+
+    ``gone`` is true where the newest run of every pipeline that recorded the number no longer
+    carries it, and ``last_seen`` is the day the newest run that did began. The page shows
+    those as removed from the code and offers no agreement on them: agreeing to a number
+    nothing has records a decision about nothing.
+
+    A run records every module-level number its own nodes reach, so a number stays until every
+    pipeline that reached it has run again. Two pipelines in one module record one set of
+    numbers between them, and a number deleted from that module reads as gone once either of
+    them has run.
     """
     numbers, _prompts = _across_the_runs(Path(root).expanduser())
     agreed = _named_by(brief, "constant")
@@ -130,9 +187,11 @@ def read_constants(
                 "module": held.get("module"),
                 "reached_from": _reached_from(pipelines, name),
                 "decision": agreed.get(name),
+                "gone": bool(held.get("gone")),
+                "last_seen": held.get("last_seen"),
             }
         )
-    return sorted(rows, key=lambda row: (row["decision"] is not None, row["name"]))
+    return sorted(rows, key=lambda row: (row["gone"], row["decision"] is not None, row["name"]))
 
 
 def read_prompt_rules(

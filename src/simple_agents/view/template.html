@@ -394,6 +394,7 @@ button.nm:hover{color:var(--accent)}
    put it 56px past the region's edge at 1200. */
 .numrow .conf .sentnote{white-space:normal;display:inline-block}
 .numrow.open .nm{color:var(--note)}
+.numrow.gone .nm,.numrow.gone .v{color:var(--muted);text-decoration:line-through}
 .mregion .numrow:has(.rule){grid-template-columns:minmax(0,0.9fr) minmax(0,2.2fr) minmax(0,1.1fr)}
 .numrow .rule{color:var(--ink);line-height:1.45}
 .seamrow .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
@@ -5087,24 +5088,34 @@ function progressRegion() {
    no decision is one the coding agent picked alone, which is the whole reason to draw this. */
 function constantsRegion() {
   const rows = DATA.constants || [];
-  const open = rows.filter(r => !r.decision).length;
+  /* A number that is gone from the code is not waiting on anybody, so it is not counted as
+     unconfirmed: there is nothing to confirm. */
+  const open = rows.filter(r => !r.decision && !r.gone).length;
   if (!rows.length) {
     return `<div class="mregion">${measureTitle("Constants", "None recorded")}
       <p>A run records every module-level number the code reached. This project has no runs
       yet, so there is nothing to confirm.</p></div>`;
   }
   const modules = new Set(rows.map(r => r.module));
-  const body = rows.map(r => `<div class="numrow${r.decision ? "" : " open"}">
+  const gone = rows.filter(r => r.gone).length;
+  /* A number the newest run of every pipeline no longer records is not in the code, so there
+     is nothing to agree to. Agreeing to one wrote a decision answering a constant the project
+     did not have. */
+  const body = rows.map(r => `<div class="numrow${r.gone ? " gone" : r.decision ? "" : " open"}">
     <span class="nm mono">${esc(r.name)}${
       modules.size > 1 ? ` <span class="asks">${esc(r.module)}</span>` : ""}</span>
     <span class="v mono">${esc(String(r.value))}</span>
-    <span class="reach">${r.reached_from.steps.length
+    <span class="reach">${r.gone
+      ? `<span class="asks">Last recorded ${esc(r.last_seen || "before the newest run")}</span>`
+      : r.reached_from.steps.length
       ? r.reached_from.steps.map(s => `<span class="mono">${esc(s)}</span>`).join(", ")
         + (r.reached_from.through.length
           ? ` <span class="asks">through ${r.reached_from.through.map(t =>
               `<span class="mono">${esc(t)}</span>`).join(", ")}</span>` : "")
       : `<span class="asks">Written in ${esc(r.module)}</span>`}</span>
-    <span class="conf">${r.decision
+    <span class="conf">${r.gone
+      ? `<span class="asks">Not in the code</span>`
+      : r.decision
       ? `<span class="badge acc" data-tip="${esc(short(r.decision.chose, 300).said)}">${
           esc(r.decision.title)}</span>`
       : sentOr(SAY.agreeNumber(r.name, r.value),
@@ -5113,7 +5124,9 @@ function constantsRegion() {
   return `<div class="mregion">${measureTitle("Constants",
     `${fmt(rows.length)} · ${open ? `${fmt(open)} unconfirmed` : "all confirmed"}`)}
     <p>Every number the project's own runs used, the steps it affects, and the decision that
-    settled it. Agree records a decision for a number that has none.</p>
+    settled it. Agree records a decision for a number that has none.${gone
+      ? ` ${fmt(gone)} number${gone === 1 ? " is" : "s are"} not in the code any more: an older run recorded ${gone === 1 ? "it" : "them"} and the newest does not.`
+      : ""}</p>
     <div class="numhead"><span>Name</span><span>Value</span><span>Reached from</span>
       <span>Decision</span></div>
     ${body}</div>`;

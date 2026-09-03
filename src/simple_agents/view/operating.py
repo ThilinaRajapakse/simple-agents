@@ -251,7 +251,9 @@ def _by_role(directory: Path) -> list[dict[str, Any]]:
             if started > one["last"]:
                 one["last"] = started
 
-    every = runs(directory, nested=True)
+    # A census of what ran, so a run whose model answered from a script is one of them: the
+    # page says what this project has done, rather than reporting a figure about the agent.
+    every = runs(directory, nested=True, scripted=None)
     count("live", [one for one in every if one.manifest.get("live")])
     count("evaluation", [one for one in every if one.manifest.get("evaluation")])
     count(
@@ -273,7 +275,7 @@ def read_operating(root: str | Path) -> dict[str, Any] | None:
     directory = root / "runs"
     if not directory.is_dir():
         return None
-    handles = runs(directory, live=True)
+    handles = runs(directory, live=True, scripted=None)
     if not handles:
         return None
 
