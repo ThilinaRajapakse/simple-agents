@@ -1,7 +1,7 @@
 {
-  "eval_format_version": "0.29",
+  "eval_format_version": "0.30",
   "eval_id": "eval_d3a7bda6510f",
-  "created_at": "2026-09-02T14:23:02.545Z",
+  "created_at": "2026-09-03T14:56:11.826Z",
   "config": {
     "split": "held_out",
     "k": 3,
@@ -169,6 +169,7 @@
       "diverged": 0
     },
     "max_spend": null,
+    "stores": {},
     "scored_from": "rollouts",
     "seed_source": "evaluation"
   },
@@ -505,7 +506,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 19,
-      "wall_clock_ms": 10,
+      "wall_clock_ms": 12,
       "absent_outputs": 3,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -642,6 +643,7 @@
     "threshold": 0.8,
     "compared": 6,
     "clean": true,
+    "measured_by": "word_overlap",
     "pairs": []
   },
   "rollouts": [

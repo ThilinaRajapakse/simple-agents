@@ -65,6 +65,7 @@ from .runner import (
     EvalSuite,
     Recording,
 )
+from .stores import CopyPerRollout, Shared
 from .variants import (
     VARIANT_FORMAT_VERSION,
     VARIANT_ROLE,
@@ -108,6 +109,8 @@ __all__ = [
     "judgement_key",
     # Running it
     "EvalSuite",
+    "CopyPerRollout",
+    "Shared",
     "evaluation_dir",
     "rollouts_under",
     "Recording",

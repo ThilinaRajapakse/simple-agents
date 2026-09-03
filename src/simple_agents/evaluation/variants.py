@@ -41,6 +41,7 @@ from ..pipeline import Pipeline
 from .compare import Comparison, compare
 from .declared import config_differences
 from .results import EvalResults
+from .stores import Isolation, refuse_a_collision, refuse_an_unisolated_store
 from .runner import (
     DEFAULT_CONCURRENCY,
     DEFAULT_CONFIDENCE,
@@ -327,6 +328,7 @@ def compare_variants(
     end_user: Any = None,
     judge: Any = None,
     max_spend: float | None = None,
+    stores: Mapping[str, Isolation] | None = None,
 ) -> VariantComparison:
     """Run the baseline and every variant in one session, and report what moved.
 
@@ -361,6 +363,12 @@ def compare_variants(
     cannot be compared with the baseline, or when the plan exceeds ``max_live_calls``.
     """
     _refuse_before_planning(variants, envelope)
+    # Every arm, before the baseline is paid for: an arm whose steps declare a store the
+    # baseline's do not would otherwise raise after the baseline had run.
+    stores = dict(stores or {})
+    refuse_a_collision(stores)
+    for arm, pipeline in [("baseline", baseline.pipeline), *variants.items()]:
+        refuse_an_unisolated_store(pipeline, stores, f"compare the {arm!r} arm of")
 
     plans = {
         name: plan_variant(baseline.pipeline, pipeline, name=name)
@@ -394,6 +402,7 @@ def compare_variants(
             end_user=end_user,
             judge=judge,
             max_spend=max_spend,
+            stores=stores,
         )
 
     comparison = VariantComparison(baseline=baseline_results)
@@ -423,6 +432,7 @@ def compare_variants(
                 end_user=end_user,
                 judge=judge,
                 max_spend=max_spend,
+                stores=stores,
                 allow_mixed_cassette=True,
             )
         comparison.plans[name] = plan

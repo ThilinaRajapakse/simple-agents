@@ -23,7 +23,14 @@ from typing import Any, Callable
 
 from simple_agents import Cassette, GeminiClient, PriceBasis, Redaction, RunEnvelope, Unknown
 from simple_agents.builtins.consult import unattended
-from simple_agents.evaluation import EvalSuite, ExampleSet, Over, ProjectMetric, ProjectRatio
+from simple_agents.evaluation import (
+    EvalSuite,
+    ExampleSet,
+    Over,
+    ProjectMetric,
+    ProjectRatio,
+    Shared,
+)
 
 sys.path.insert(0, str(Path(__file__).parent))
 from agent import build, canonical_vendor, claims  # noqa: E402
@@ -215,10 +222,19 @@ def suite(pipeline=None, examples=None) -> EvalSuite:
     )
 
 
+STORES = {
+    # `intake` reads the inbox and writes nothing, and `notify` writes its notice under
+    # `ctx.workspace` and only records the access, so no rollout reaches either store.
+    "claims_inbox": Shared("read-only; intake reads a claim and writes nothing"),
+    "outbox": Shared("notify writes under ctx.workspace during an evaluation"),
+}
+
+
 def _run(built: EvalSuite, cassette: Cassette, model: GeminiClient, *, k: int, seed: int):
     return built.run(
         envelope=envelope(cassette), model=model, split=SPLIT, k=k, seed=seed,
         max_spend=MAX_SPEND, end_user=unattended(), concurrency=CONCURRENCY,
+        stores=STORES,
     )
 
 
@@ -286,7 +302,7 @@ def _sweep(model: GeminiClient) -> None:
         suite(), {name: build(**knobs) for name, knobs in VARIANTS.items()},
         envelope=envelope(Cassette.off()), model=model,
         split=SPLIT, k=1, seed=SWEEP["seed"], max_spend=MAX_SPEND, end_user=unattended(),
-        concurrency=CONCURRENCY,
+        concurrency=CONCURRENCY, stores=STORES,
     )
     comparison.write(SWEEP["comparison"])
     for name, out in SWEEP["results"].items():

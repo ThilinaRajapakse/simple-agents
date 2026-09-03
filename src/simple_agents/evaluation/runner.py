@@ -58,6 +58,14 @@ from .declared import (
 from .end_user import answerers_in, described
 from .examples import Example, ExampleSet
 from .intervals import DEFAULT_CONFIDENCE, DEFAULT_RESAMPLES
+from .stores import (
+    Isolation,
+    copies_for,
+    refuse_a_collision,
+    refuse_an_unisolated_store,
+    remove as remove_copies,
+    stores_record,
+)
 from .answer_key import Criteria
 from .baseline import answers_for as baseline_answers_for
 from .baseline import rollouts_for as baseline_rollouts_for
@@ -427,6 +435,7 @@ class EvalSuite:
         on_rollout: Callable[[RolloutProgress], None] | None = None,
         end_user: Any = None,
         judge: Callable[[Sequence[JudgementRequest]], Any] | None = None,
+        stores: Mapping[str, Isolation] | None = None,
     ) -> EvalResults:
         """Run every example in ``split`` ``k`` times and report what happened.
 
@@ -445,12 +454,10 @@ class EvalSuite:
 
         **An evaluation records its rollouts**, into ``<run_dir>/eval/<eval_id>/cassette.jsonl``
         unless the envelope names one, so a metric that raised is applied again with
-        :meth:`rescore` rather than paid for again. ``record=False`` turns it off.
-        ``concurrency`` runs that many at once; a hosted backend with a per-minute quota needs
-        a ``PacedClient`` in front of the adapter.
-        ``resume_from`` names this evaluation's own directory, where it stopped part way:
-        rollouts that finished are scored from disk, the missing ones are run, and one that
-        never finished is run again. ``on_rollout`` is called as each finishes::
+        :meth:`rescore` rather than paid for again. ``record=False`` turns it off, and
+        ``concurrency`` runs that many rollouts at once (`docs/evaluation.md` §6.2).
+        ``resume_from`` names this evaluation's own directory: the rollouts that finished are
+        scored from disk and the rest are run. ``on_rollout`` is called as each finishes::
 
             suite.run(envelope=env, model=client, split="held_out", k=3, seed=41,
                       resume_from="runs/eval/eval_a1226bc495df",
@@ -460,6 +467,13 @@ class EvalSuite:
 
             suite.run(envelope=env, model=client, split="held_out", k=3, seed=41,
                       end_user=SimulatedEndUser(model=cheap))
+
+        ``stores`` says what each store a step declares in ``touches=`` does here, and is
+        required wherever a step declares one::
+
+            suite.run(envelope=env, model=client, split="held_out", k=5,
+                      stores={"catalogue": CopyPerRollout("data/shows.db", as_input="db"),
+                              "embeddings": Shared("read-only; no step writes it")})
 
         ``allow_mixed_cassette`` runs a cassette in ``update`` mode and
         ``allow_contaminated_split`` a split sharing material with this one, both otherwise
@@ -481,6 +495,9 @@ class EvalSuite:
         self._refuse_an_ambiguous_recording(envelope)
         self._refuse_sampled_trajectory(envelope)
         self._refuse_an_undescribed_end_user(end_user, chosen)
+        stores = dict(stores or {})
+        refuse_an_unisolated_store(self.pipeline, stores, "run")
+        refuse_a_collision(stores)
         # Before the rollouts, so a refusal costs none of them (`baseline.answers_for`).
         baseline_answers = baseline_answers_for(self.baseline, chosen)
         # A rollout of a pipeline whose own work overlaps issues that many calls at once, so
@@ -516,6 +533,7 @@ class EvalSuite:
             judgements=judgements,
             on_rollout=on_rollout,
             eval_id=eval_id,
+            stores=stores,
         )
         # Before the gate, so a judged condition asked about the baseline's constant answer is
         # collected in the same pass as the agent's and judged with it rather than after. Only
@@ -562,6 +580,7 @@ class EvalSuite:
                 rollouts=rollouts,
                 max_spend=max_spend,
                 judgements=judgements,
+                stores=stores,
             ),
             metrics=metrics,
             criteria=criteria,
@@ -590,6 +609,7 @@ class EvalSuite:
         judgements: Judgements | None,
         on_rollout: Callable[[RolloutProgress], None] | None,
         eval_id: str,
+        stores: Mapping[str, Isolation] | None = None,
     ) -> list[RolloutOutcome]:
         """Every rollout not already on disk, run and scored, with the resumed ones beside.
 
@@ -625,6 +645,7 @@ class EvalSuite:
                         run_concurrency,
                         end_user,
                         judgements,
+                        stores,
                     )
                     for example, index in jobs
                 ]
@@ -653,6 +674,7 @@ class EvalSuite:
                         run_concurrency,
                         end_user,
                         judgements,
+                        stores,
                     )
                 )
                 for example, index in jobs
@@ -672,36 +694,34 @@ class EvalSuite:
         seed: int | None = None,
         max_spend: float | None = None,
         end_user: Any = None,
+        stores: Mapping[str, Isolation] | None = None,
     ) -> Recording:
         """Make the live runs an evaluation's rollouts will replay, and say what they cost.
 
-        One live run per rollout, each at the seed that rollout will use, all into one
-        cassette. :meth:`run` then replays them with no network and no spend::
+                One live run per rollout, each at the seed that rollout will use, all into one
+                cassette. :meth:`run` then replays them with no network and no spend::
 
-            made = suite.record(
-                envelope=env, model=client, split="held_out", k=5, max_spend=0.50
-            )
-            results = suite.run(
-                envelope=env.with_cassette(Cassette.replay(made.cassette)),
-                model=client, split="held_out", k=5, seed=made.seed,
-            )
+                    made = suite.record(
+                        envelope=env, model=client, split="held_out", k=5, max_spend=0.50
+                    )
+                    results = suite.run(
+                        envelope=env.with_cassette(Cassette.replay(made.cassette)),
+                        model=client, split="held_out", k=5, seed=made.seed,
+                    )
 
-        The envelope's cassette names the file and is ``Cassette.record(path)`` for a new one
-        or ``Cassette.update(path)`` to fill in what an earlier recording does not hold. A call
-        already on file is served rather than made again, which is why this costs less than the
-        same rollouts run live: the k rollouts of one example that make the same tool call buy
-        one answer between them.
+                The envelope's cassette names the file and is ``Cassette.record(path)`` for a new one
+                or ``Cassette.update(path)`` to fill in what an earlier recording does not hold. A call
+                already on file is served rather than made again, so the k rollouts of one example that
+                make the same tool call buy one answer between them.
 
-        ``max_spend`` is required wherever a ``spends_money`` tool is reachable, and means the
-        same as it does on :meth:`run`. ``split``, ``k`` and ``seed`` have to match the
-        evaluation this recording is for, because the seeds derive from them; ``seed`` comes
-        back on the result for that reason.
+        ``max_spend``, ``end_user`` and ``stores`` mean what they mean on :meth:`run`, and each is
+                required on the same rule. ``split``, ``k`` and ``seed`` have to match the evaluation
+                this recording is for, because the seeds derive from them, and ``seed`` comes back on
+                the result. The ``end_user`` has to be the one :meth:`run` is given, since the answers
+                go into the cassette.
 
-        ``end_user`` is who answers a consultation during these runs, and has to be the one
-        :meth:`run` is given, since the answers go into the cassette.
-
-        A run that fails is recorded as far as it got and named in ``failed`` rather than
-        raising, so one bad example does not discard the calls the others paid for.
+                A run that fails is recorded as far as it got and named in ``failed`` rather than
+                raising, so one bad example does not discard the calls the others paid for.
         """
         chosen = self.examples.in_split(split)
         self._refuse_bad_k(k)
@@ -714,6 +734,11 @@ class EvalSuite:
             envelope, examples=len(chosen), k=k, max_spend=max_spend, verb="record"
         )
         self._refuse_an_undescribed_end_user(end_user, chosen)
+        # These runs execute the real code as a rollout does, so a store they share is written
+        # examples x k times before the evaluation that replays them ever runs.
+        stores = dict(stores or {})
+        refuse_an_unisolated_store(self.pipeline, stores, "record")
+        refuse_a_collision(stores)
         eval_seed = seed if seed is not None else random.SystemRandom().randrange(2**31)
         eval_id = self._eval_id(eval_seed, split, k, model, end_user)
         root = Path(envelope.run_dir) / EVAL_BUCKET / f"{eval_id}-recording"
@@ -736,9 +761,10 @@ class EvalSuite:
                     eval_id=eval_id,
                     rollout=index,
                 )
+                overlay, made = copies_for(root / run_id, stores)
                 try:
                     self.pipeline.run(
-                        example.inputs,
+                        _with_stores(example, overlay),
                         envelope=scoped,
                         model=model,
                         seed=derive_seed(eval_seed, example.id, index),
@@ -751,6 +777,9 @@ class EvalSuite:
                     raise
                 except Exception:  # noqa: BLE001, one failed run does not end the recording
                     failed.append(run_id)
+                    remove_copies(made)
+                    continue
+                remove_copies(made)
         spent = _spend_of(root, run_ids.values())
         return Recording(
             cassette=str(path),
@@ -1282,6 +1311,7 @@ class EvalSuite:
         seed: int,
         run_id: str,
         concurrency: int,
+        overlay: Mapping[str, Any] | None = None,
     ) -> Any:
         """Run one rollout, which is one run unless the example carries a conversation.
 
@@ -1295,8 +1325,9 @@ class EvalSuite:
         """
         conversation_id = ROLLOUT_CONVERSATION if envelope.conversations is not None else None
         scope = ROLLOUT_SCOPE if envelope.memory is not None else None
+        given = _with_stores(example, overlay)
         result = self.pipeline.run(
-            example.inputs,
+            given,
             envelope=_at_turn(envelope, 1),
             model=model,
             seed=seed,
@@ -1307,9 +1338,9 @@ class EvalSuite:
         )
         for number, said in enumerate(example.turns, start=2):
             result = self.pipeline.run(
-                said
+                {**_as_inputs(said), **dict(overlay or {})}
                 if isinstance(said, dict)
-                else {**_as_inputs(example.inputs), **_said(said, example)},
+                else {**_as_inputs(given), **_said(said, example)},
                 envelope=_at_turn(envelope, number),
                 model=model,
                 seed=derive_seed(seed, "turn", number),
@@ -1331,6 +1362,51 @@ class EvalSuite:
         run_concurrency: int = 1,
         end_user: Any = None,
         judgements: Judgements | None = None,
+        stores: Mapping[str, Isolation] | None = None,
+    ) -> RolloutOutcome:
+        """One rollout, against its own copy of every store declared per rollout.
+
+        The copies are made before the run and removed after it, so a rollout that failed
+        leaves no store behind for the next evaluation to find. A rollout that suspended keeps
+        them: the run is waiting and can be continued, and the copies sit inside its own
+        directory, which ``resume_from`` removes before running that rollout again
+        (``docs/evaluation.md`` §6.5).
+        """
+        root = Path(envelope.run_dir) / run_ids[(example.id, index)]
+        overlay, made = copies_for(root, stores or {})
+        try:
+            result = self._scored_rollout(
+                example,
+                index,
+                envelope,
+                model,
+                eval_seed,
+                run_ids,
+                run_concurrency,
+                end_user,
+                judgements,
+                overlay,
+            )
+        except RunSuspended:
+            raise
+        except BaseException:
+            remove_copies(made)
+            raise
+        remove_copies(made)
+        return result
+
+    def _scored_rollout(
+        self,
+        example: Example,
+        index: int,
+        envelope: RunEnvelope,
+        model: ModelClient | None,
+        eval_seed: int,
+        run_ids: dict[tuple[str, int], str],
+        run_concurrency: int = 1,
+        end_user: Any = None,
+        judgements: Judgements | None = None,
+        overlay: Mapping[str, Any] | None = None,
     ) -> RolloutOutcome:
         seed = derive_seed(eval_seed, example.id, index)
         run_id = run_ids[(example.id, index)]
@@ -1355,6 +1431,7 @@ class EvalSuite:
                 seed=seed,
                 run_id=run_id,
                 concurrency=run_concurrency,
+                overlay=overlay,
             )
         except RunSuspended:
             # The run stopped to ask a person and its state is on disk. Scoring it would
@@ -2414,6 +2491,7 @@ class EvalSuite:
         rollouts: Sequence[RolloutOutcome],
         max_spend: float | None,
         judgements: Judgements | None = None,
+        stores: Mapping[str, Isolation] | None = None,
     ) -> dict[str, Any]:
         return {
             "split": split,
@@ -2444,6 +2522,10 @@ class EvalSuite:
             # A rate measured with a paid tool running live was bounded by something, and a
             # reader of the file cannot tell what from the budget alone (FT-27).
             "max_spend": max_spend,
+            # What each store a step reaches did here. A figure measured against a store the
+            # rollouts shared is a different measurement from one measured against a copy
+            # each, and this is what says which of them the file holds.
+            "stores": stores_record(stores or {}),
             "scored_from": "rollouts",
             "seed_source": "evaluation",
         }
@@ -2520,6 +2602,9 @@ class EvalSuite:
             "cost_basis": first.get("cost_basis"),
             "cassette": dict(first.get("cassette") or {}),
             "max_spend": None,
+            # `null` rather than `{}`: nothing ran here, and what the rollouts on disk ran
+            # against is unrecorded, which is a different answer from no store declared.
+            "stores": None,
             # These rollouts were not produced by this call, and the seed is one rollout's
             # rather than the evaluation's, which does not invert from it.
             "scored_from": "run_directory",
@@ -2537,6 +2622,26 @@ def _at_turn(envelope: RunEnvelope, turn: int) -> RunEnvelope:
 def _as_inputs(inputs: Any) -> dict[str, Any]:
     """The example's inputs as a dict, for a later turn built from them."""
     return dict(inputs) if isinstance(inputs, Mapping) else {}
+
+
+def _with_stores(example: Example, overlay: Mapping[str, Any] | None) -> Any:
+    """The example's inputs with this rollout's store copies added under their input keys.
+
+    Added here rather than to the example, so the paths stay out of ``content_hash`` and a
+    copy that lands somewhere different each run leaves ``eval_id`` alone.
+    """
+    if not overlay:
+        return example.inputs
+    if not isinstance(example.inputs, Mapping):
+        raise ConfigurationError(
+            f"stores=... hands each rollout the path to its own copy under "
+            f"{', '.join(repr(k) for k in sorted(overlay))}, and example {example.id!r} takes "
+            f"{type(example.inputs).__name__} rather than a mapping, so there is no key for "
+            f"the path to arrive under.\n"
+            f"Give the examples dict inputs, or drop stores= and hand the store to the "
+            f"pipeline some other way."
+        )
+    return {**dict(example.inputs), **dict(overlay)}
 
 
 def _said(said: Any, example: Example) -> dict[str, Any]:

@@ -20,7 +20,7 @@ from typing import Callable
 
 from simple_agents import Cassette, GeminiClient, PriceBasis, Redaction, RunEnvelope, Unknown
 from simple_agents.builtins.consult import unattended
-from simple_agents.evaluation import EvalSuite, ExampleSet
+from simple_agents.evaluation import EvalSuite, ExampleSet, Shared
 
 sys.path.insert(0, str(Path(__file__).parent))
 from agent import _triage, triage  # noqa: E402
@@ -100,6 +100,14 @@ def suite(pipeline=None, examples=None) -> EvalSuite:
     )
 
 
+STORES = {
+    # `intake` reads the inbox and writes nothing, and `publish` writes its copy under
+    # `ctx.workspace` and only records the access, so no rollout reaches either store.
+    "inbox": Shared("read-only; intake reads a ticket and writes nothing"),
+    "outbox": Shared("publish writes under ctx.workspace during an evaluation"),
+}
+
+
 def make(cassette_for: Callable[..., Cassette], model: GeminiClient,
          replaying: bool = False) -> None:
     """Make every committed record, reading each call through the cassette given.
@@ -118,7 +126,7 @@ def make(cassette_for: Callable[..., Cassette], model: GeminiClient,
         envelope=envelope(cassette_for(EVALUATION["cassette"], evaluation=True)),
         model=model,
         split=EVALUATION["split"], k=EVALUATION["k"], seed=EVALUATION["seed"],
-        max_spend=EVALUATION["max_spend"], end_user=unattended(),
+        max_spend=EVALUATION["max_spend"], end_user=unattended(), stores=STORES,
     )
     results.write("evals/results/held-out.json", overwrite=True)
     print(results.report())
@@ -129,7 +137,7 @@ def make(cassette_for: Callable[..., Cassette], model: GeminiClient,
         envelope=envelope(cassette_for(RUNG["cassette"], evaluation=True)),
         model=model,
         split=EVALUATION["split"], k=EVALUATION["k"], seed=RUNG["seed"],
-        max_spend=EVALUATION["max_spend"], end_user=unattended(),
+        max_spend=EVALUATION["max_spend"], end_user=unattended(), stores=STORES,
     )
     rung_results.write(RUNG["results"], overwrite=True)
     print(rung_results.report())
@@ -143,7 +151,7 @@ def make(cassette_for: Callable[..., Cassette], model: GeminiClient,
         envelope=envelope(Cassette.off()),
         model=model,
         split=EVALUATION["split"], k=EVALUATION["k"], seed=VARIANT["seed"],
-        max_spend=EVALUATION["max_spend"], end_user=unattended(),
+        max_spend=EVALUATION["max_spend"], end_user=unattended(), stores=STORES,
     )
     comparison.write(VARIANT["comparison"])
     comparison.variants[VARIANT["name"]].write(VARIANT["results"], overwrite=True)

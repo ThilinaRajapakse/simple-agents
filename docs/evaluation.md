@@ -129,9 +129,9 @@ the project records rather than one the library makes (FT-03). Start at 0.8 and 
 flags.
 
 Two kinds are reported. `near_duplicate` compares every pair of examples in different splits on
-the words in their inputs, using the same tokeniser the shipped search index uses. `shared_source`
-flags a pair drawn from one `source` however differently they are worded, because what was
-learned from one applies to the other.
+the words in their inputs, using the same tokeniser the shipped search index uses.
+`shared_source` flags a pair drawn from one `source` however differently they are worded,
+because what was learned from one applies to the other.
 
 A pair can be flagged for both reasons, and is then reported once per reason, so a count by kind
 counts each reason a split has to be redrawn for. The fixes differ: one side of a
@@ -1873,6 +1873,67 @@ A prompt that is a function of the example alone does not.
 
 ---
 
+### 6.9 What each rollout runs against
+
+A rollout executes the real code, so a step that writes a store writes it once per rollout.
+§6.2 covers the case the workspace rule serves: a pipeline whose last step writes into the
+product's artifact sends that write under `ctx.workspace`, and nothing reads it back.
+
+**A pipeline that reads back what it writes is the case the workspace rule does not serve.**
+Where excluding what a previous run already queued is production behaviour, an evaluation that
+hid the write would measure a pipeline the product does not run. Sharing one store across
+rollouts measures something else again: each rollout reads what the ones before it wrote. One
+project ran 23 rollouts against a single database copy, and the count its exclusion step
+blocked went from 45 to 279 across the run.
+
+**`stores` says what happens to each store, one answer per store.** It is required on
+`suite.run`, on `suite.record` and on `compare_variants` wherever a step declares one in
+`touches=`. `record` runs the real code too, so a store its runs share is written once per
+run before the evaluation that replays them has begun:
+
+```python
+from simple_agents.evaluation import CopyPerRollout, Shared
+
+results = suite.run(
+    envelope=env, model=client, split="held_out", k=5, seed=41,
+    stores={
+        "catalogue": CopyPerRollout("data/shows.db", as_input="db_path"),
+        "embeddings": Shared("read-only; no step of this pipeline writes it"),
+    },
+)
+```
+
+`CopyPerRollout` copies the store before the rollout starts, puts the copy's path into that
+rollout's inputs under `as_input`, and deletes it when the rollout ends, whether it passed,
+failed or raised. A rollout that suspended keeps its copies, since the run is waiting and can
+be continued; they sit inside that rollout's own directory, which `resume_from` removes before
+running it again (§6.5). A step reads the path from `ctx.run_inputs["db_path"]`
+(`docs/pipeline.md` §3.1). `Shared` says every rollout reaches the store as it is, and the
+reason goes into the results file beside the figure.
+
+**The path is added after the example set is hashed.** A copy that lands somewhere different
+on each run therefore leaves `content_hash` and `eval_id` alone, and two evaluations still
+compare. Putting the paths into the examples themselves is what stopped one project's
+`compare()` from pairing two of its own runs.
+
+**A step that declares no store is not covered by this.** `touches=` is what a node says about
+the resources it reaches in its own code, so a step that reaches one and declares nothing is
+invisible here, as it is on the drawings (`docs/view.md` §4). A tool's own `touches=` is not
+read here either: a tool declaring `WRITES` has already said its writes stay inside the run
+(§7.2).
+
+**A copy is made per rollout, so a 51MB store over 23 rollouts is 1.1GB written and removed.**
+`Shared` avoids that and reintroduces what the copies prevent, so it is the answer for a store
+the pipeline reads and never writes.
+
+**Two stores that would write over each other are refused before any rollout runs**: two
+`as_input` keys the same, so only the last copy is reachable; and two resource names that file
+their copy under the same path. A copy is filed under the resource name with anything but
+letters, digits, `_`, `.` and `-` replaced, so `catalogue/v2` cannot nest a directory and
+`../x` cannot write outside the rollout.
+
+---
+
 ## 7. What an evaluation refuses to run
 
 ### 7.1 A split whose two sides overlap
@@ -2136,7 +2197,7 @@ stops an evaluation recording rollouts it would then delete.
 
 ## 8. The results file
 
-JSON, `eval_format_version` `0.29`. Each figure carries `population`, the sentence naming which rollouts it covers, and `over`, the same fact as the value that decided it, so a reader comparing two files does not parse a sentence. It carries what the number was and what produced it, so a
+JSON, `eval_format_version` `0.30`. Each figure carries `population`, the sentence naming which rollouts it covers, and `over`, the same fact as the value that decided it, so a reader comparing two files does not parse a sentence. It carries what the number was and what produced it, so a
 reader can tell what was measured without the code that measured it.
 
 **`EvalResults.read` reads a file written at `0.28` or later.** The format is additive by
@@ -2157,12 +2218,13 @@ results.carries("node_ratios")          # False: written before per-node ratios 
 ```
 
 The names are `node_ratios`, a `ProjectRatio` reported per node (§11.5), and `slice`, what the
-evaluated pipeline is a slice of (§5.6). Both arrived in `0.29`.
+evaluated pipeline is a slice of (§5.6), both of which arrived in `0.29`; and `stores`, what
+each store the pipeline reaches did during the rollouts (§6.9), which arrived in `0.30`.
 
 | Field | Holds |
 |---|---|
 | `eval_id`, `created_at` | which evaluation this was |
-| `config` | split, k, n, seed, concurrency, run_concurrency, the example set's content hash, its splits, which of them is held out, and its absent proportion, the version of the comparison that decided whether an answer was right, each criterion's text and the version of the check that decided it under `criteria` (§1.6), the declaration and version of every project metric under `metrics` and `node_metrics` (§11), `slice`: what the evaluated pipeline is a slice of, and `null` where it is a whole one (§5.6), the bootstrap parameters, the pipeline's nodes and the pipelines used as nodes, as the manifest records them (`docs/run-envelope.md` §2.1), a `graph_fingerprint` of the shape they were measured over, a `behaviour_fingerprint` of what produced them, which is `null` where a node takes the run's model and none was given (FT-37), the prompt versions, the tools every node can call and their side-effect classes, the model pin, the cost basis, the cassette mode and this evaluation's `hits`, `misses`, `recorded` and `diverged` counts, the budget, `max_spend`, `scored_from`, and `seed_source` |
+| `config` | split, k, n, seed, concurrency, run_concurrency, the example set's content hash, its splits, which of them is held out, and its absent proportion, the version of the comparison that decided whether an answer was right, each criterion's text and the version of the check that decided it under `criteria` (§1.6), the declaration and version of every project metric under `metrics` and `node_metrics` (§11), `slice`: what the evaluated pipeline is a slice of, and `null` where it is a whole one (§5.6), the bootstrap parameters, the pipeline's nodes and the pipelines used as nodes, as the manifest records them (`docs/run-envelope.md` §2.1), a `graph_fingerprint` of the shape they were measured over, a `behaviour_fingerprint` of what produced them, which is `null` where a node takes the run's model and none was given (FT-37), the prompt versions, the tools every node can call and their side-effect classes, the model pin, the cost basis, the cassette mode and this evaluation's `hits`, `misses`, `recorded` and `diverged` counts, the budget, `max_spend`, `scored_from`, `seed_source`, and `stores`: what each store a step declares in `touches=` did during the rollouts, `copy_per_rollout` with its source and input key or `shared` with the reason (`docs/evaluation.md` §6.9) |
 
 Three of those name how the number came to be rather than what it was measured over.
 `max_spend` is the ceiling the evaluation ran under and is `null` where none was declared, so a
@@ -2448,6 +2510,10 @@ is required wherever a `spends_money` tool is reachable, as it is for `suite.run
 kind, a node added or removed, a tool added or removed, a prompt reworded, a temperature moved, a
 rewired graph, a different model on one node. There is no separate edit language to learn, and a
 variant the library cannot generate is one written by hand.
+
+**`stores` is passed here rather than per arm**, and is checked against every arm's pipeline
+before the baseline runs, so an arm whose steps reach a store the baseline's do not is refused
+rather than raising once the baseline has been paid for (§6.9).
 
 **`end_user` is passed here rather than per arm**, and every arm gets it, so an agent that
 consults is compared against one reader rather than against whichever the arm happened to reach

@@ -1,5 +1,5 @@
 {
-  "eval_format_version": "0.29",
+  "eval_format_version": "0.30",
   "eval_id": "eval_c98a800fac80",
   "created_at": "2026-09-02T17:32:43.864Z",
   "config": {
@@ -463,6 +463,16 @@
       "diverged": 0
     },
     "max_spend": 2.0,
+    "stores": {
+      "inbox": {
+        "isolation": "shared",
+        "reason": "read-only; intake reads a ticket and writes nothing"
+      },
+      "outbox": {
+        "isolation": "shared",
+        "reason": "publish writes under ctx.workspace during an evaluation"
+      }
+    },
     "scored_from": "rollouts",
     "seed_source": "evaluation"
   },
