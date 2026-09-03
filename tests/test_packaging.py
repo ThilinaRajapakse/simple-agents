@@ -229,10 +229,10 @@ def test_every_format_version_is_pinned_to_a_literal() -> None:
     from simple_agents.records.suspension import SUSPENSION_FORMAT_VERSION
 
     assert simple_agents.FORMAT_VERSION == "0.29"
-    assert MANIFEST_FORMAT_VERSION == "0.40"
+    assert MANIFEST_FORMAT_VERSION == "0.41"
     assert SUSPENSION_FORMAT_VERSION == "0.5"
     assert SHELF_FORMAT_VERSION == "0.1"
-    assert EVAL_FORMAT_VERSION == "0.30"
+    assert EVAL_FORMAT_VERSION == "0.31"
     assert EVAL_FORMAT_FLOOR == "0.28"
     assert VARIANT_FORMAT_VERSION == "0.3"
     assert INDEX_FORMAT_VERSION == "2.0"

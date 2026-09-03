@@ -307,7 +307,8 @@ def test_a_real_run_reads_back_through_the_same_surface(tmp_path: Path) -> None:
             fake_response(
                 content=json.dumps({"answer": {"type": "unknown", "reason": "not in the text"}})
             )
-        ]
+        ],
+        scripted=False,
     )
 
     result = pipeline.run(

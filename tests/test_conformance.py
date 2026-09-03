@@ -1,4 +1,4 @@
-"""The twenty-seven checks, against project fixtures produced by replaying a real evaluation.
+"""The twenty-eight checks, against project fixtures produced by replaying a real evaluation.
 
 `scripts/build_conformance_fixtures.py` writes them. `conforming/` passes them all, and every
 other fixture is that one with a single mutation, so a test that fires a check names the one
@@ -27,7 +27,7 @@ from simple_agents.conformance import (
     run_checks,
     taxonomy,
 )
-from simple_agents.conformance.artifacts import _latest_run
+from simple_agents.conformance.artifacts import Artifacts, _latest_run, runs_by_pipeline
 from simple_agents.conformance.brief import Brief
 from simple_agents.conformance.decisions import PRODUCING_KINDS, decisions_from
 from simple_agents.conformance.produced import produced_across
@@ -35,6 +35,7 @@ from simple_agents.conformance.run import _produced_by_no_decision
 from simple_agents.conformance.checks import (
     CHECKS,
     COMMON_RECORD_FIELDS,
+    Context,
     RECORD_TYPES,
     _absence_waived,
     _answering_nodes,
@@ -81,8 +82,9 @@ class TestTheConformingProject:
         # FT-31, FT-37 and FT-38 fire at stage `ship` and this project is at `measure`;
         # FT-39 passes with no comments.toml on disk, FT-40 with no agent.py, since a
         # project that declares no pipeline in code has declared no step it has not built,
-        # and FT-42 because every name under `produces` was recorded by a run.
-        assert [c.outcome for c in report.checks].count(Outcome.PASSED) == 24
+        # FT-42 because every name under `produces` was recorded by a run, and FT-45 because
+        # the results file names the pipeline its factory registers.
+        assert [c.outcome for c in report.checks].count(Outcome.PASSED) == 25
         assert [c.entry_id for c in report.checks if c.outcome is Outcome.NOT_APPLICABLE] == [
             "FT-31",
             "FT-37",
@@ -632,7 +634,7 @@ class TestTheTierGate:
     def test_an_inapplicable_check_is_reported_rather_than_dropped(self) -> None:
         report = run_checks(project("prototype"))
 
-        assert len(report.checks) == 27
+        assert len(report.checks) == 28
         assert "Fires at tier evaluated, and this project claims prototype." in report.text()
 
     def test_a_project_with_no_evaluation_fails_once_and_blocks_the_rest(self) -> None:
@@ -805,7 +807,7 @@ class TestTheTaxonomyIsTheSourceOfTheMessages:
     def test_every_entry_parses_out_of_the_shipped_document(self) -> None:
         entries = taxonomy()
 
-        assert len(entries) == 44
+        assert len(entries) == 45
         assert all(entry.message for entry in entries)
 
     def test_an_entry_naming_a_stage_carries_it_and_the_rest_carry_none(self) -> None:
@@ -907,7 +909,7 @@ class TestTheEnumerationsInTheDocument:
         ]
 
         assert len(runs) == 20
-        assert "twenty of the twenty-seven" in row
+        assert "twenty of the twenty-eight" in row
 
     def test_the_checks_prototype_drops_are_the_ones_it_does_not_run(self) -> None:
         """The ids moved out of the table on 2026-08-19 and into the sentence under it, which
@@ -939,9 +941,9 @@ class TestTheEnumerationsInTheDocument:
         entries = taxonomy()
         surfaces = {entries[i].surface for i in self.registered()}
 
-        assert len(self.registered()) == 27, "the document counts them in four places"
+        assert len(self.registered()) == 28, "the document counts them in four places"
         assert surfaces == {"artifact"}
-        assert "All twenty-seven are `artifact` surface" in self.document()
+        assert "All twenty-eight are `artifact` surface" in self.document()
 
     def test_the_table_of_what_each_check_reads_lists_every_check(self) -> None:
         """`docs/conformance.md` §3 is a row per check, and nothing compared it to the set."""
@@ -1104,8 +1106,8 @@ class TestTheSampleReportIsWhatTheSuitePrints:
 
         shown = re.findall(r"^\s*(?:pass|FAIL|blocked|n/a)  (FT-\d+)", self.documented(), re.M)
 
-        assert len(shown) == 27
-        assert len(set(shown)) == 27
+        assert len(shown) == 28
+        assert len(set(shown)) == 28
 
     def test_the_counts_on_the_last_line_add_up_to_the_rows_above_them(self) -> None:
         import re
@@ -1160,7 +1162,7 @@ class TestWhatTheSuiteDoesNotDo:
             24: "Twenty-four",
             25: "Twenty-five",
             26: "Twenty-six",
-            27: "Twenty-seven",
+            28: "Twenty-eight",
             33: "thirty-three",
             34: "thirty-four",
             35: "thirty-five",
@@ -1172,7 +1174,7 @@ class TestWhatTheSuiteDoesNotDo:
             41: "forty-one",
             42: "forty-two",
             43: "forty-three",
-            44: "forty-four",
+            45: "forty-five",
         }
 
         assert (
@@ -1283,10 +1285,11 @@ class TestTheCommand:
             # FT-39 passes with no comments.toml on disk; FT-40 reads the fixture's manifest,
             # which records no planned step, since the fixture declares no agent.py to read;
             # FT-41 reads nine manifests, none of which carries a suspension; FT-42 reads
-            # every name under `produces` against them.
+            # every name under `produces` against them; FT-45 is blocked with the rest that
+            # read a results file this fixture does not have.
             "passed": 18,
             "failed": 1,
-            "blocked": 5,
+            "blocked": 6,
             "not_applicable": 3,  # FT-31, FT-37 and FT-38, which fire at `ship`
         }
         assert report["ok"] is False
@@ -1369,7 +1372,7 @@ class TestWhichRunTheChecksRead:
         )
         self._add_run(root, "run_in_flight", started_at="2099-01-02T00:00:00.000Z", outcome=None)
 
-        assert _latest_run(root) == finished
+        assert _latest_run(root, runs_by_pipeline(root)) == finished
 
     def test_a_run_that_errored_is_not_the_one_read(self, tmp_path) -> None:
         root = copied("conforming", tmp_path)
@@ -1378,7 +1381,7 @@ class TestWhichRunTheChecksRead:
         )
         self._add_run(root, "run_crashed", started_at="2099-01-03T00:00:00.000Z", outcome="error")
 
-        assert _latest_run(root) == finished
+        assert _latest_run(root, runs_by_pipeline(root)) == finished
 
     def test_a_run_stopped_early_by_a_budget_still_counts_as_finished(self, tmp_path) -> None:
         root = copied("conforming", tmp_path)
@@ -1386,7 +1389,7 @@ class TestWhichRunTheChecksRead:
             root, "run_stopped", started_at="2099-01-04T00:00:00.000Z", outcome="stopped_early"
         )
 
-        assert _latest_run(root) == stopped
+        assert _latest_run(root, runs_by_pipeline(root)) == stopped
 
     def test_a_project_whose_every_run_failed_still_reads_one(self, tmp_path) -> None:
         """Reporting no run at all would hide the runs that exist behind a missing-artifact
@@ -1398,7 +1401,7 @@ class TestWhichRunTheChecksRead:
             data["outcome"] = "error"
             manifest.write_text(json.dumps(data))
 
-        assert _latest_run(root) is not None
+        assert _latest_run(root, runs_by_pipeline(root)) is not None
 
     def test_a_labelling_run_is_not_the_one_read(self, tmp_path) -> None:
         """`docs/evaluation.md` §1.4 writes a labelling pass into `runs/`, and it is the newest
@@ -1415,7 +1418,7 @@ class TestWhichRunTheChecksRead:
             role="labelling",
         )
 
-        assert _latest_run(root) == agent_run
+        assert _latest_run(root, runs_by_pipeline(root)) == agent_run
 
     def test_a_run_that_names_no_role_is_the_agent_s(self, tmp_path) -> None:
         root = copied("conforming", tmp_path)
@@ -1424,7 +1427,7 @@ class TestWhichRunTheChecksRead:
         )
 
         assert "role" not in json.loads((newest / "manifest.json").read_text())
-        assert _latest_run(root) == newest
+        assert _latest_run(root, runs_by_pipeline(root)) == newest
 
     def test_a_project_whose_every_run_is_a_labelling_pass_is_told_so(self, tmp_path) -> None:
         root = tmp_path / "only_labelling"
@@ -1934,7 +1937,7 @@ class TestTheShipStage:
         report = run_checks(root)
 
         assert _by_id(report, "FT-13").outcome is Outcome.PASSED
-        assert any("Every run under runs/ is marked live" in note for note in report.notes)
+        assert any("the checks could read is marked live" in note for note in report.notes)
 
 
 _SHIP_ENTRIES = """
@@ -2649,7 +2652,7 @@ def _shipped_copy(tmp_path: Path, *, fingerprint: str) -> Path:
 
 
 class TestTheDocumentedNotesAreWhatIsPrinted:
-    """`docs/conformance.md` §4.4 shows three notes this item added, and nothing ran them.
+    """`docs/conformance.md` §4.4 shows the notes the report prints, and nothing ran them.
 
     The paths and stamps are one project's; the sentence around them is the code's. A sample
     that is trimmed to fit reads as the whole note, and the reader acts on what it does not
@@ -2722,10 +2725,60 @@ class TestTheDocumentedNotesAreWhatIsPrinted:
         )
         found = self._artifacts(tmp_path, run_dir=built, results=results)
 
-        note = _the_number_came_from_elsewhere(found, "measure")
+        note = _the_number_came_from_elsewhere(
+            Context(artifacts=found, brief=Brief(path=None, tier="evaluated"), taxonomy=taxonomy()),
+            "measure",
+        )
 
         assert note is not None
         assert " ".join(note.split()) in self.documented()
+
+    def test_the_pipeline_moved_note_is_what_is_printed(self, tmp_path) -> None:
+        """The fourth note in `docs/conformance.md` §4.4, which nothing ran until it went a
+        sentence out of date."""
+        import json
+
+        from simple_agents.conformance.run import _config_of, _the_pipeline_moved
+
+        run = tmp_path / "runs" / "run_7f2a"
+        run.mkdir(parents=True)
+        (run / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "run_7f2a",
+                    "behaviour_fingerprint": "sha256:94e59c769d747f81",
+                    "started_at": "2026-09-01T00:00:00Z",
+                    "outcome": "completed",
+                    "evaluation": None,
+                }
+            ),
+            encoding="utf-8",
+        )
+        brief = tmp_path / "brief.toml"
+        brief.write_text(
+            'tier = "evaluated"\nstage = "build"\n'
+            'confirmed_against = "sha256:213998182146fc28"\n'
+            + "".join(
+                f'\n[entries.{name}]\nstatus = "answered"\n'
+                f'recorded_at = "2026-08-27T09:14:02Z"\nanswer = "something"\n'
+                for name in (
+                    "agency_boundary",
+                    "consultation",
+                    "presentation",
+                    "backend",
+                    "budget",
+                    "tool_effects",
+                )
+            ),
+            encoding="utf-8",
+        )
+        found = Artifacts.discover(tmp_path)
+        ctx = Context(artifacts=found, brief=Brief.read(brief), taxonomy=taxonomy())
+        note = _the_pipeline_moved(ctx.brief, ctx, "build")
+
+        assert note is not None
+        assert " ".join(note.split()) in " ".join(self.documented().split())
+        assert _config_of(ctx) is None, "no results file, so the read is the widened one"
 
     def test_the_rollout_drift_note_is_what_is_printed(self, tmp_path) -> None:
         from simple_agents.conformance.run import _rollouts_written_after
@@ -3399,16 +3452,26 @@ class TestADecisionNamesSomethingNeverBuilt:
         assert held.outcome is Outcome.PASSED
         assert "No decision names what it became" in held.detail
 
-    def test_names_with_no_agent_run_to_read_them_against_are_blocked(self, tmp_path) -> None:
+    def test_names_with_no_run_to_read_them_against_are_blocked(self, tmp_path) -> None:
         target = copied("conforming", tmp_path)
         for manifest in target.rglob("manifest.json"):
-            raw = json.loads(manifest.read_text(encoding="utf-8"))
-            raw["role"] = "labelling"
-            manifest.write_text(json.dumps(raw), encoding="utf-8")
+            manifest.write_text("not json at all", encoding="utf-8")
         held = _by_id(run_checks(target), "FT-42")
 
         assert held.outcome is Outcome.BLOCKED
-        assert "no run under runs/ has a role of `agent`" in held.detail
+        assert "no run under runs/ could be read" in held.detail
+
+    def test_a_name_a_run_of_another_role_recorded_passes_and_says_which(self, tmp_path) -> None:
+        """A decision about the corpus names the nodes of the pipeline that builds it."""
+        target = copied("conforming", tmp_path)
+        for manifest in target.rglob("manifest.json"):
+            raw = json.loads(manifest.read_text(encoding="utf-8"))
+            raw["role"] = "corpus"
+            manifest.write_text(json.dumps(raw), encoding="utf-8")
+        held = _by_id(run_checks(target), "FT-42")
+
+        assert held.outcome is Outcome.PASSED
+        assert "hunt (recorded by corpus runs)" in held.detail
 
     def test_a_not_applicable_decision_names_nothing_to_look_for(self, tmp_path) -> None:
         """A project saying it has no decision of that kind is not a project with a claim."""
@@ -3602,14 +3665,41 @@ class TestWhatTheRunsRecordedProducing:
         assert set(found.tools) == {"catalogue_search"}
         assert found.constants_recorded
 
-    def test_a_run_the_project_made_for_itself_is_not_the_agent(self, tmp_path) -> None:
+    def test_a_run_the_project_made_for_itself_is_read_and_says_which_role(self, tmp_path) -> None:
+        """A decision about a corpus names the nodes of the pipeline that builds it.
+
+        One project's `dependency` decision named four nodes and six constants of a
+        `role="corpus"` pipeline, and reading the agent's runs alone reported ten built names
+        as never recorded.
+        """
         target = copied("conforming", tmp_path)
         for manifest in target.rglob("manifest.json"):
             raw = json.loads(manifest.read_text(encoding="utf-8"))
-            raw["role"] = "labelling"
+            raw["role"] = "corpus"
             manifest.write_text(json.dumps(raw), encoding="utf-8")
+        found = produced_across(target / "runs")
 
-        assert produced_across(target / "runs").runs_read == 0
+        assert found.runs_read == 9
+        assert found.what_it_is("hunt") == "node id"
+        assert found.where_from("hunt") == "recorded by corpus runs"
+
+    def test_a_name_only_the_agents_runs_carry_says_nothing_about_where(self) -> None:
+        found = produced_across(project("conforming") / "runs")
+
+        assert found.where_from("hunt") == ""
+        assert found.where_from("never recorded by anything") == ""
+
+    def test_a_name_two_roles_recorded_is_the_agents(self, tmp_path) -> None:
+        """A node the agent runs is the agent's, whatever else also ran it."""
+        target = copied("conforming", tmp_path)
+        one = sorted(target.rglob("manifest.json"))[0]
+        raw = json.loads(one.read_text(encoding="utf-8"))
+        raw["role"] = "corpus"
+        one.write_text(json.dumps(raw), encoding="utf-8")
+        found = produced_across(target / "runs")
+
+        assert found.roles["hunt"] == {"agent", "corpus"}
+        assert found.where_from("hunt") == ""
 
     def test_a_name_carries_the_day_of_the_newest_run_that_had_it(self, tmp_path) -> None:
         target = copied("conforming", tmp_path)

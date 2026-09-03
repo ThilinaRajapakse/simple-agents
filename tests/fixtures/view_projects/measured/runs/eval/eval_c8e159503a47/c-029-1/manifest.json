@@ -1,9 +1,11 @@
 {
-  "format_version": "0.40",
+  "format_version": "0.41",
   "trajectory_format_version": "0.29",
   "library_version": "0.1.2",
   "run_id": "c-029-1",
+  "pipeline": "claims",
   "role": "agent",
+  "scripted": false,
   "live": false,
   "end_user": {
     "answered_by": "nobody"
@@ -15,8 +17,8 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-02T17:34:44.548Z",
-  "ended_at": "2026-09-02T17:34:46.978Z",
+  "started_at": "2026-09-03T18:48:41.327Z",
+  "ended_at": "2026-09-03T18:48:44.017Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1245584452,

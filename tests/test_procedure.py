@@ -70,8 +70,11 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # finds one without knowing which document owns it, and from 3800 on 2026-09-01, when the
 # first installed-package session ran `find /` hunting for the docs: the file now says
 # `docs_path()` prints the directory its 39 `docs/*.md` names live in. New content rather
-# than a restatement of another document, which is what the budget is against.
-WORD_BUDGET = 3860
+# than a restatement of another document, which is what the budget is against. And from 3860
+# on 2026-09-03, for two things the library did not have: a writer for a decision the builder
+# settled by a click, since eight of those on one project produced eight decisions whose
+# `because` opened with the same two lines, and the feature index line for naming a pipeline.
+WORD_BUDGET = 3897
 # Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
 # three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
 # `simple-agents record` command, seven words over the ceiling across eight sentences.

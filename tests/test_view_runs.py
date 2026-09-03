@@ -308,7 +308,7 @@ class TestTheShipPage:
 
     def test_the_checks_are_a_board_with_the_failing_ones_first(self, pages) -> None:
         held = pages["shipped"]["pages"]["ship"]["sections"]
-        assert "Checks" in held and "24 of 26 pass" in held
+        assert "Checks" in held and "25 of 27 pass" in held
         assert "1 not at this stage" in held
         # the design's product section names two of the three declared surfaces, and the
         # fixture's two suspended runs are what FT-41 is about
@@ -327,7 +327,7 @@ class TestTheShipPage:
         counting it as one reads a project at its first stage as one in trouble."""
         held = pages["brainstorming"]["pages"]["ship"]["sections"]
         assert "7 of 12 pass" in held
-        assert "10 could not run" in held and "5 not at this stage" in held
+        assert "11 could not run" in held and "5 not at this stage" in held
         # and a blocked row says what it waits on
         assert "which FT-01 reports" in held
 

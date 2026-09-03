@@ -1,9 +1,11 @@
 {
-  "format_version": "0.40",
+  "format_version": "0.41",
   "trajectory_format_version": "0.29",
   "library_version": "0.1.2",
   "run_id": "t-export-filter-0",
+  "pipeline": "triage",
   "role": "agent",
+  "scripted": false,
   "live": false,
   "end_user": {
     "answered_by": "nobody"
@@ -15,8 +17,8 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-02T17:32:43.899Z",
-  "ended_at": "2026-09-02T17:32:48.307Z",
+  "started_at": "2026-09-03T18:46:36.396Z",
+  "ended_at": "2026-09-03T18:46:41.255Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1089886398,
@@ -766,7 +768,7 @@
     "dropped": null,
     "hits": 0,
     "misses": 0,
-    "recorded": 7,
+    "recorded": 6,
     "diverged": 0
   },
   "memory": null,

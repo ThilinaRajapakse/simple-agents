@@ -353,6 +353,129 @@ class TestTheCommand:
             main(["record"])
 
 
+class TestADecisionRecordedFromAClick:
+    """`--from-comment`: the click is what was weighed, and the builder is who agreed.
+
+    One project's view offered eight one-click agreements. Each produced a decision whose
+    `considered` quoted the click and whose `because` opened with the same two lines, so the
+    brief held seven near-copies of one paragraph.
+    """
+
+    def _with_a_comment(self, tmp_path: Path, said: str) -> Path:
+        root = conforming(tmp_path)
+        (root / "comments.toml").write_text(
+            'version = "0.2"\n\n'
+            "[[comment]]\n"
+            'id = "c6"\n'
+            'at = "project"\n'
+            f'said = "{said}"\n'
+            'by = "builder"\n'
+            'kind = "comment"\n'
+            'status = "open"\n',
+            encoding="utf-8",
+        )
+        return root
+
+    def test_the_click_is_what_was_considered_and_the_status_is_agreed(self, tmp_path) -> None:
+        said = "RERANK_DEPTH should be 40. Record it as a constant decision."
+        root = self._with_a_comment(tmp_path, said)
+
+        status = main(
+            [
+                "record",
+                "decision",
+                "rerank_depth",
+                "--kind",
+                "constant",
+                "--from-comment",
+                "c6",
+                "--produces",
+                "RERANK_DEPTH",
+                "--brief",
+                str(root / "brief.toml"),
+            ]
+        )
+
+        assert status == 0
+        held = [d for d in Brief.read(root / "brief.toml").decisions if d.name == "rerank_depth"]
+        assert len(held) == 1
+        assert held[0].considered == (said,)
+        assert held[0].status == "agreed"
+        assert held[0].because is None
+        assert STAMP.match(held[0].recorded_at or "")
+
+    @pytest.mark.parametrize("named", ["changed", "proposed"])
+    def test_a_status_the_caller_names_is_kept(self, tmp_path, named) -> None:
+        """Including `proposed`, which nothing could tell from the default before."""
+        root = self._with_a_comment(tmp_path, "Not this one.")
+
+        main(
+            [
+                "record",
+                "decision",
+                "rerank_depth",
+                "--kind",
+                "constant",
+                "--status",
+                named,
+                "--from-comment",
+                "c6",
+                "--brief",
+                str(root / "brief.toml"),
+            ]
+        )
+
+        held = [d for d in Brief.read(root / "brief.toml").decisions if d.name == "rerank_depth"]
+        assert held[0].status == named
+
+    def test_considered_given_by_hand_wins(self, tmp_path) -> None:
+        root = self._with_a_comment(tmp_path, "The click.")
+
+        main(
+            [
+                "record",
+                "decision",
+                "rerank_depth",
+                "--kind",
+                "constant",
+                "--from-comment",
+                "c6",
+                "--considered",
+                "something else",
+                "--brief",
+                str(root / "brief.toml"),
+            ]
+        )
+
+        held = [d for d in Brief.read(root / "brief.toml").decisions if d.name == "rerank_depth"]
+        assert held[0].considered == ("something else",)
+
+    def test_a_comment_the_file_does_not_hold_is_refused(self, tmp_path, capsys) -> None:
+        """The brief is untouched: a decision written against a comment nobody left would say
+        the builder settled something they never saw."""
+        root = self._with_a_comment(tmp_path, "The click.")
+        before = (root / "brief.toml").read_text(encoding="utf-8")
+
+        status = main(
+            [
+                "record",
+                "decision",
+                "nope",
+                "--kind",
+                "constant",
+                "--from-comment",
+                "c99",
+                "--brief",
+                str(root / "brief.toml"),
+            ]
+        )
+
+        assert status != 0
+        said = capsys.readouterr().err
+        assert "holds no comment 'c99'" in said and "The ids it holds are: c6" in said
+        assert (root / "brief.toml").read_text(encoding="utf-8") == before
+
+
 class TestFT44:
     def test_the_conforming_project_passes(self, tmp_path) -> None:
         root = conforming(tmp_path)

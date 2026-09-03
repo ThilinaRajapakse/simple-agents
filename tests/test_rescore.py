@@ -446,7 +446,7 @@ class TestRescore:
         live = empty.run(
             envelope=RunEnvelope(run_dir=str(tmp_path), cassette=Cassette.off()),
             # No responses at all, so every rollout stops on its first model call.
-            model=FakeModelClient(responses=[]),
+            model=FakeModelClient(responses=[], scripted=False),
             split="held_out",
             k=1,
             seed=41,
@@ -467,7 +467,7 @@ class TestRescore:
         empty = EvalSuite(pipeline(), examples(), answer="answer", matches=EXACT)
         live = empty.run(
             envelope=RunEnvelope(run_dir=str(tmp_path), cassette=Cassette.off()),
-            model=FakeModelClient(responses=["not json at all"] * 9),
+            model=FakeModelClient(responses=["not json at all"] * 9, scripted=False),
             split="held_out",
             k=1,
             seed=41,

@@ -82,7 +82,9 @@ def pipeline() -> Pipeline:
 class TestWhatASpunNodeProduced:
     def test_it_produces_nothing_and_the_run_completes(self, tmp_path) -> None:
         result = pipeline().run(
-            {}, envelope=RunEnvelope(run_dir=tmp_path), model=FakeModelClient(answer=_talks)
+            {},
+            envelope=RunEnvelope(run_dir=tmp_path),
+            model=FakeModelClient(answer=_talks, scripted=False),
         )
 
         # The node after it was handed `None`, and nothing raised.
@@ -93,7 +95,7 @@ class TestWhatASpunNodeProduced:
             pipeline().run(
                 {},
                 envelope=RunEnvelope(run_dir=tmp_path),
-                model=FakeModelClient(answer=_talks),
+                model=FakeModelClient(answer=_talks, scripted=False),
             )
 
         found = node_metrics(tmp_path)
@@ -110,7 +112,7 @@ class TestWhatASpunNodeProduced:
         pipeline().run(
             {},
             envelope=RunEnvelope(run_dir=tmp_path),
-            model=FakeModelClient(answer=_calls_a_tool),
+            model=FakeModelClient(answer=_calls_a_tool, scripted=False),
         )
 
         found = node_metrics(tmp_path)
@@ -127,7 +129,9 @@ class TestTheManifestSaysTheSameThing:
 
     def test_it_carries_what_the_trajectory_says(self, tmp_path) -> None:
         pipeline().run(
-            {}, envelope=RunEnvelope(run_dir=tmp_path), model=FakeModelClient(answer=_talks)
+            {},
+            envelope=RunEnvelope(run_dir=tmp_path),
+            model=FakeModelClient(answer=_talks, scripted=False),
         )
 
         manifest = json.loads(next(tmp_path.glob("**/manifest.json")).read_text(encoding="utf-8"))
@@ -154,7 +158,9 @@ class TestTheManifestSaysTheSameThing:
             )
 
         pipeline().run(
-            {}, envelope=RunEnvelope(run_dir=tmp_path), model=FakeModelClient(answer=finishes)
+            {},
+            envelope=RunEnvelope(run_dir=tmp_path),
+            model=FakeModelClient(answer=finishes, scripted=False),
         )
 
         manifest = json.loads(next(tmp_path.glob("**/manifest.json")).read_text(encoding="utf-8"))
@@ -202,7 +208,7 @@ class TestACallMadeInsideATool:
         Pipeline([node], budget=Budget.unbounded()).run(
             {"book": ["Ubik", "Solaris"]},
             envelope=RunEnvelope(run_dir=tmp_path),
-            model=FakeModelClient(answer=answer),
+            model=FakeModelClient(answer=answer, scripted=False),
             seed=41,
             concurrency=2,
         )
@@ -236,7 +242,7 @@ class TestWhichRunsAreRead:
             pipeline().run(
                 {},
                 envelope=RunEnvelope(run_dir=tmp_path),
-                model=FakeModelClient(answer=_talks),
+                model=FakeModelClient(answer=_talks, scripted=False),
             )
 
     def test_every_run_under_the_directory_by_default(self, tmp_path) -> None:
@@ -263,7 +269,7 @@ class TestWhichRunsAreRead:
         pipeline().run(
             {},
             envelope=RunEnvelope(run_dir=tmp_path, role="labelling"),
-            model=FakeModelClient(answer=_talks),
+            model=FakeModelClient(answer=_talks, scripted=False),
         )
 
         assert node_metrics(tmp_path)["hunt"].runs == 4
@@ -305,7 +311,7 @@ class TestAToolThatNeverAnswered:
         ).run(
             {},
             envelope=RunEnvelope(run_dir=tmp_path),
-            model=FakeModelClient(answer=_calls_a_tool),
+            model=FakeModelClient(answer=_calls_a_tool, scripted=False),
         )
 
     def test_a_tool_that_failed_every_time_is_named_with_every_call(self, tmp_path) -> None:

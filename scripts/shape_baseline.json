@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "P3-74 cycle 6: EvalSuite.record takes stores= and makes a copy per run, on the same rule as run",
+  "reason": "P3-75: a check for the pipeline a number was measured over, and the anchor FT-25, FT-37 and FT-38 read within one pipeline",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -86,7 +86,7 @@
       "function lines": 61
     },
     "src/simple_agents/conformance/checks.py::module": {
-      "module lines": 1811
+      "module lines": 2035
     },
     "src/simple_agents/conformance/elicitation.py::module": {
       "module lines": 968
@@ -98,11 +98,11 @@
       "function branches": 15
     },
     "src/simple_agents/conformance/run.py::function::run_checks": {
-      "function lines": 71
+      "function lines": 72
     },
     "src/simple_agents/conformance/spend.py::function::unfinished_across": {
-      "function branches": 18,
-      "function lines": 76
+      "function branches": 20,
+      "function lines": 80
     },
     "src/simple_agents/context.py::class::RunContext": {
       "class lines": 751
@@ -186,7 +186,7 @@
       "function branches": 13
     },
     "src/simple_agents/evaluation/runner.py::class::EvalSuite": {
-      "class lines": 1929
+      "class lines": 1934
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite.__init__": {
       "function lines": 52
@@ -195,7 +195,8 @@
       "function lines": 54
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._declared_config": {
-      "function lines": 77
+      "function lines": 82,
+      "function branches": 7
     },
     "src/simple_agents/evaluation/runner.py::function::EvalSuite._refuse_an_undescribed_end_user": {
       "function branches": 18,
@@ -223,7 +224,7 @@
       "function lines": 135
     },
     "src/simple_agents/evaluation/runner.py::module": {
-      "module lines": 2367
+      "module lines": 2372
     },
     "src/simple_agents/evaluation/scoring.py::function::_criteria_verdict": {
       "function lines": 54
@@ -244,7 +245,7 @@
       "function lines": 70
     },
     "src/simple_agents/evaluation/variants.py::module": {
-      "module lines": 879
+      "module lines": 881
     },
     "src/simple_agents/graph.py::class::Graph": {
       "class lines": 307
@@ -304,7 +305,7 @@
       "function lines": 62
     },
     "src/simple_agents/pipeline/core.py::class::Pipeline": {
-      "class lines": 1518
+      "class lines": 1526
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline._attempt": {
       "function branches": 19,
@@ -337,7 +338,7 @@
       "function lines": 69
     },
     "src/simple_agents/pipeline/core.py::module": {
-      "module lines": 1782
+      "module lines": 1790
     },
     "src/simple_agents/pipeline/preflight.py::function::_refuse_a_bad_slice": {
       "function branches": 15
@@ -356,7 +357,8 @@
       "function lines": 66
     },
     "src/simple_agents/pipeline/recording.py::function::_new_manifest": {
-      "function lines": 54
+      "function lines": 59,
+      "function branches": 7
     },
     "src/simple_agents/pipeline/recording.py::function::_node_entries": {
       "function branches": 18,
@@ -370,14 +372,14 @@
       "class lines": 214
     },
     "src/simple_agents/records/manifest.py::class::Manifest": {
-      "class lines": 405
+      "class lines": 420
     },
     "src/simple_agents/records/manifest.py::function::Manifest.restore": {
       "function branches": 37,
       "function lines": 66
     },
     "src/simple_agents/records/manifest.py::function::Manifest.to_json": {
-      "function lines": 72
+      "function lines": 74
     },
     "src/simple_agents/records/suspension.py::function::ValueCodec.decode": {
       "function branches": 14,
@@ -459,6 +461,15 @@
     },
     "src/simple_agents/view/serve.py::function::_snapshot": {
       "function branches": 18
+    },
+    "src/simple_agents/evaluation/per_node.py::module": {
+      "module lines": 802
+    },
+    "src/simple_agents/cli/reporting.py::function::report_over_runs": {
+      "function branches": 13
+    },
+    "src/simple_agents/cli/reporting.py::class::RunsReport": {
+      "class lines": 212
     }
   },
   "reasons": {
@@ -603,6 +614,9 @@
     "src/simple_agents/view/product.py::function::_one_surface": "One surface's card; each branch is one optional field.",
     "src/simple_agents/view/research.py::function::read_research": "One page's reader; the branches are the record shapes a research stage leaves.",
     "src/simple_agents/view/runs_overlay.py::function::_scan": "One directory scan; the length is the run states it tells apart.",
-    "src/simple_agents/view/serve.py::function::_snapshot": "One snapshot of the served state; each branch is one region's presence rule."
+    "src/simple_agents/view/serve.py::function::_snapshot": "One snapshot of the served state; each branch is one region's presence rule.",
+    "src/simple_agents/cli/reporting.py::function::report_over_runs": "One read of a directory into one report; each branch is one filter the caller set.",
+    "src/simple_agents/evaluation/per_node.py::module": "Metrics per node, over a trajectory and over a directory of them. Two over the threshold, from the scripted filter joining role and live in node_metrics.",
+    "src/simple_agents/cli/reporting.py::class::RunsReport": "One report over a directory of runs: the figures, and the lines that say what was read and what was left out."
   }
 }

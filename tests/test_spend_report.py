@@ -126,7 +126,7 @@ def spin(
         (built or pipeline()).run(
             {},
             envelope=RunEnvelope(run_dir=run_dir, cost_basis=basis, role=role, live=live),
-            model=FakeModelClient(answer=answer),
+            model=FakeModelClient(answer=answer, scripted=False),
         )
 
 
@@ -668,7 +668,7 @@ class TestAFanOutWhoseItemsProducedNothing:
         built.run(
             {"book": ["Ubik", "Solaris"]},
             envelope=RunEnvelope(run_dir=tmp_path / "runs", cost_basis=PRICES),
-            model=FakeModelClient(answer=_talks),
+            model=FakeModelClient(answer=_talks, scripted=False),
         )
 
     def test_the_node_itself_records_no_termination(self, tmp_path) -> None:

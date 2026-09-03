@@ -28,7 +28,7 @@ from simple_agents import (
     fake_response,
     runs,
 )
-from simple_agents.conformance.artifacts import _latest_run
+from simple_agents.conformance.artifacts import _latest_run, runs_by_pipeline
 from simple_agents.evaluation import Label, read_labels, write_labels
 
 from conftest import run_path
@@ -86,7 +86,9 @@ def label_pass(run_dir: Path, candidates: list[dict]):
         role="labelling",
         cassette=Cassette.record(str(run_dir.parent / "cassettes" / "labels.jsonl")),
     )
-    client = FakeModelClient(responses=[fake_response(VERDICT)] * (len(candidates) + 4))
+    client = FakeModelClient(
+        responses=[fake_response(VERDICT)] * (len(candidates) + 4), scripted=False
+    )
     return label.run({"candidates": candidates}, model=client, envelope=env)
 
 
@@ -123,7 +125,7 @@ def test_the_budget_bounds_the_pass_rather_than_one_candidate(tmp_path: Path, ca
         )
         label.run(
             {"candidates": candidates},
-            model=FakeModelClient(responses=[fake_response(VERDICT)] * 64),
+            model=FakeModelClient(responses=[fake_response(VERDICT)] * 64, scripted=False),
             envelope=RunEnvelope(run_dir=str(tmp_path / "runs"), cost_basis=PRICES),
         )
 
@@ -138,7 +140,7 @@ def test_the_pass_is_not_read_as_a_run_of_the_agent(tmp_path: Path, candidates) 
 
     assert runs(project / "runs", role="labelling")
     assert runs(project / "runs", role="agent") == []
-    assert _latest_run(project) is None
+    assert _latest_run(project, runs_by_pipeline(project)) is None
 
 
 def test_a_label_carries_the_run_that_decided_it(tmp_path: Path, candidates) -> None:

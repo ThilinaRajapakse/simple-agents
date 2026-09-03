@@ -1,0 +1,90 @@
+{
+  "format_version": "0.5",
+  "run_id": "run_20260903T185127Z_a5d91c92",
+  "seed": 1023802455,
+  "suspended_at": "2026-09-03T18:51:27.440Z",
+  "stops": [
+    {
+      "node_id": "settle",
+      "waiting_for": "the month to close",
+      "options": null,
+      "resume_not_before": "2026-09-01T09:00:00Z"
+    }
+  ],
+  "inputs": {
+    "kind": "data",
+    "value": {
+      "mode": "clock"
+    }
+  },
+  "spend": {
+    "steps": 0,
+    "tokens": 0,
+    "cost": null,
+    "wall_clock_ms": 0
+  },
+  "counters": {
+    "sequence": 4,
+    "model_calls": {},
+    "tool_calls": {
+      "pick_up": 1
+    },
+    "tool_occurrences": {
+      "{\"arguments\": {\"since\": \"2026-08-01\"}, \"item_index\": null, \"name\": \"ledger_rows\", \"node_id\": \"pick_up\", \"version\": \"sha256:f01fc5cbe5fa\"}": 1
+    },
+    "last_input": {},
+    "money_currency": null
+  },
+  "frames": [
+    {
+      "prefix": "",
+      "edges": {
+        "resolved": [
+          {
+            "source": "pick_up",
+            "target": "settle",
+            "fired": true,
+            "value": {
+              "kind": "data",
+              "value": {
+                "mode": "clock",
+                "entries": 40,
+                "earlier_turns": 0
+              }
+            },
+            "reason": null
+          }
+        ],
+        "visits": {
+          "pick_up": 1,
+          "settle": 1
+        },
+        "done": [
+          "pick_up",
+          "settle"
+        ]
+      },
+      "produced": {
+        "pick_up": {
+          "kind": "data",
+          "value": {
+            "mode": "clock",
+            "entries": 40,
+            "earlier_turns": 0
+          }
+        }
+      },
+      "opened": {
+        "steps": 0,
+        "tokens": 0,
+        "cost": null,
+        "wall_clock_ms": 0
+      },
+      "in_progress": [
+        "settle"
+      ],
+      "node_state": {},
+      "below": {}
+    }
+  ]
+}

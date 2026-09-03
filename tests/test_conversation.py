@@ -254,7 +254,7 @@ class TestWhenMessagesGoOn:
             _pipeline().run(
                 {"question": "q1"},
                 envelope=env,
-                model=FakeModelClient(answer=blow_up),
+                model=FakeModelClient(answer=blow_up, scripted=False),
                 conversation_id="c1",
             )
 
@@ -437,7 +437,7 @@ class TestInAnEvaluation:
                 answer="answer",
                 matches=lambda s: str(s.expected).lower() in str(s.answer).lower(),
             ),
-            FakeModelClient(answer=answer),
+            FakeModelClient(answer=answer, scripted=False),
         )
 
     def test_an_example_carries_what_was_already_said(self, env) -> None:
@@ -737,7 +737,9 @@ class TestRescoringAMultiTurnEvaluation:
         )
         results = suite.run(
             envelope=env,
-            model=FakeModelClient(answer=lambda r: fake_response(content=next(answers))),
+            model=FakeModelClient(
+                answer=lambda r: fake_response(content=next(answers)), scripted=False
+            ),
             split="held_out",
             k=1,
         )
@@ -808,7 +810,9 @@ class TestLookingAtAConversationIsNotJoiningIt:
         ).run(
             {},
             envelope=env,
-            model=FakeModelClient(responses=[fake_response(content='{"summary": "s"}')]),
+            model=FakeModelClient(
+                responses=[fake_response(content='{"summary": "s"}')], scripted=False
+            ),
             conversation_id="c1",
         )
 
@@ -825,7 +829,7 @@ class TestARunThatStoppedAndContinued:
                 raise Suspend(waiting_for="the backend is down")
             return fake_response(content='{"answer": "ok"}')
 
-        return FakeModelClient(answer=answer)
+        return FakeModelClient(answer=answer, scripted=False)
 
     def test_the_question_is_on_the_conversation_while_the_run_waits(self, env) -> None:
         with pytest.raises(RunSuspended):

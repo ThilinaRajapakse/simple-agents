@@ -103,6 +103,10 @@
         "only_before": [],
         "only_after": [],
         "changed": {
+          "pipeline": [
+            "claims",
+            null
+          ],
           "nodes.finance.tools": [
             [
               "consult",
@@ -1012,6 +1016,10 @@
         "only_before": [],
         "only_after": [],
         "changed": {
+          "pipeline": [
+            "claims",
+            null
+          ],
           "nodes.audit.loop.max_iterations": [
             2,
             1
