@@ -4,6 +4,7 @@
 
     simple-agents record answer used_through --text "A phone app over an HTTP API."
     simple-agents record decision pool_size --kind constant --status agreed --chose 200
+    simple-agents record decision pool_size --kind constant --from-comment c6
 
 `docs/conformance.md` §2.3 is the reference; the writing itself is
 :mod:`simple_agents.conformance.writing`.
@@ -71,7 +72,10 @@ def _decision_form(what: argparse._SubParsersAction) -> None:
         "--kind", required=True, choices=kind_names(), help="one of the six kinds"
     )
     decision.add_argument(
-        "--status", default="proposed", choices=DECISION_STATUSES, help="default proposed"
+        "--status",
+        default=None,
+        choices=DECISION_STATUSES,
+        help="default proposed, or agreed with --from-comment",
     )
     decision.add_argument("--chose", default=None, help="what was chosen")
     decision.add_argument(
@@ -95,6 +99,17 @@ def _decision_form(what: argparse._SubParsersAction) -> None:
         help="what it became in the code, by name; repeatable",
     )
     decision.add_argument("--stage", default=None, help="the stage it was decided at")
+    decision.add_argument(
+        "--from-comment",
+        dest="from_comment",
+        default=None,
+        help="a comment id: what the builder said becomes `considered`, and the status `agreed`",
+    )
+    decision.add_argument(
+        "--comments",
+        default="comments.toml",
+        help="the comments file --from-comment reads, instead of ./comments.toml",
+    )
 
 
 def _key_forms(what: argparse._SubParsersAction) -> None:
@@ -115,10 +130,13 @@ def _key_forms(what: argparse._SubParsersAction) -> None:
     )
     against = what.add_parser(
         "read-against",
-        help="confirmed_against: the pipeline the entries were read against, off the newest run",
+        help=(
+            "confirmed_against: the pipeline the entries were read against, off the newest "
+            "run of the pipeline the results file measured"
+        ),
     )
     against.add_argument(
-        "--stamp", default=None, help="a behaviour_fingerprint, instead of the newest run's"
+        "--stamp", default=None, help="a behaviour_fingerprint, instead of the one it would read"
     )
     against.add_argument("--brief", default="brief.toml", help="the brief, instead of ./brief.toml")
     shape = what.add_parser(
@@ -151,13 +169,14 @@ def run_record(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int
             deferred_to=args.deferred_to,
         )
     else:
+        clicked = _what_the_builder_said(args)
         recorded = record_decision(
             args.brief,
             args.name,
             kind=args.kind,
-            status=args.status,
+            status=args.status or ("agreed" if clicked else "proposed"),
             chose=args.chose,
-            considered=args.considered or (),
+            considered=(args.considered or ()) or ((clicked,) if clicked else ()),
             because=_text_argument(args.because, args.because_file),
             rests_on=args.rests_on or (),
             produces=args.produces or (),
@@ -167,6 +186,35 @@ def run_record(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int
     stamped = f", recorded_at {recorded.recorded_at}" if recorded.recorded_at else ""
     print(f"{what} [{recorded.table}] in {recorded.path}{stamped}")
     return 0
+
+
+def _what_the_builder_said(args: argparse.Namespace) -> str | None:
+    """The sentence a comment carries, for a decision recorded from one.
+
+    A decision the builder settled by a click on the view has one thing weighed and one reason:
+    what they said. Copying it here is what keeps the entry to that. `because` is left to
+    whatever was passed, which for a decision the builder settled is usually nothing.
+
+    Raises :class:`~simple_agents.errors.ConfigurationError` naming the ids the file holds
+    where there is no such comment, since a decision recorded against a comment nobody wrote
+    would say the builder settled something they never saw.
+    """
+    if not getattr(args, "from_comment", None):
+        return None
+    from ..records.comments import read_comments
+
+    path = Path(args.comments)
+    if not path.is_absolute():
+        path = Path(args.brief).resolve().parent / args.comments
+    comments = read_comments(path)
+    thread = comments.thread(args.from_comment)
+    if thread is None:
+        held = ", ".join(c.id for c in comments.all if c.id) or "none"
+        raise ConfigurationError(
+            f"{path} holds no comment {args.from_comment!r}. The ids it holds are: {held}.\n"
+            f"`simple-agents comments` lists them with what each says."
+        )
+    return thread.said
 
 
 def _record_key(args: argparse.Namespace):
