@@ -23,10 +23,6 @@ project that measures its own corpus should set them from that instead.
 
 from __future__ import annotations
 
-import heapq
-import threading
-import math
-import operator
 from dataclasses import dataclass
 from typing import Any, Protocol, Sequence
 
@@ -42,8 +38,6 @@ __all__ = [
     "Lexical",
     "Semantic",
     "Hybrid",
-    "VectorStore",
-    "VectorScan",
     "normalise",
     "refuse_no_ranking",
 ]
@@ -312,120 +306,6 @@ class Hybrid:
     @property
     def needs_lexical(self) -> bool:
         return True
-
-
-# -- vectors -----------------------------------------------------------------------------
-
-
-class VectorStore(Protocol):
-    """Where an index keeps its vectors and how it finds the nearest.
-
-    The library ships :class:`VectorScan`, which holds them in memory and compares against
-    every one. A project with a corpus too large for that points ``vectors=`` at its own store
-    over whatever it already runs::
-
-        class MyStore:
-            def add(self, ids: Sequence[str], vectors: Sequence[Sequence[float]]) -> None:
-                ...
-
-            def search(self, vector: Sequence[float], top_k: int) -> list[tuple[str, float]]:
-                ...
-
-            def __len__(self) -> int:
-                ...
-
-    ``search`` returns ``(doc_id, score)`` best first, where a higher score is more similar.
-    Vectors reaching ``add`` are already normalised to unit length, so a dot product is the
-    cosine. A store that returns approximate neighbours returns fewer true matches than
-    :class:`VectorScan` for the same ``top_k``, and the project owns that trade.
-    """
-
-    def add(self, ids: Sequence[str], vectors: Sequence[Sequence[float]]) -> None: ...
-
-    def search(self, vector: Sequence[float], top_k: int) -> list[tuple[str, float]]: ...
-
-    def __len__(self) -> int: ...
-
-
-class VectorScan:
-    """Vectors in memory, compared against every one. The default, and it needs no dependency.
-
-    Results are exact: there is no approximation and no parameter trading recall for speed::
-
-        store = VectorScan()
-        store.add(["a1"], [[0.1, -0.3, 0.2]])
-        store.search([0.1, -0.3, 0.2], top_k=1)     # [('a1', 1.0)]
-
-    **What it costs, measured on one CPU core**: a corpus of 10,000 documents at 768 dimensions
-    holds 31 MB and answers a query in about 64 ms on Python 3.12, or 146 ms on 3.11, where the
-    faster arithmetic is unavailable. 100,000 documents holds 307 MB and takes about 620 ms.
-    A project past that supplies its own :class:`VectorStore`.
-    """
-
-    def __init__(self) -> None:
-        self._ids: list[str] = []
-        self._vectors: list[list[float]] = []
-        # The identifiers and the vectors are one table kept in two lists, so a writer holds
-        # both while it appends and a reader holds both while it scores. Without it two adds
-        # at once file a vector under another document's identifier, which is the same fault
-        # the length check below refuses.
-        self._lock = threading.Lock()
-
-    def add(self, ids: Sequence[str], vectors: Sequence[Sequence[float]]) -> None:
-        """Add vectors under their identifiers. Both sequences are paired by position."""
-        if len(ids) != len(vectors):
-            raise ConfigurationError(
-                f"VectorScan.add was given {len(ids)} identifier(s) and {len(vectors)} "
-                f"vector(s). They are paired by position, so a mismatch would file a vector "
-                f"under another document's identifier."
-            )
-        added = [[float(x) for x in vector] for vector in vectors]
-        with self._lock:
-            self._ids.extend(ids)
-            self._vectors.extend(added)
-
-    def search(self, vector: Sequence[float], top_k: int) -> list[tuple[str, float]]:
-        """The nearest vectors by dot product, best first. Empty where nothing was added."""
-        if top_k < 1:
-            return []
-        query = list(vector)
-        with self._lock:
-            ids = list(self._ids)
-            candidates = list(self._vectors)
-        if not candidates:
-            return []
-        scores = [_dot(candidate, query) for candidate in candidates]
-        best = heapq.nlargest(
-            min(top_k, len(scores)), range(len(scores)), key=lambda i: (scores[i], ids[i])
-        )
-        return [(ids[i], scores[i]) for i in best]
-
-    def ids(self) -> list[str]:
-        """Every identifier held, in the order it was added."""
-        return list(self._ids)
-
-    def all_vectors(self) -> list[list[float]]:
-        """Every vector held, in the order it was added."""
-        return [list(v) for v in self._vectors]
-
-    @property
-    def dimensions(self) -> int | None:
-        """How wide the vectors are, or ``None`` where none was added."""
-        return len(self._vectors[0]) if self._vectors else None
-
-    def __len__(self) -> int:
-        return len(self._ids)
-
-
-if hasattr(math, "sumprod"):  # Python 3.12 and later.
-
-    def _dot(left: Sequence[float], right: Sequence[float]) -> float:
-        return math.sumprod(left, right)
-
-else:  # pragma: no cover - exercised on Python 3.11 only.
-
-    def _dot(left: Sequence[float], right: Sequence[float]) -> float:
-        return sum(map(operator.mul, left, right))
 
 
 def ranking_to_record(ranking: Ranking, rerank: Any | None) -> dict[str, Any]:

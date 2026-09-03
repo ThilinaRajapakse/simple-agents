@@ -346,7 +346,7 @@ already had.
 **Acted on:** `DF6-I14`.
 
 **Library.** `DocumentIndex` has `from_texts`, `save` and `load` and no incremental add
-([`search.py`](../../../src/simple_agents/builtins/search.py#L344) `load` is the last of them). The
+([`search.py`](../../../src/simple_agents/builtins/search.py#L601) `load` is the last of them). The
 builder's rule was that the index persists and is additive (`BUILD-LOG.md:356`), so the project
 holds vectors in SQLite with a text hash per row (`plot/vectors.py`), and its first search loop
 recomputed every norm per query at 134.7ms against the library's 22.3ms before a cached matrix

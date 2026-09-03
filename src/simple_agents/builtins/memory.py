@@ -24,7 +24,8 @@ from ..embeddings import normalise
 from ..errors import ConfigurationError
 from ..memory import Memory
 from ..tools import Retrieval, SideEffectClass, Tool, tool
-from .ranking import Ranking, VectorScan, refuse_no_ranking
+from .ranking import Ranking, refuse_no_ranking
+from .vectors import VectorStore, default_store
 from .search import DocumentIndex
 
 __all__ = ["remember", "recall", "memory_search"]
@@ -240,7 +241,7 @@ def _vectors_for(
     texts: dict[str, str],
     embeddings: Any,
     retrieval: Retrieval,
-) -> VectorScan:
+) -> VectorStore:
     """The store's vectors, embedding and writing back only what is missing or stale.
 
     An entry already embedded by this model is read off disk. Anything else is embedded in one
@@ -255,7 +256,7 @@ def _vectors_for(
         for key, vector in zip(missing, vectors):
             fresh[key] = vector
             memory.store_vector(key, vector, identity)
-    store = VectorScan()
+    store = default_store()
     keys = list(entries)
     store.add(
         keys,

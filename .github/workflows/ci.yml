@@ -32,8 +32,9 @@ jobs:
         with:
           node-version: "22"
       # The semantic extra carries sentence-transformers, which one pacing test needs; the
-      # mcp extra carries the SDK tests/test_mcp.py skips without.
-      - run: uv sync --extra semantic --extra mcp --python ${{ matrix.python }}
+      # mcp extra carries the SDK tests/test_mcp.py skips without; the ann extra carries FAISS,
+      # which tests/test_faiss_vectors.py skips without.
+      - run: uv sync --extra semantic --extra mcp --extra ann --python ${{ matrix.python }}
       # tests/fixtures/view_projects/_stages/ is derived and not tracked, and the fixture
       # currency test fails while it is missing.
       - run: uv run python scripts/build_view_fixtures.py

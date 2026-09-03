@@ -424,7 +424,7 @@ fingerprint.** Measured 2026-08-18 on two pipelines differing in one tool's body
    `side_effect_class`, `declared_cost`, `re_executed` and `reader`, writes them straight into the
    manifest, and puts them in neither digest. The per-node `tools` field is names only.
 3. **A consultation reader's model and prompt**, recorded by
-   [`_reader_entry`](../../../src/simple_agents/pipeline/recording.py#L189) under `tools[].reader`. This is
+   [`_reader_entry`](../../../src/simple_agents/pipeline/recording.py#L201) under `tools[].reader`. This is
    the library-owned model call on a `Deterministic` node that `P3-12` shipped, and
    [`plan.md`](../../plan.md#L1) §2.1 already calls it the first such call a shipped agent carries
    into production rather than only into an evaluation.

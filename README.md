@@ -162,7 +162,7 @@ The questions are the ones only you can answer: what the agent is for, what a ri
 | [`docs/procedure.md`](docs/procedure.md) | The six stages of a build, what to settle with the builder at each, the project layout, and the gate that ends each stage. Shipped as a skill, and what `simple-agents init` registers. |
 | [`docs/pipeline.md`](docs/pipeline.md) | The pipeline as a graph, the three node kinds, branching, joining and bounded cycles, suspending a run and resuming it, streaming a node's output, handing a subtask to a pipeline the model chooses, what a node receives, the output schema and `unknown`, and budgets. |
 | [`docs/tools.md`](docs/tools.md) | The tool contract, the registry, how a tool is replayed, the built-in set, which hosts a run may reach, caching what was fetched, and consulting the end user. |
-| [`docs/retrieval.md`](docs/retrieval.md) | Searching by meaning as well as by words: which model embeds a corpus, how lexical and semantic results combine, reranking, where the vectors live, and what a search costs. |
+| [`docs/retrieval.md`](docs/retrieval.md) | Searching by meaning as well as by words: which model embeds a corpus, how lexical and semantic results combine, reranking, where the vectors live, how a corpus that changes is added to, and what a search costs. |
 | [`docs/memory.md`](docs/memory.md) | The memory store, the tools that reach it, what an evaluation does with it, and what redaction reaches. |
 | [`docs/conversation.md`](docs/conversation.md) | A conversation that outlives the run: how a node takes part, what a turn is, reading one back, and compaction. |
 | [`docs/context.md`](docs/context.md) | What the model is sent on each call, what overflow means, and how to replace the default. |

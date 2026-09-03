@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.29",
-  "eval_id": "eval_3ee65365fe4e",
-  "created_at": "2026-08-28T21:41:36.412Z",
+  "eval_id": "eval_dad3b69a290e",
+  "created_at": "2026-09-02T17:32:58.835Z",
   "config": {
     "split": "held_out",
     "k": 2,
@@ -22,7 +22,10 @@
       "version": "sha256:3a5c473d076f",
       "source": "derived"
     },
-    "baseline": null,
+    "baseline": {
+      "version": "sha256:52a243b152ac",
+      "source": "derived"
+    },
     "criteria": {},
     "judgements": null,
     "metrics": [],
@@ -390,7 +393,30 @@
       }
     ],
     "graph_fingerprint": "sha256:e6aa2bd179c9a971",
-    "behaviour_fingerprint": "sha256:8b5c628b2fcbcb50",
+    "tools": [
+      {
+        "name": "handbook_lookup",
+        "version": "sha256:7c92a3187881",
+        "side_effect_class": "read_only"
+      },
+      {
+        "name": "web_search",
+        "version": "sha256:c67d962aeb11",
+        "side_effect_class": "spends_money"
+      },
+      {
+        "name": "consult",
+        "version": "sha256:ffdee4e0bb7e",
+        "side_effect_class": "read_only"
+      }
+    ],
+    "budget": {
+      "max_steps": 14,
+      "max_tokens": 60000,
+      "max_cost": 0.2,
+      "max_wall_clock_ms": null
+    },
+    "behaviour_fingerprint": "sha256:5230925f97114292",
     "prompts": {
       "classify": {
         "version": "sha256:41be87db262d",
@@ -413,23 +439,6 @@
         "source": "derived"
       }
     },
-    "tools": [
-      {
-        "name": "handbook_lookup",
-        "version": "sha256:7c92a3187881",
-        "side_effect_class": "read_only"
-      },
-      {
-        "name": "web_search",
-        "version": "sha256:c67d962aeb11",
-        "side_effect_class": "spends_money"
-      },
-      {
-        "name": "consult",
-        "version": "sha256:ffdee4e0bb7e",
-        "side_effect_class": "read_only"
-      }
-    ],
     "model": {
       "backend": "hosted_api",
       "request_model": "gemini-3.1-flash-lite",
@@ -452,12 +461,6 @@
       "misses": 0,
       "recorded": 0,
       "diverged": 0
-    },
-    "budget": {
-      "max_steps": 14,
-      "max_tokens": 60000,
-      "max_cost": 0.2,
-      "max_wall_clock_ms": null
     },
     "max_spend": 2.0,
     "scored_from": "rollouts",
@@ -780,7 +783,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 8,
+      "wall_clock_ms": 1,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -880,7 +883,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 8,
-      "wall_clock_ms": 19,
+      "wall_clock_ms": 26,
       "absent_outputs": 2,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -961,7 +964,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 5,
+      "wall_clock_ms": 8,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1034,7 +1037,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 8,
-      "wall_clock_ms": 16,
+      "wall_clock_ms": 9,
       "absent_outputs": 1,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1115,7 +1118,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 4,
-      "wall_clock_ms": 5,
+      "wall_clock_ms": 4,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1198,7 +1201,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 4,
-      "wall_clock_ms": 5,
+      "wall_clock_ms": 6,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1286,7 +1289,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 8,
-      "wall_clock_ms": 16,
+      "wall_clock_ms": 8,
       "absent_outputs": 0,
       "unfinished_executions": 1,
       "unfinished_items": 0,
@@ -1308,15 +1311,15 @@
           "type": "unknown",
           "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
         },
-        "output": 668
+        "output": 652
       },
       "cost": {
-        "value": 0.0008856000000000001,
+        "value": 0.0008792000000000001,
         "currency": "USD",
         "basis": "price",
         "is_upper_bound": false,
         "reason": null,
-        "measured": 0.0008856000000000001,
+        "measured": 0.0008792000000000001,
         "priced_calls": 8,
         "unpriced_calls": 0
       }
@@ -1527,7 +1530,7 @@
       },
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 30,
+      "wall_clock_ms": 25,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1559,15 +1562,15 @@
         "type": "unknown",
         "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
       },
-      "output": 1839
+      "output": 1823
     },
     "cost": {
-      "value": 0.0015361,
+      "value": 0.0015297000000000004,
       "currency": "USD",
       "basis": "price",
       "is_upper_bound": false,
       "reason": null,
-      "measured": 0.0015361,
+      "measured": 0.0015297000000000004,
       "priced_calls": 32,
       "unpriced_calls": 0,
       "unpriced_nodes": []
@@ -1587,7 +1590,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-export-filter-0",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-export-filter-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-export-filter-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1672,7 +1675,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-export-filter-1",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-export-filter-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-export-filter-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1760,7 +1763,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-nonsense-0",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-nonsense-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-nonsense-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1841,7 +1844,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-nonsense-1",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-nonsense-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-nonsense-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1919,7 +1922,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-seat-count-0",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-seat-count-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-seat-count-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2004,7 +2007,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-seat-count-1",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-seat-count-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-seat-count-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2089,7 +2092,7 @@
       "outcome": "correct",
       "answer": "answer_directly",
       "run_id": "t-thanks-0",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-thanks-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-thanks-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2174,7 +2177,7 @@
       "outcome": "correct",
       "answer": "answer_directly",
       "run_id": "t-thanks-1",
-      "trajectory": "runs/eval/eval_3ee65365fe4e/t-thanks-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_dad3b69a290e/t-thanks-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2253,6 +2256,96 @@
       "unreached_items": 0
     }
   ],
-  "baseline": [],
+  "baseline": [
+    {
+      "example_id": "t-export-filter",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 0.0,
+        "met": 0,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-seat-count",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 0.0,
+        "met": 0,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-thanks",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": {
+        "grade": 0.0,
+        "met": 0,
+        "total": 1,
+        "parts": {},
+        "unmet_required": [],
+        "asserted": true
+      },
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    },
+    {
+      "example_id": "t-nonsense",
+      "rollout": 0,
+      "seed": 0,
+      "outcome": "false_confidence",
+      "answer": "escalate",
+      "run_id": null,
+      "trajectory": null,
+      "error": null,
+      "nodes": {},
+      "scores": {},
+      "ratios": {},
+      "verdict": null,
+      "left_out": [],
+      "unanswered_consultations": 0,
+      "unreached_items": 0
+    }
+  ],
   "baseline_unscored": []
 }

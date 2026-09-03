@@ -174,7 +174,7 @@ date.
 
 | Surface | What |
 |---|---|
-| [`manifest.py` `module_constants`](../../src/simple_agents/records/manifest.py#L830) | The introspection: seed modules from the node callables, closure over the project's own, names from the source and values from the namespace |
+| [`manifest.py` `module_constants`](../../src/simple_agents/records/manifest.py#L839) | The introspection: seed modules from the node callables, closure over the project's own, names from the source and values from the namespace |
 | [`pipeline.py` `manifest_constants`](../../src/simple_agents/pipeline/core.py#L2001) | The public accessor, beside `manifest_tools` and `manifest_prompts` |
 | [`decisions.py` `PRODUCING_KINDS`](../../src/simple_agents/conformance/decisions.py#L354) | `produces` on `Decision` and `DecisionKind`, and the refusal on the two kinds that carry none |
 | [`checks.py` `ft_42`](../../src/simple_agents/conformance/checks.py#L2017) | The forward direction |

@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.29",
-  "eval_id": "eval_ef8abe5df07a",
-  "created_at": "2026-09-01T18:15:58.381Z",
+  "eval_id": "eval_d3a7bda6510f",
+  "created_at": "2026-09-02T14:23:02.545Z",
   "config": {
     "split": "held_out",
     "k": 3,
@@ -133,7 +133,7 @@
       "max_cost": null,
       "max_wall_clock_ms": 600000
     },
-    "behaviour_fingerprint": "sha256:add27436ac048be7",
+    "behaviour_fingerprint": "sha256:f328fa575225d020",
     "prompts": {
       "hunt": {
         "version": "sha256:eb76a45a9605",
@@ -584,7 +584,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 9,
-      "wall_clock_ms": 5,
+      "wall_clock_ms": 4,
       "absent_outputs": 5,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -654,7 +654,7 @@
         "reason": "The retailer notes mention 'Kirkwall' as a location that ships from Leeds and offers free returns, which aligns with the earlier answer. However, the notes do not explicitly confirm that 'Kirkwall' is the answer to the original question, only that it is a location with certain shipping and return policies."
       },
       "run_id": "e1-0",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e1-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e1-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -684,7 +684,7 @@
       "outcome": "correct",
       "answer": "Kirkwall",
       "run_id": "e1-1",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e1-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e1-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -721,7 +721,7 @@
       "outcome": "correct",
       "answer": "Kirkwall",
       "run_id": "e1-2",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e1-2/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e1-2/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -761,7 +761,7 @@
         "reason": "The retailer notes mention 'Northgate' as a retailer and state that 'ashford: The Ashford trouser is cut from cotton twill. Sold by Northgate.' However, the earlier answer 'Northgate' was not directly supported as a shipping origin or retailer note in the provided context. The notes do not explicitly confirm the shipping origin or retailer name 'Northgate' as the answer to the earlier question."
       },
       "run_id": "e2-0",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e2-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e2-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -791,7 +791,7 @@
       "outcome": "correct",
       "answer": "Northgate",
       "run_id": "e2-1",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e2-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e2-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -828,7 +828,7 @@
       "outcome": "correct",
       "answer": "Northgate",
       "run_id": "e2-2",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e2-2/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e2-2/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -868,7 +868,7 @@
         "reason": "The retailer notes for Kirkwall do not mention annual revenue."
       },
       "run_id": "e3-0",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e3-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e3-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -901,7 +901,7 @@
         "reason": "The retailer notes mention Kirkwall's shipping origin and return policy but do not provide any information about its annual revenue."
       },
       "run_id": "e3-1",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e3-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e3-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {
@@ -934,7 +934,7 @@
         "reason": "The retailer notes mention Kirkwall's shipping origin and return policy but do not provide any information about its annual revenue."
       },
       "run_id": "e3-2",
-      "trajectory": "runs/eval/eval_ef8abe5df07a/e3-2/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_d3a7bda6510f/e3-2/trajectory.jsonl",
       "error": null,
       "nodes": {
         "hunt": {

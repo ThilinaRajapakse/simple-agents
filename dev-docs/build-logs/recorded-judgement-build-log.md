@@ -20,9 +20,9 @@ did not survive.
 - **`source_version` does not version a `Path` a function closed over.** Measured by running
   it: two lookup functions closing over different files produced `sha256:6f331d63b95b` both
   times, and the same functions closing over `str` paths versioned apart.
-  [`_stable_text`](../../src/simple_agents/records/manifest.py#L548) renders anything outside the JSON
+  [`_stable_text`](../../src/simple_agents/records/manifest.py#L557) renders anything outside the JSON
   scalars as its type name, so a `Path` became `<PosixPath>`. **This contradicts
-  [`source_version`](../../src/simple_agents/records/manifest.py#L596)'s own docstring**, which says
+  [`source_version`](../../src/simple_agents/records/manifest.py#L605)'s own docstring**, which says
   only captured data whose text is fixed by its value counts, and a `Path`'s text is.
 - **The item record said a missing judgement ends the evaluation "after every rollout has been
   run and paid for". It does not.** Measured by running six examples at `k=2` with nothing
@@ -283,7 +283,7 @@ answers and were judged separately, which is decision 3's key doing what it is f
   value a function closes over is not in `source_version`'s hash. `docs/evaluation.md` §11.6,
   `ProjectMetric`'s docstring and `WithinTolerance`'s said it; `docs/run-envelope.md` §2.6 gave
   a stale reason for `consultation_route`. The true sentence belongs to `tools.py`'s
-  [`derived_version`](../../src/simple_agents/tools.py#L1050), which hashes source alone, and
+  [`derived_version`](../../src/simple_agents/tools.py#L1054), which hashes source alone, and
   `docs/tools.md` §3.1 states it correctly. `design/answer-shapes.md` S3.6 carried the same
   claim and is corrected there.
 - **Fourteen conformance fixtures regenerated** for the results file bump.

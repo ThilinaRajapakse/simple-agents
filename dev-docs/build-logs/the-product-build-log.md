@@ -46,7 +46,7 @@ else:
 differs by step kind.** A [`Deterministic`](../../src/simple_agents/nodes/deterministic.py#L29) body always
 executes, replay included (its `execute` calls `self.fn` unconditionally), and
 `ctx.workspace` is the run's fresh directory. A tool's function receives only its arguments
-and handles ([`tools.py:815`](../../src/simple_agents/tools.py#L815) `call`); the run
+and handles ([`tools.py:819`](../../src/simple_agents/tools.py#L819) `call`); the run
 directory reaches it only through a [`Workspace`](../../src/simple_agents/tools.py#L204)
 handle, and holding one makes the tool re-execute on replay (`RE_EXECUTED_HANDLE_TYPES`).
 No role, no `live`, and no evaluation flag reaches tool or node

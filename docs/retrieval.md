@@ -45,23 +45,67 @@ and the model is offered the same two arguments.
 
 ---
 
-## 2. What an index costs to build
+## 2. What an index costs to build, and how it grows
 
 **Passing `embeddings` embeds every document once, when the index is built.** For a corpus of
 ten thousand documents that is one pass over the whole corpus, so an index used more than once
 is saved and loaded rather than rebuilt:
 
 ```python
-DocumentIndex.from_texts(corpus, embeddings=embedder).save("corpus.index")
+index = DocumentIndex.from_texts(corpus, embeddings=embedder, ranking=Semantic())
+index.save("corpus.index")
 
-index = DocumentIndex.load("corpus.index", embeddings=embedder)
+index = DocumentIndex.load("corpus.index", embeddings=embedder, ranking=Semantic())
 ```
 
-The file holds the documents and their vectors, and records which model produced them.
-`load` does not embed by itself.
+**`save` writes two files.** `corpus.index` holds the documents, the stopwords, the analyzer
+that cut them into words, and what embedded them; `corpus.index.vec` holds the vectors as raw
+`float32`. Both move together, and `load` reads the pair. A million 768-dimension vectors are
+3 GB, which is why they are not in the JSON. `load` does not embed by itself.
 
-**Rebuild and save again whenever the corpus changes.** An index loaded from a file describes
-the corpus as it was when the file was written and the library does not check for staleness.
+**A save that fails leaves the corpus that was already there.** Both files are written beside
+the real ones and moved into place at the end, so a refusal partway through costs nothing that
+has to be embedded again.
+
+### 2.1 Adding to a corpus that changes
+
+A corpus that gains a document a day is added to rather than rebuilt. `add` embeds the new
+documents and leaves the rest alone, `replace` re-embeds the ones whose text changed, and
+`remove` drops the ones it names:
+
+```python
+index.add({"s5121": "Cormorant Bay was announced for the spring."})
+index.replace({"s4870": "Harrow Lane returns in March, one season only."})
+index.remove(["s3199"])
+index.save("corpus.index")
+```
+
+Each of the three updates the words and the vectors together, so a search after one of them
+matches on what the corpus says now. `add` refuses an identifier the index already holds, and
+`replace` and `remove` refuse one it does not. Removing every document is refused too: an
+index holding nothing answers every search the way a corpus without the answer does.
+
+**A write that cannot embed changes nothing.** The embedding call is made before the corpus is
+touched, so an add whose backend is down leaves the index as it was rather than holding a
+document the vector search cannot reach.
+
+**An add inside a running pipeline takes the `Retrieval` handle**, the same one a search
+takes, because embedding the new documents is a model call:
+
+```python
+@tool(side_effect_class=SideEffectClass.WRITES)
+def file_the_announcement(retrieval: Retrieval, show_id: str, text: str) -> str:
+    """File a newly announced show so later searches find it."""
+    index.add({show_id: text}, retrieval=retrieval)
+    return show_id
+```
+
+Without it the call is charged to no budget, recorded in no trajectory, and made again on
+every replay and every rollout of an evaluation. An add made from a build script, before any
+run, needs no handle.
+
+**Save after growing.** An index that was added to and not saved keeps the new documents for
+as long as the process runs, and the file on disk still describes the corpus as it was.
 
 ---
 
@@ -92,7 +136,8 @@ Use the model the corpus was embedded with, or re-embed the corpus with the new 
 it again: DocumentIndex.from_texts(corpus, embeddings=new).save(path).
 ```
 
-Changing the embedding model means re-embedding the corpus.
+Changing the embedding model means re-embedding the corpus. An `add` or a `replace` under a
+different model is refused the same way, naming the documents rather than the query.
 
 **Pin the embedding model.** It is a second model identity in the run: the manifest records it,
 the cassette key includes it, and FT-14 reads it alongside the chat model.
@@ -187,10 +232,28 @@ information about how strong that list's matches were.
 
 ### 4.2 Where the vectors live
 
-`vectors` defaults to `VectorScan`, which holds them in memory and compares against every one.
-Results are exact.
+`vectors` says which store holds them and answers a search against them. Three ship:
 
-A project past that supplies its own store:
+| Store | Results | Needs | Reach for it when |
+|---|---|---|---|
+| `NumpyVectors()` | exact | numpy | the default, up to a few hundred thousand documents |
+| `VectorScan()` | exact | nothing | numpy is unavailable |
+| `FaissVectors(...)` | exact or approximate | the `ann` extra | a corpus around a million documents, or a GPU to put it on |
+
+An index that names none builds `NumpyVectors` where numpy is installed and `VectorScan`
+otherwise. The two return the same documents in the same order, so which one answered changes
+the time a search takes and not what comes back.
+
+**Measured on one CPU core at 768 dimensions**, a query against:
+
+| Documents | `VectorScan` | `NumpyVectors` | Memory |
+|---|---|---|---|
+| 10,000 | 60 ms | 3.5 ms | 307 MB against 39 MB |
+| 100,000 | 590 ms | 7.1 ms | 3.0 GB against 306 MB |
+
+A Python float is an object, which is where `VectorScan`'s memory goes.
+
+A project with the corpus in a store it already runs supplies its own:
 
 ```python
 class MyStore:
@@ -198,13 +261,78 @@ class MyStore:
     def search(self, vector: Sequence[float], top_k: int) -> list[tuple[str, float]]: ...
     def __len__(self) -> int: ...
 
-DocumentIndex.from_texts(corpus, embeddings=embedder, vectors=MyStore())
+DocumentIndex.from_texts(corpus, embeddings=embedder, ranking=Semantic(),
+                         vectors=MyStore())
 ```
 
 `search` returns `(doc_id, score)` best first, where a higher score is more similar. Vectors
 reaching `add` are already unit length, so a dot product is the cosine. A store returning
-approximate neighbours returns fewer true matches than `VectorScan` for the same `top_k`, and
+approximate neighbours returns fewer true matches than an exact one for the same `top_k`, and
 the project owns that trade.
+
+**A store handed in empty is filled from the corpus** when the index is built, and one already
+holding vectors is used as it is. A store holding part of the corpus has the rest embedded
+into it.
+
+**Three more methods are optional, and each one enables something.** `ids()` and
+`all_vectors()` are what `save` writes, and a store without them is refused at `save`.
+`remove(ids)` is what `index.remove` and `index.replace` call. The three stores above have all
+three.
+
+### 4.3 FAISS, and the GPU
+
+`FaissVectors` needs the `ann` extra:
+
+```
+pip install 'simple-agents[ann]'
+```
+
+```python
+DocumentIndex.from_texts(corpus, embeddings=embedder, ranking=Semantic(),
+                         vectors=FaissVectors())                       # exact, on the CPU
+DocumentIndex.load("corpus.index", embeddings=embedder, ranking=Semantic(),
+                   vectors=FaissVectors(kind="approximate"))           # a graph, on the CPU
+DocumentIndex.load("corpus.index", embeddings=embedder, ranking=Semantic(),
+                   vectors=FaissVectors(device="cuda"))                # exact, on the GPU
+```
+
+`kind="exact"` compares against every vector, the same documents an exact scan returns.
+`kind="approximate"` walks a graph and returns most of the true neighbours for a fraction of
+the work, which is the trade a corpus of a million documents usually wants. The walk is as
+wide as the number of results asked for, so `top_k` and a `Hybrid` `depth` both keep their
+recall: measured on 7,308 documents at 1,024 dimensions, 0.97 of the exact answer's top ten
+and 0.99 of its top hundred.
+
+**The GPU is a different FAISS build.** The `ann` extra installs the CPU one. FAISS's own GPU
+distribution is a conda package, and there is a wheel on PyPI:
+
+```
+pip uninstall -y faiss-cpu && pip install faiss-gpu-cu12
+```
+
+Both provide the module named `faiss`, so a machine has one of them. Asking for `cuda` on a
+CPU build names this install in the refusal. `kind="approximate"` with `device="cuda"` is
+refused, because FAISS's GPU indexes do not include the graph.
+
+**An approximate index cannot delete.** FAISS builds the graph as vectors arrive and offers no
+way to take one out, so `remove` marks the document and filters it out of every later search,
+with a warning naming `store.rebuild()`. Searching stays correct and asks for more candidates
+the more has been removed; `rebuild()` builds the graph again from what is left. An exact
+index deletes outright.
+
+### 4.4 What a run records about a search
+
+The manifest's entry for the tool that searches an index carries a `retrieval` object: the
+ranking, the fusion and its settings, the reranker, the `store` and whether it is `exact`, the
+analyzer, and the model that embedded the corpus. It is part of `behaviour_fingerprint`, so a
+result stored under an exact scan is not read back as though it were produced by an
+approximate one, and an evaluation comparing two runs reports the store as a changed setting
+rather than comparing their numbers.
+
+How many documents the index held is on the manifest's own `retrieval` array instead, counted
+when the run ends (`docs/run-envelope.md` §2). A corpus that gained a document during the run
+leaves the count the run finished with, and a growing corpus leaves every stored result
+readable, because gaining a document has not changed how the pipeline behaves.
 
 ---
 
@@ -269,8 +397,8 @@ to rerank is the index's setting. A host that needs a key takes `api_key=`, held
 
 ## 6. What a search costs, and where it is recorded
 
-Embedding the query is a model call, and so is a rerank. Both go through the same path every
-model call goes through:
+Embedding the query is a model call, so is a rerank, and so is embedding the documents an
+`add` puts in (§2.1). All three go through the same path every model call goes through:
 
 - each is a `model_call` record in the trajectory, parented to the tool call that made it, with
   `params.call_kind` of `embedding` or `rerank`
@@ -282,7 +410,8 @@ The record carries what was asked and the shape of what came back, not the vecto
 
 **A search that makes model calls is re-run during a replay** rather than served from the
 cassette, and its embedding and reranking calls are served instead, so a replayed run writes the
-same records the live run wrote. A purely lexical search is stored as one entry.
+same records the live run wrote. A purely lexical search is stored as one entry. A tool that
+adds to the index takes the same handle and is replayed the same way.
 
 **Declare a rate per model.** An embedding model and a chat model are priced differently, so a
 single `PriceBasis` prices the embedding calls at chat rates:

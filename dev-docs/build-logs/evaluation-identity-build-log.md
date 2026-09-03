@@ -19,7 +19,7 @@ Everything below was measured against `be78524` before anything was decided, bec
 **Row 1 was `P3-18`'s Left open and is confirmed.** The tool's version moved
 `sha256:aa4d52b117e0` to `sha256:42608933a241`, the stamp moved with it, and the evaluation
 directory stayed `eval_31211894ea66`.
-[`recording.py`](../../src/simple_agents/pipeline/recording.py#L458) (`_node_entries`), the `tools` key of a node entry,
+[`recording.py`](../../src/simple_agents/pipeline/recording.py#L470) (`_node_entries`), the `tools` key of a node entry,
 recorded `sorted(t.name for t in ...)`.
 
 **Rows 2 and 4 were in no record.** A `Deterministic` node's function is versioned nowhere:
@@ -28,7 +28,7 @@ everything after
 is skipped, so its entry carried `node_id`, `node_kind`, `successors`, `route`,
 `consultation_route`, `loop`, `on_error`, `retry`, `schema`, `accepts` and `tools` and nothing
 about what the node does. And
-[`manifest.py`](../../src/simple_agents/records/manifest.py#L596), `source_version`, returned
+[`manifest.py`](../../src/simple_agents/records/manifest.py#L605), `source_version`, returned
 `{"version": declared, "source": "declared"}` and discarded the hash, so declaring a version
 switched off the only automatic trace.
 

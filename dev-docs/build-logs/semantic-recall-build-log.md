@@ -117,7 +117,7 @@ run it is not.
 
 ### 1.5 What `memory_search` costs today, before a vector version is designed around it
 
-[`builtins/memory.py` `memory_search`](../../src/simple_agents/builtins/memory.py#L108) builds a
+[`builtins/memory.py` `memory_search`](../../src/simple_agents/builtins/memory.py#L109) builds a
 `DocumentIndex` from every entry in the store on every call. Measured on entries of about
 20 words:
 
@@ -543,7 +543,7 @@ What was not intended is that it invalidated **every** recording, including the 
 purely lexical index.
 
 The first build restructured `document_search` into one closure covering all four cases.
-[`derived_version`](../../src/simple_agents/tools.py#L1050) hashes a tool's source, and the source
+[`derived_version`](../../src/simple_agents/tools.py#L1054) hashes a tool's source, and the source
 of a nested function includes the indentation it is written at, so moving the lexical body
 inside an `if` changed its hash and every recorded `document_search` call missed:
 

@@ -16,7 +16,7 @@ digests it through `inspect.getsource`, so a first attempt at the repro from a h
 **Where the channel enters the digest.** [`_tool_entry`](../../src/simple_agents/pipeline/recording.py#L147)
 records `version`, which for `consult()` is `version or _derived_version(ask, match)`.
 [`behaviour_fingerprint`](../../src/simple_agents/pipeline/core.py#L2070) digests the tool entries
-after [`_without_derived`](../../src/simple_agents/pipeline/recording.py#L229) strips `derived`, so
+after [`_without_derived`](../../src/simple_agents/pipeline/recording.py#L241) strips `derived`, so
 `version` is what carries the channel in.
 
 **What else reads that version, checked before touching it.** The cassette key for a consultation,
@@ -48,7 +48,7 @@ of that question and is on the manifest per consultation.
 
 ## 3. Build
 
-[`_without_channels`](../../src/simple_agents/pipeline/recording.py#L208) drops `version` from a tool entry
+[`_without_channels`](../../src/simple_agents/pipeline/recording.py#L220) drops `version` from a tool entry
 carrying an `answered_by`, and `behaviour_fingerprint` applies it to the tool list alone. Nothing
 else changed: `_tool_entry`, the manifest, the cassette key and `_verify_against` are as they were.
 

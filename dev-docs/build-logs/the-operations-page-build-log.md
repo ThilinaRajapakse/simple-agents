@@ -74,7 +74,7 @@ What shipped:
   stage set when the project has live runs, and `nowRegion`, `historyRegion`, `stuckRegion`,
   `shelvedRegion`, `conversationsRegion`, `changesRegion` and `ranRegion`.
 - The fixture's background pipeline and the runs that exercise it,
-  [`build_view_fixtures.py` `build_operating`](../../scripts/build_view_fixtures.py#L245).
+  [`build_view_fixtures.py` `build_operating`](../../scripts/build_view_fixtures.py#L253).
 
 **The fixture's states are real runs, not edited records.** `shipped` gains `reconcile`, a
 nightly pass over the ledger that calls no model, which is the background half a shipped

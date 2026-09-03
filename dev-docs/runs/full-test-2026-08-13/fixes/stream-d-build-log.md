@@ -101,7 +101,7 @@ four-type tuple written before `delegation` existed. A resumed run's `counts.del
 `counts.records` both understated, which falsifies `run-envelope.md` §2.1 and `restore`'s own
 docstring.
 
-[`manifest.py` `restore`](../../../../src/simple_agents/records/manifest.py#L455) now reads `RECORD_TYPES`
+[`manifest.py` `restore`](../../../../src/simple_agents/records/manifest.py#L463) now reads `RECORD_TYPES`
 too, with the same comment. A type added to the format is carried across a resume without anyone
 remembering this module.
 
@@ -116,7 +116,7 @@ A run under a `DeviceBasis` with a tool declaring `per_call` in USD reported
 different currencies now sum to unknown naming both, so a `by_model` basis mixing a `DeviceBasis`
 and a `PriceBasis` reports `totals.cost` as unknown rather than as a number in neither unit.
 
-[`Manifest._money_charged`](../../../../src/simple_agents/records/manifest.py#L276) derives what
+[`Manifest._money_charged`](../../../../src/simple_agents/records/manifest.py#L283) derives what
 `charged_cost` reports rather than passing the run's running total through:
 
 | The run's basis | `charged_cost` |

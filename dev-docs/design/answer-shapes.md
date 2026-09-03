@@ -426,14 +426,14 @@ nothing looks at it.
 the wrong way round.** *Corrected 2026-08-18 at the `P3-12` sitting, by measuring it.* It read *"A
 tolerance is not versioned"*, resting on `docs/evaluation.md` §11.6's sentence that a threshold
 the function closes over is not in the hash.
-[`source_version`](../../src/simple_agents/records/manifest.py#L596) hashes the source **and what the
+[`source_version`](../../src/simple_agents/records/manifest.py#L605) hashes the source **and what the
 function closed over**, so a tolerance a factory captured moves the version; a constant the
 function reads from module level does not, and neither does what a file it opens holds. Measured:
 two closures over 0.02 and 0.05 version apart, and a module constant rebound from 0.02 to 0.05
 versions identically.
 
 **Where §11.6's sentence came from**, since it was true of a real function: `tools.py`'s
-[`derived_version`](../../src/simple_agents/tools.py#L1050) hashes source alone and covers no
+[`derived_version`](../../src/simple_agents/tools.py#L1054) hashes source alone and covers no
 closure, which `docs/tools.md` §3.1 states correctly. That true sentence was written beside the
 other function in three shipped places, all corrected 2026-08-18.
 
@@ -882,7 +882,7 @@ takes, so a two-argument matcher keeps working unchanged.
 *For:* no break, and both 3B and 3C become available.
 *Against:* a signature that silently decides what a callable receives is a thing to document
 carefully, and a typo in a parameter name becomes a different call rather than an error.
-**Precedent exists**: [`_schema_from_signature`](../../src/simple_agents/tools.py#L1175) already
+**Precedent exists**: [`_schema_from_signature`](../../src/simple_agents/tools.py#L1179) already
 builds a tool's argument schema by inspecting one.
 
 **What would decide it.** Whether the break is acceptable. 3D costs nothing to any project on

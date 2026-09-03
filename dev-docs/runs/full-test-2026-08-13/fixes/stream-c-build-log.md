@@ -132,7 +132,7 @@ absolute figures are not comparable with §1.12's table; its direction under a s
 
 ### 2.1 D4: `ENGLISH_STOPWORDS` ships and is the default
 
-[`search.py` `ENGLISH_STOPWORDS`](../../../../src/simple_agents/builtins/search.py#L51), 175
+[`search.py` `ENGLISH_STOPWORDS`](../../../../src/simple_agents/builtins/search.py#L70), 175
 English function words and question words, exported from `simple_agents.builtins`.
 `DocumentIndex.stopwords` takes `None` for the default, any iterable to replace it, and `()` to
 search every word the query holds. The saved index file records the resolved list, so an index
@@ -146,12 +146,12 @@ written, which was already the rule.
 
 ### 2.2 D4 follow-up: `ranking=` is required wherever `embeddings=` is passed
 
-[`ranking.py` `refuse_no_ranking`](../../../../src/simple_agents/builtins/ranking.py#L452) holds
+[`ranking.py` `refuse_no_ranking`](../../../../src/simple_agents/builtins/ranking.py#L331) holds
 the refusal text from [`RULINGS.md` D4](../RULINGS.md#L90) verbatim, and two callers raise it:
 
-- [`search.py` `DocumentIndex`](../../../../src/simple_agents/builtins/search.py#L137), which also
+- [`search.py` `DocumentIndex`](../../../../src/simple_agents/builtins/search.py#L153), which also
   covers `from_texts`, `from_directory` and `load`, since all three build one.
-- [`memory.py` `memory_search`](../../../../src/simple_agents/builtins/memory.py#L108), which took
+- [`memory.py` `memory_search`](../../../../src/simple_agents/builtins/memory.py#L109), which took
   `embeddings=` and silently chose `Hybrid(fuse=RRF())` in the same way.
 
 **`memory_search` is a reading of the ruling rather than something it names.** The ruling says
@@ -164,11 +164,11 @@ An index built without `embeddings` is still `Lexical()` with nothing to declare
 ### 2.3 L-1: `Annotated[..., Field(...)]` reaches the model and the validator
 
 The patch at [`../patches/L-1-tool-annotated-metadata.patch`](../patches/L-1-tool-annotated-metadata.patch)
-applied to [`tools.py` `_resolved_hints`](../../../../src/simple_agents/tools.py#L1069):
+applied to [`tools.py` `_resolved_hints`](../../../../src/simple_agents/tools.py#L1073):
 `get_type_hints(fn, include_extras=True)`.
 
 One thing the patch did not carry.
-[`tools.py` `_handles_in_signature`](../../../../src/simple_agents/tools.py#L1086) compared the
+[`tools.py` `_handles_in_signature`](../../../../src/simple_agents/tools.py#L1090) compared the
 annotation against `HANDLE_TYPES` with `isinstance(annotation, type)`, which an
 `Annotated[...]` is not. Keeping the metadata therefore made `Annotated[Workspace, ...]` stop
 being recognised as a handle: it would have been offered to the model and left unfilled. The

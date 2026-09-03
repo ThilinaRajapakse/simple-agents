@@ -684,7 +684,7 @@ without include_extras: {'tag': <class 'str'>}
 with include_extras   : {'tag': Annotated[str, FieldInfo(..., description='hello')]}
 ```
 
-[`_resolved_hints`](../../../src/simple_agents/tools.py#L1069) called `get_type_hints(fn)` without
+[`_resolved_hints`](../../../src/simple_agents/tools.py#L1073) called `get_type_hints(fn)` without
 `include_extras=True`, so `Annotated` metadata was stripped before the schema was derived, exactly
 as the QA pass found. **The sentence the coding agent wrote about it is the one worth keeping:**
 

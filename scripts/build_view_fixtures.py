@@ -65,11 +65,18 @@ def _inside(project: Path):
 
     Every fixture project holds an ``agent`` and a ``record`` module under the same names,
     so the previous project's are dropped from ``sys.modules`` on the way in and out.
+
+    The pipeline registry is emptied with them. It is process-global, and `shipped` is a copy
+    of `measured` carrying the same factory names, so a `--record` of the whole set imported
+    the second one into a registry still holding the first and was refused.
     """
+    from simple_agents import clear_registered_pipelines
+
     held_cwd = Path.cwd()
     held_path = list(sys.path)
     for name in ("agent", "record"):
         sys.modules.pop(name, None)
+    clear_registered_pipelines()
     os.chdir(project)
     sys.path.insert(0, str(project))
     try:
@@ -79,6 +86,7 @@ def _inside(project: Path):
         sys.path[:] = held_path
         for name in ("agent", "record"):
             sys.modules.pop(name, None)
+        clear_registered_pipelines()
 
 
 def _spec_of(project: Path):

@@ -682,8 +682,21 @@ index = DocumentIndex.from_texts(corpus, embeddings=SentenceTransformerEmbedding
 ```
 
 `docs/retrieval.md` is that surface: which model embeds, how the lexical and semantic results
-combine, reranking, and what the model calls a search makes cost. The tool is the same tool,
-with the same name and the same two arguments offered to the model.
+combine, reranking, where the vectors live, and what the model calls a search makes cost. The
+tool is the same tool, with the same name and the same two arguments offered to the model.
+
+**A corpus that changes is added to rather than rebuilt.** `index.add`, `index.replace` and
+`index.remove` update the words and the vectors together, and `index.save` writes what the
+index holds now:
+
+```python
+index.add({"a3": "The Ashford depot closes at 4pm on weekdays."})
+index.save("corpus.index")
+```
+
+Only the documents given are embedded. An add made inside a running pipeline takes the
+`Retrieval` handle, since embedding the new documents is a model call
+(`docs/retrieval.md` §2.1).
 
 ### 4.2 The search provider
 

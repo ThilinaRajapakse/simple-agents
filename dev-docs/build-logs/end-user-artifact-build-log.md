@@ -28,7 +28,7 @@ evaluation rather than a pipeline. No production run has any of those.
 what exists rather than walking the graph again.
 
 **Prompts are not in the node entries.** `_node_entries`
-([recording.py:458](../../src/simple_agents/pipeline/recording.py#L458)) returns prompts in a separate slot,
+([recording.py:470](../../src/simple_agents/pipeline/recording.py#L470)) returns prompts in a separate slot,
 keyed by node id, so a digest over `manifest_nodes()` alone would have missed the exact case this
 item exists for. `manifest_prompts()` goes in explicitly.
 

@@ -507,7 +507,7 @@ Recorded so the scope above is legible, and so nothing here is mistaken for an o
   ([`core.py:610`](../../../src/simple_agents/pipeline/core.py#L610) (`discard_claim`)), so a typo in `answers=` destroys
   a suspended run.
 - `get_type_hints(fn)` without `include_extras=True`
-  ([`tools.py` `_resolved_hints`](../../../src/simple_agents/tools.py#L1069)) discards every tool parameter's
+  ([`tools.py` `_resolved_hints`](../../../src/simple_agents/tools.py#L1073)) discards every tool parameter's
   description and constraints. Patch in `patches/`, verified, unapplied.
 - `resume_from` is refused on the default recording path.
 - `resume(answer=...)` reaches an `AgentNode` and no other node kind.

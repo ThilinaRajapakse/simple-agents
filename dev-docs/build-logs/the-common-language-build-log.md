@@ -7,7 +7,7 @@ the subsystem lives there; this is how the build went.
 
 ## 1. Before any design
 
-- [`recording.py` `_node_entries`](../../src/simple_agents/pipeline/recording.py#L458) already computes
+- [`recording.py` `_node_entries`](../../src/simple_agents/pipeline/recording.py#L470) already computes
   the manifest's declared half without running, and
   [`graph_fingerprint`](../../src/simple_agents/pipeline/core.py#L2055) `graph_fingerprint` digests
   shape alone, so introspection reuses the manifest's own vocabulary rather than inventing one.

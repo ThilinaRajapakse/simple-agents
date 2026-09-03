@@ -67,7 +67,7 @@ An evaluation reuses one envelope across every rollout and varies the seed, whic
 
 The manifest is written when the run starts and rewritten when it ends. A run that crashed still has one, carrying `outcome: "error"` and the records that were written before the failure.
 
-**Current version: `0.39`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
+**Current version: `0.40`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
 
 ### 2.1 Fields
 
@@ -109,6 +109,7 @@ The manifest is written when the run starts and rewritten when it ends. A run th
 | `suspensions` | array | One entry per node that stopped: `suspended_at`, `node_id`, `waiting_for`, and `resumed_at`. A run whose overlapping arms stopped together has an entry each, so the manifest names every question the run was waiting on. A resume closes every open entry, and the gap between the last two fields is time no budget was charged for. |
 | `cassette` | object | `mode`, `path`, `dropped`, and the run's `hits`, `misses`, `recorded`, `diverged`. `diverged` counts requests already on file whose response came back different, so a non-zero count means the backend does not reproduce its own sampling (§5). `dropped` is `null` while the file is on disk and names the reason where the run deleted it, which is a default recording on a run whose payloads were sampled out (§7). |
 | `memory` | object | The memory this run reached: the store's `directory`, a `scope_digest` of the scope the run named, and `entries`, how many facts it held when the run ended. `null` where the envelope declared no store or the run named no scope. The scope itself is not recorded, since it usually identifies a person (`docs/memory.md` §1). |
+| `retrieval` | array | One entry per tool that searched a `DocumentIndex`, counted when the run ended: the `tool`, how many `documents` the index held, how many of them have `vectors`, the `store` those are in and whether it is `exact`, and `embedded_by`. A run that added documents leaves the count it finished with. How the index ranks is on the tool's own entry under `tools`, since that decides what a search returns and this does not (`docs/retrieval.md` §4.4). |
 | `paths` | object | `trajectory` and `workspace`. |
 | `counts` | object | `records`, and one count per record type, including the types this run wrote none of. |
 | `totals` | object | `tokens`, `cost`, `tool_spend`, `charged_cost` (all §4), and `held_back_ms`. The last is how long the run's model calls spent waiting before the attempt that succeeded, summed: retry backoff after a rate limit, and any wait a `PacedClient` imposed. The waiting is elapsed time and `max_wall_clock_ms` is charged for it, so comparing this total against the wall clock is what separates a throttled run from a slow one. A call that exhausted its retries counts here too, on the run that its failure ended: the run waited, and the wait is what explains its wall clock. |

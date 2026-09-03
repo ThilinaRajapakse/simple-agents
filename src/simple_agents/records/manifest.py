@@ -31,7 +31,7 @@ from .trajectory import FORMAT_VERSION as TRAJECTORY_FORMAT_VERSION
 
 __all__ = ["MANIFEST_FORMAT_VERSION", "Manifest", "source_version"]
 
-MANIFEST_FORMAT_VERSION = "0.39"
+MANIFEST_FORMAT_VERSION = "0.40"
 
 DEFAULT_ROLE = "agent"
 
@@ -104,6 +104,13 @@ class Manifest:
     """The store a tool taking a `Memory` reached, or `null` where the envelope declared none.
     Holds the directory, a digest of the scope, and how many entries the store held when the
     run ended. The scope itself is not recorded: it usually identifies a person."""
+
+    retrieval: list[dict[str, Any]] = field(default_factory=list)
+    """One entry per tool that searched a `DocumentIndex`, counted when the run ended: the
+    `tool`, how many `documents` the index held, how many of them have `vectors`, the `store`
+    holding those and whether it is `exact`, and what `embedded_by` produced them. A run that
+    adds documents leaves the count it finished with. How the index ranks is on the tool's own
+    entry under `tools`, because that decides what a search returns and this does not."""
 
     slice: dict[str, Any] | None = None
     """What this run's pipeline is a slice of, from ``Pipeline.slice``, and ``null`` where the
@@ -398,6 +405,7 @@ class Manifest:
             "stream_waivers": self.stream_waivers,
             "cassette": {**self.cassette, **self._cassette_counts},
             "memory": self.memory,
+            "retrieval": self.retrieval,
             "paths": {
                 "trajectory": self.trajectory_path,
                 "workspace": self.workspace_path,
@@ -481,6 +489,7 @@ class Manifest:
             evaluation=raw.get("evaluation"),
             conversation=raw.get("conversation"),
             memory=raw.get("memory"),
+            retrieval=raw.get("retrieval") or [],
             mcp=list(raw.get("mcp") or []),
             budget=raw["budget"],
             library_version=raw["library_version"],

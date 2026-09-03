@@ -219,7 +219,7 @@ meaningless rather than stale". A container gaining an error edge is a change of
 resumes. The nested budget is not in the manifest at all.
 
 **A nested pipeline's `tools=` and `fetch_policy=` are read nowhere.**
-[`_node_entries`](../../src/simple_agents/pipeline/recording.py#L458) and
+[`_node_entries`](../../src/simple_agents/pipeline/recording.py#L470) and
 [`_declared_tools`](../../src/simple_agents/pipeline/core.py#L1942) read `self.tools` of the top
 pipeline; `_close_manifest` reads `self.fetch_policy` of the top pipeline. Measured, with an
 EUR-declaring `spends_money` tool in a **sub-pipeline's** registry under a USD `PriceBasis`:
@@ -397,8 +397,8 @@ for it." §2.4's "file the manifest separately" option was already overruled at 
 which is what surfaced it.
 
 Fixed by computing the prefix once per entry and applying it to all three, in
-[recording.py `_node_entries`](../../src/simple_agents/pipeline/recording.py#L458) and in
-[`_container_entry`](../../src/simple_agents/pipeline/recording.py#L315).
+[recording.py `_node_entries`](../../src/simple_agents/pipeline/recording.py#L470) and in
+[`_container_entry`](../../src/simple_agents/pipeline/recording.py#L327).
 
 ### 3.2 And a ninth: the prefix scheme was ambiguous
 

@@ -23,7 +23,7 @@ and closes: "Without one, `top_k` reaches the model as a bare integer with a def
 nothing saying what a good value is."
 
 **What happens.** `top_k` reaches the model as a bare integer with a default and nothing saying
-what a good value is. [`_resolved_hints`, tools.py:1069](../../../../src/simple_agents/tools.py#L1069)
+what a good value is. [`_resolved_hints`, tools.py:1073](../../../../src/simple_agents/tools.py#L1073)
 calls `get_type_hints(fn)` without `include_extras=True`, so every `Annotated` metadata item is
 stripped before `create_model` sees the annotation. The description never reaches the schema,
 and neither does any constraint: `Annotated[int, Field(ge=1, le=10)]` accepts `top_k=400`

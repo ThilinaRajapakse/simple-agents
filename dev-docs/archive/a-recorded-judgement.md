@@ -45,7 +45,7 @@ unrecorded and outside `source_version`, and the two other consumers have the sa
 different places.
 
 **The consultation half is a shipped surface that does not work.**
-[`ConsultTool.read_answer`](../../src/simple_agents/tools.py#L1300) runs again on replay and on
+[`ConsultTool.read_answer`](../../src/simple_agents/tools.py#L1304) runs again on replay and on
 resume and must not do work beyond matching, so a model-backed `match=` would make a live,
 unrecorded, non-deterministic call on every replay.
 
@@ -63,7 +63,7 @@ two are silent.
    [`_rules`](../../src/simple_agents/evaluation/compare.py#L696) reads exactly that. Measured:
    editing a verdict in the file from `true` to `false` leaves the hash **identical**; a path
    closed over as a `Path` rather than a `str` hashes identically for two different files,
-   because [`_stable_text`](../../src/simple_agents/records/manifest.py#L548) renders anything outside
+   because [`_stable_text`](../../src/simple_agents/records/manifest.py#L557) renders anything outside
    the JSON scalars as its type name. So re-judging every label moves every number and
    `compare()` attributes all of it to the agent. `docs/evaluation.md` §11.6's shipped
    mitigation, *"put the value in the function"*, cannot be applied to 200 judgements.
@@ -71,7 +71,7 @@ two are silent.
    *Re-measured 2026-08-18 at the sitting, and the `Path` half is a defect in its own right.*
    Two functions closing over different files record the same version when the path is a `Path`
    and different versions when it is a `str`. That contradicts
-   [`source_version`](../../src/simple_agents/records/manifest.py#L596)'s own docstring, *"Only captured
+   [`source_version`](../../src/simple_agents/records/manifest.py#L605)'s own docstring, *"Only captured
    data whose text is fixed by its value counts"*, since a `Path`'s text is fixed by its value.
    It is wrong for every function closing over a path and not only for a judgement lookup, so
    it is corrected ahead of the design rather than inside it.

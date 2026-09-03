@@ -24,7 +24,7 @@ into §2 here.
   ([`checks.py`](../../src/simple_agents/conformance/checks.py#L793)), `end_user` and
   `nobody`; the page reads that constant rather than restating it.
 - **`module_constants` takes callables and walks the modules they come from**
-  ([`manifest.py`](../../src/simple_agents/records/manifest.py#L830)), so the same machinery reads a
+  ([`manifest.py`](../../src/simple_agents/records/manifest.py#L839)), so the same machinery reads a
   surface's own numbers from the module that declares it.
 - **`DeclaredPipelines` is the one thing a check gets from importing the project**
   ([`run.py` `_pipelines_in_the_code`](../../src/simple_agents/conformance/run.py#L663)), which
@@ -93,7 +93,7 @@ What shipped:
 - [`template.html`](../../src/simple_agents/view/template.html#L1): `checksRegion`,
   `productRegion`, `retentionRegion` and `briefBoardRegion`.
 - The `shipped` fixture and its generator,
-  [`build_view_fixtures.py` `build_shipped`](../../scripts/build_view_fixtures.py#L152).
+  [`build_view_fixtures.py` `build_shipped`](../../scripts/build_view_fixtures.py#L160).
 
 **One defect found, and it was latent before this item.** Loading a project twice in one
 process found its product the first time and never again: `load_project` forgets the module it

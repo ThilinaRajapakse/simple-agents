@@ -208,7 +208,7 @@ that without one the parameter reaches the model "as a bare integer with a defau
 saying what a good value is". That is exactly what happens **with** one.
 
 `ge=1, le=10` is also dropped from the schema **and from the validator**: `top_k=400` is accepted.
-Cause is one missing argument at [tools.py `_resolved_hints`](../../../src/simple_agents/tools.py#L1069):
+Cause is one missing argument at [tools.py `_resolved_hints`](../../../src/simple_agents/tools.py#L1073):
 `get_type_hints(fn)` strips `Annotated` metadata without `include_extras=True`. Adding it restores
 both the description and the bound; verified.
 

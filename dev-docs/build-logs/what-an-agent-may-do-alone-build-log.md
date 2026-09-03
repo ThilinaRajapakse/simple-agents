@@ -33,7 +33,7 @@ Ran a `ToolNode` inside a compiled `StateGraph` to see it filled rather than onl
 
 **What the library does today.** Six handles in
 [`tools.py` `HANDLE_TYPES`](../../src/simple_agents/tools.py#L651), detected in
-[`_handles_in_signature`](../../src/simple_agents/tools.py#L1086) by the parameter's own type
+[`_handles_in_signature`](../../src/simple_agents/tools.py#L1090) by the parameter's own type
 after `Annotated` metadata is stripped. Four of them in
 [`RE_EXECUTED_HANDLE_TYPES`](../../src/simple_agents/tools.py#L668), which
 [`context.py` `call_tool`](../../src/simple_agents/context.py#L1033) reads to return before

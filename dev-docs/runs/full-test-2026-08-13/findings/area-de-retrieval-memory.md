@@ -127,7 +127,7 @@ document holding any query word, and no stopword list ships
 ([search.py:176](../../../../src/simple_agents/builtins/search.py#L176), `DocumentIndex.stopwords`
 defaults to `frozenset()`; [tools.md line 459](../../../../docs/tools.md#L459), "No list ships").
 A natural-language question therefore hands a lexical vote to nearly every document through
-words like `the` and `does`. `RRF` at [ranking.py:86](../../../../src/simple_agents/builtins/ranking.py#L86)
+words like `the` and `does`. `RRF` at [ranking.py:80](../../../../src/simple_agents/builtins/ranking.py#L80)
 compares rank alone and cannot tell a BM25 score of 3.9 from one of 0.14, so two weak votes beat
 one strong one. The paraphrase, absent from the lexical list by construction, has one vote:
 
@@ -275,9 +275,9 @@ settled by their names." It does not say in which direction, and the two compone
 | `RRF().combine` on tied lists | part-0002, part-0001, part-0003 |
 
 `VectorScan` sorts by `(score, doc_id)` descending
-([ranking.py:86](../../../../src/simple_agents/builtins/ranking.py#L86)); `RRF` sorts by
+([ranking.py:80](../../../../src/simple_agents/builtins/ranking.py#L80)); `RRF` sorts by
 `(-votes, doc_id)`, so identifiers ascending
-([ranking.py:86](../../../../src/simple_agents/builtins/ranking.py#L86)). No hit was mispaired in
+([ranking.py:80](../../../../src/simple_agents/builtins/ranking.py#L80)). No hit was mispaired in
 any of them.
 
 ---
@@ -399,14 +399,18 @@ parented to the tool call, and both models in `models.observed`.
 ## What might have been missed, and where coverage is thin
 
 - **`VectorScan.ids()`, `all_vectors()`, `dimensions` and `__len__` read the two lists without
-  the lock** that `add` and `search` take ([`VectorScan`, ranking.py](../../../../src/simple_agents/builtins/ranking.py#L350)
+  the lock** that `add` and `search` take ([`VectorScan`, vectors.py](../../../../src/simple_agents/builtins/vectors.py#L88)
   onward). `DocumentIndex.save` calls `all_vectors()` and then `ids()` as two separate reads
-  ([search.py:284](../../../../src/simple_agents/builtins/search.py#L284) and
-  [search.py:295](../../../../src/simple_agents/builtins/search.py#L295)), so an add landing between
-  them would write a file whose vector count and identifier count disagree. `RETR-025` hammered
-  exactly that, 4000 adds against a continuous saver, and produced **zero** mismatches, so this is
-  a code reading with no evidence behind it. It is recorded because the changelog fix covered
-  `add` and `search` and stopped there.
+  ([`write_index`, index_file.py](../../../../src/simple_agents/builtins/index_file.py#L55)), so an
+  add landing between them would write a file whose vector count and identifier count disagree.
+  `RETR-025` hammered exactly that, 4000 adds against a continuous saver, and produced **zero**
+  mismatches, so this is a code reading with no evidence behind it. It is recorded because the
+  changelog fix covered `add` and `search` and stopped there.
+  **Closed at `P3-73`, 2026-09-02.** `add` made the interleave reachable, so `save` takes the
+  index lock, `ids()` and `all_vectors()` take the store's, and a mismatch between the two is
+  refused rather than written. `tests/test_growing_index.py::TestTwoWritersAndAReader::
+  test_an_add_cannot_land_inside_a_save` runs the add inside the window and fails without the
+  lock.
 - **Retrieval quality is measured on hand-built corpora only.** D-2's numbers are six queries of
   one shape against one embedding model. They are enough to say the default behaves this way on
   this shape, and not enough to say what it does on a project's real corpus, which is what

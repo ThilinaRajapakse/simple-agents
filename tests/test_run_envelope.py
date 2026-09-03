@@ -369,6 +369,7 @@ class TestManifest:
                 "permission": None,
                 "reader": None,
                 "mcp": None,
+                "retrieval": None,
             }
         ]
 

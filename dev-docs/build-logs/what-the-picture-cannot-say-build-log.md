@@ -9,7 +9,7 @@ seven strands are settled here; the subsystem's design of record stays in
 
 Every "what decides the shape" in the item record was measured rather than reasoned about.
 
-- **Per-node cost is not in the manifest.** [`manifest.py` `to_json`](../../src/simple_agents/records/manifest.py#L347) writes `totals.cost` for the whole run and `cost_basis`; nothing per node. So the
+- **Per-node cost is not in the manifest.** [`manifest.py` `to_json`](../../src/simple_agents/records/manifest.py#L354) writes `totals.cost` for the whole run and `cost_basis`; nothing per node. So the
   run-record half is a trajectory read, which settles strand 1's stated question.
 - **The evaluation half is on disk and unread.**
   [`per_node.py:250`](../../src/simple_agents/evaluation/per_node.py#L250) `NodeMetrics.to_record`

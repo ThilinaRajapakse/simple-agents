@@ -262,9 +262,9 @@ find_book.call({"title": "Piranesi", "year": 2020})
 → TypeError: find_book() got an unexpected keyword argument 'year'
 ```
 
-`Tool.call` ([`tools.py` `Tool.call`](../../../src/simple_agents/tools.py#L815)) validates the model's arguments
+`Tool.call` ([`tools.py` `Tool.call`](../../../src/simple_agents/tools.py#L819)) validates the model's arguments
 against a schema, then splats them into the function. The validator is a pydantic model built by
-`_schema_from_signature` ([tools.py:1175](../../../src/simple_agents/tools.py#L1175)) with no config
+`_schema_from_signature` ([tools.py:1179](../../../src/simple_agents/tools.py#L1179)) with no config
 passed, so pydantic's default applies and **an unknown key is ignored rather than refused**.
 Validation passes, the function raises `TypeError`, the agent loop's catch-all treats an
 undeclared exception as caller-facing and re-raises it as a `CallerFacingError`

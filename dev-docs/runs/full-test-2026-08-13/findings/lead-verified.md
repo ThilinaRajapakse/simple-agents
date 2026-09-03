@@ -56,7 +56,7 @@ prompt, while a missing constraint means the library validates a call it was tol
 [tools.md §1.2](../../../../docs/tools.md#L80) says a call that does not satisfy the schema is handed
 back to the model for correction.
 
-**Cause**, [tools.py:1069](../../../../src/simple_agents/tools.py#L1069), in `_resolved_hints`:
+**Cause**, [tools.py:1073](../../../../src/simple_agents/tools.py#L1073), in `_resolved_hints`:
 
 ```python
 return get_type_hints(fn)
@@ -133,7 +133,7 @@ and getting that wrong would leave a claim held forever instead.
 ## L-2. `consult()` produces a tool with no version, where every decorated tool derives one. Minor, with a replay consequence.
 
 `@tool` sets `version=version or derived_version(fn)`
-([tools.py:1288](../../../../src/simple_agents/tools.py#L1288)). `consult()` builds its `ConsultTool`
+([tools.py:1292](../../../../src/simple_agents/tools.py#L1292)). `consult()` builds its `ConsultTool`
 directly and passes `version=version`, which defaults to `None`, so no version is derived.
 
 ```python

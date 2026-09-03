@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.29",
-  "eval_id": "eval_c72effafd811",
-  "created_at": "2026-08-29T10:35:14.463Z",
+  "eval_id": "eval_7ac9f64f8102",
+  "created_at": "2026-09-02T17:36:00.885Z",
   "config": {
     "split": "held_out",
     "k": 1,
@@ -407,7 +407,30 @@
     ],
     "containers": [],
     "graph_fingerprint": "sha256:61d487b2d4086ca8",
-    "behaviour_fingerprint": "sha256:c6065c8cd9560f4c",
+    "tools": [
+      {
+        "name": "policy_lookup",
+        "version": "sha256:f582845489a4",
+        "side_effect_class": "read_only"
+      },
+      {
+        "name": "consult",
+        "version": "sha256:39afdd321997",
+        "side_effect_class": "read_only"
+      },
+      {
+        "name": "post_ledger",
+        "version": "sha256:2c07edff79d7",
+        "side_effect_class": "writes"
+      }
+    ],
+    "budget": {
+      "max_steps": 12,
+      "max_tokens": 40000,
+      "max_cost": 0.05,
+      "max_wall_clock_ms": null
+    },
+    "behaviour_fingerprint": "sha256:5769e8c9ef9b5cc7",
     "prompts": {
       "extract": {
         "version": "sha256:406ccf47b399",
@@ -426,23 +449,6 @@
         "source": "derived"
       }
     },
-    "tools": [
-      {
-        "name": "policy_lookup",
-        "version": "sha256:f582845489a4",
-        "side_effect_class": "read_only"
-      },
-      {
-        "name": "consult",
-        "version": "sha256:39afdd321997",
-        "side_effect_class": "read_only"
-      },
-      {
-        "name": "post_ledger",
-        "version": "sha256:2c07edff79d7",
-        "side_effect_class": "writes"
-      }
-    ],
     "model": {
       "backend": "hosted_api",
       "request_model": "gemini-3.1-flash-lite",
@@ -465,12 +471,6 @@
       "misses": 49,
       "recorded": 49,
       "diverged": 0
-    },
-    "budget": {
-      "max_steps": 12,
-      "max_tokens": 40000,
-      "max_cost": 0.05,
-      "max_wall_clock_ms": null
     },
     "max_spend": 4.0,
     "scored_from": "rollouts",
@@ -1297,7 +1297,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 30,
+      "wall_clock_ms": 14,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1426,7 +1426,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 30,
-      "wall_clock_ms": 41,
+      "wall_clock_ms": 40,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1507,7 +1507,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 9,
+      "wall_clock_ms": 18,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1607,7 +1607,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 33,
-      "wall_clock_ms": 35,
+      "wall_clock_ms": 36,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1688,7 +1688,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 33,
-      "wall_clock_ms": 31,
+      "wall_clock_ms": 30,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1848,7 +1848,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 24501,
+      "wall_clock_ms": 26442,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1932,7 +1932,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 0,
+      "wall_clock_ms": 1,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -2009,7 +2009,7 @@
       },
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 25,
+      "wall_clock_ms": 28,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -2078,7 +2078,7 @@
         }
       },
       "run_id": "c-001-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-001-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-001-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2184,7 +2184,7 @@
         }
       },
       "run_id": "c-002-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-002-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-002-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2287,7 +2287,7 @@
         "po_number": "PO-77812"
       },
       "run_id": "c-003-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-003-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-003-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2390,7 +2390,7 @@
         "po_number": "PO-80115"
       },
       "run_id": "c-004-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-004-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-004-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2490,7 +2490,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-005-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-005-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-005-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2575,7 +2575,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-006-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-006-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-006-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2668,7 +2668,7 @@
         }
       },
       "run_id": "c-007-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-007-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-007-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2774,7 +2774,7 @@
         }
       },
       "run_id": "c-008-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-008-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-008-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2874,7 +2874,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-009-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-009-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-009-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2970,7 +2970,7 @@
         }
       },
       "run_id": "c-010-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-010-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-010-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3076,7 +3076,7 @@
         }
       },
       "run_id": "c-011-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-011-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-011-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3176,7 +3176,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-013-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-013-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-013-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3263,7 +3263,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-014-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-014-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-014-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3356,7 +3356,7 @@
         }
       },
       "run_id": "c-015-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-015-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-015-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3462,7 +3462,7 @@
         }
       },
       "run_id": "c-017-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-017-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-017-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3562,7 +3562,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-018-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-018-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-018-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3655,7 +3655,7 @@
         }
       },
       "run_id": "c-019-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-019-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-019-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3755,7 +3755,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-020-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-020-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-020-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3840,7 +3840,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-022-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-022-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-022-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -3933,7 +3933,7 @@
         }
       },
       "run_id": "c-023-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-023-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-023-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4039,7 +4039,7 @@
         }
       },
       "run_id": "c-024-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-024-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-024-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4139,7 +4139,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-025-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-025-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-025-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4224,7 +4224,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-027-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-027-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-027-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4314,7 +4314,7 @@
         "po_number": "PO-77102"
       },
       "run_id": "c-028-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-028-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-028-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4420,7 +4420,7 @@
         }
       },
       "run_id": "c-029-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-029-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-029-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4520,7 +4520,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-030-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-030-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-030-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4611,7 +4611,7 @@
         }
       },
       "run_id": "c-032-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-032-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-032-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4717,7 +4717,7 @@
         }
       },
       "run_id": "c-033-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-033-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-033-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4817,7 +4817,7 @@
         "reason": "parked for finance"
       },
       "run_id": "c-034-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-034-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-034-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -4910,7 +4910,7 @@
         }
       },
       "run_id": "c-036-0",
-      "trajectory": "runs/eval/eval_c72effafd811/c-036-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_7ac9f64f8102/c-036-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {

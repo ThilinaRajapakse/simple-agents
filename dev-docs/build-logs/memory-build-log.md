@@ -204,7 +204,7 @@ collision goes from exotic to routine.
 ### 1.7 Found while reading: the manifest counts four of the five record types
 
 Not this item's, and reported rather than fixed.
-[`manifest.py` `to_json`](../../src/simple_agents/records/manifest.py#L347) enumerates the per-kind
+[`manifest.py` `to_json`](../../src/simple_agents/records/manifest.py#L354) enumerates the per-kind
 breakdown as a literal tuple of four names, and the delegation item added a fifth type.
 
 **Measured**, on a run that emitted two `delegation` records:

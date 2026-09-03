@@ -55,8 +55,11 @@ def pick_up(inputs: Any, ctx: Any) -> dict:
     """
     ctx.call_tool("ledger_rows", since=str(inputs.get("since", "2026-08-01")))
     earlier = len(list(ctx.conversation or ()))
-    return {"mode": str(inputs.get("mode", "settle")), "entries": RECONCILE_BATCH,
-            "earlier_turns": earlier}
+    return {
+        "mode": str(inputs.get("mode", "settle")),
+        "entries": RECONCILE_BATCH,
+        "earlier_turns": earlier,
+    }
 
 
 def settle(inputs: Any, ctx: Any) -> dict:
@@ -66,15 +69,18 @@ def settle(inputs: Any, ctx: Any) -> dict:
     """
     mode = inputs["mode"]
     if mode == "waiting":
-        raise Suspend(waiting_for="the finance desk to confirm the August write-off",
-                      options=["write it off", "chase it"])
+        raise Suspend(
+            waiting_for="the finance desk to confirm the August write-off",
+            options=["write it off", "chase it"],
+        )
     if mode == "clock":
-        raise Suspend(waiting_for="the month to close",
-                      resume_not_before="2026-09-01T09:00:00Z")
+        raise Suspend(waiting_for="the month to close", resume_not_before="2026-09-01T09:00:00Z")
     if mode == "shelve":
-        ctx.call_tool("consult",
-                      question="Is the 12p line on PO-80115 per unit or for the whole order?",
-                      about="po-80115-unit")
+        ctx.call_tool(
+            "consult",
+            question="Is the 12p line on PO-80115 per unit or for the whole order?",
+            about="po-80115-unit",
+        )
         return {"settled": 0, "asked": 1}
     if mode == "throttled":
         ctx.call_tool("registry_health")
@@ -86,12 +92,12 @@ def reconcile() -> Pipeline:
     """The nightly pass over the ledger."""
     return Pipeline(
         [
-            Deterministic(pick_up, node_id="pick_up", successors=["settle"],
-                          tools=[ledger_rows]),
+            Deterministic(pick_up, node_id="pick_up", successors=["settle"], tools=[ledger_rows]),
             Deterministic(
-                settle, node_id="settle", successors=[],
-                tools=[registry_health,
-                       consult(ask_the_finance_page, answered_by="end_user")],
+                settle,
+                node_id="settle",
+                successors=[],
+                tools=[registry_health, consult(ask_the_finance_page, answered_by="end_user")],
             ),
         ],
         budget=Budget(max_steps=4, max_tokens=None, max_cost=None, max_wall_clock_ms=600_000),

@@ -150,6 +150,10 @@ def _tool_entry(tool: Tool, *, offered: bool) -> dict[str, Any]:
     ``offered`` is false for a tool the project registered and no node was given, which is a
     tool that was declared and cannot be called.
 
+    ``retrieval`` is set on a tool that searches a ``DocumentIndex`` and ``null`` on every
+    other kind. It carries what decides which documents come back, and leaves out how many
+    there are, which the manifest records separately.
+
     ``answered_by`` is set on a consultation tool and ``null`` on every other kind, so which
     tools reach a person is read from the manifest rather than guessed from a name a project
     chose. ``permission`` carries the builder's agreement where the answerer is the coding
@@ -183,6 +187,14 @@ def _tool_entry(tool: Tool, *, offered: bool) -> dict[str, Any]:
         # declared, so a disagreement between a claim and a declaration is read from the
         # run. `null` on every tool that is not an MCP tool.
         "mcp": getattr(tool, "mcp_entry", None),
+        # How the index this tool searches ranks, which store answers it and what embedded
+        # the corpus. `null` on every tool that searches no index. How many documents the
+        # index holds is on the manifest's own `retrieval` instead, because this entry is
+        # part of `behaviour_fingerprint` and a corpus that grew has not changed how the
+        # pipeline behaves.
+        "retrieval": (
+            tool.searches.to_record() if getattr(tool, "searches", None) is not None else None
+        ),
     }
 
 
@@ -594,6 +606,20 @@ def _node_entries(
     return nodes, prompts, tools, containers
 
 
+def _searching_tools(pipeline: "Pipeline") -> list[Any]:
+    """Every tool in the tree that searches a ``DocumentIndex``, each named once."""
+    found: dict[str, Any] = {}
+    for inner in pipeline._every_pipeline():
+        for node in inner.nodes:
+            for tool in getattr(node, "tools", None) or ():
+                if getattr(tool, "searches", None) is not None:
+                    found.setdefault(tool.name, tool)
+        for tool in inner.tools or ():
+            if getattr(tool, "searches", None) is not None:
+                found.setdefault(tool.name, tool)
+    return list(found.values())
+
+
 def _new_manifest(
     pipeline: "Pipeline",
     *,
@@ -703,6 +729,12 @@ def _close_manifest(
     if run is not None and run.memory is not None:
         # Counted again at the end, because the run is what put things in it.
         manifest.memory = run.memory.to_manifest()
+    # Counted at the end for the same reason: a run that adds documents to an index leaves a
+    # larger corpus than it started with, and the count of what was searched is a fact about
+    # the run rather than about what the pipeline declares.
+    manifest.retrieval = [
+        {"tool": tool.name, **tool.searches.to_manifest()} for tool in _searching_tools(pipeline)
+    ]
     manifest.close(
         ended_at=utc_now(),
         outcome="stopped_early" if stopped_early else outcome,

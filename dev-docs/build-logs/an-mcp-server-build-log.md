@@ -17,7 +17,7 @@ measurement.
   with extra fields, so an `MCPTool` had a pattern to follow.
 - **`_tool_entry` reads subclass fields with `getattr(tool, ..., None)`** ([`pipeline.py`](../../src/simple_agents/pipeline/recording.py#L147), `_tool_entry`), so a
   new per-tool manifest field costs one line.
-- **[`source_version`](../../src/simple_agents/records/manifest.py#L596) covers a closure only for captured data whose text is fixed by
+- **[`source_version`](../../src/simple_agents/records/manifest.py#L605) covers a closure only for captured data whose text is fixed by
   its value.** A closure over a live connection is versioned by its source alone, identical for
   every tool one server offers. This is why the version had to be declared rather than derived.
 - **`EvalSuite` builds one pipeline for every rollout**, stated in [`docs/tools.md` §3.2.1](../../docs/tools.md#L537). This

@@ -26,6 +26,10 @@ dependencies = [
 
 [project.optional-dependencies]
 semantic = ["sentence-transformers>=3.0"]
+# FAISS, for `FaissVectors`. The CPU build: FAISS's GPU distribution is a separate one that
+# provides the same `faiss` module, so a machine has one of the two and naming both here would
+# install a conflict. `docs/retrieval.md` §4.3 carries the GPU install.
+ann = ["faiss-cpu>=1.9", "numpy>=1.24"]
 # The MCP SDK, for `simple_agents.mcp`. Client and server halves ship together and there is no
 # client-only extra, so this is an extra rather than a runtime dependency: it carries an ASGI
 # server and a compiled `cryptography` that a project reaching no MCP server should not meet.

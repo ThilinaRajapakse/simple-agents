@@ -18,17 +18,26 @@ STALE_AFTER_HOURS = 48
 @product_factory
 def product() -> Product:
     """Every place the end user meets this agent."""
-    return Product(surfaces=[
-        Surface(
-            "the finance inbox", "starts_a_run", pipeline="claims",
-            does="a claim submitted by an employee starts one run",
-        ),
-        Surface(
-            "the finance desk", "answers_a_waiting_run", pipeline="claims", through="consult",
-            does="the person in finance answers when the agent cannot settle a claim alone",
-        ),
-        Surface(
-            "the ledger", "reads_the_artifact", reads="ledger",
-            does="an approved claim is posted there, and finance reads it",
-        ),
-    ])
+    return Product(
+        surfaces=[
+            Surface(
+                "the finance inbox",
+                "starts_a_run",
+                pipeline="claims",
+                does="a claim submitted by an employee starts one run",
+            ),
+            Surface(
+                "the finance desk",
+                "answers_a_waiting_run",
+                pipeline="claims",
+                through="consult",
+                does="the person in finance answers when the agent cannot settle a claim alone",
+            ),
+            Surface(
+                "the ledger",
+                "reads_the_artifact",
+                reads="ledger",
+                does="an approved claim is posted there, and finance reads it",
+            ),
+        ]
+    )

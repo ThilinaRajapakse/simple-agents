@@ -15,15 +15,17 @@ the two are searched::
 
 ``ranking`` is required there and ``rerank`` decides what reorders the result;
 ``simple_agents.builtins.ranking`` documents the choices and where their figures come from.
+
+An index grows: ``add`` embeds the new documents alone, ``replace`` re-embeds the ones whose
+text changed, and ``remove`` drops them. ``simple_agents.builtins.vectors`` holds the stores
+they write through.
 """
 
 from __future__ import annotations
 
-import base64
-import json
 import math
 import re
-from array import array
+import threading
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -33,17 +35,34 @@ from ..embeddings import normalise
 from ..errors import ConfigurationError, ModelFacingError
 from ..models import ModelIdentity
 from ..tools import ModelHandle, Retrieval, SideEffectClass, Tool, tool
+from .index_file import (
+    ANALYZER,
+    INDEX_FORMAT_VERSION,
+    VECTOR_FILE_SUFFIX,
+    has_method,
+    read_index,
+    refuse_mismatch,
+    write_index,
+)
 from .ranking import (
     Lexical,
     Ranking,
-    VectorScan,
-    VectorStore,
     ranking_to_record,
     refuse_no_ranking,
 )
+from .vectors import VectorStore, default_store, store_to_record
 from .rerank import CrossEncoderRerank, ModelRerank, Reranker
 
-__all__ = ["DocumentIndex", "ENGLISH_STOPWORDS", "Hit", "document_search", "tokens"]
+__all__ = [
+    "ANALYZER",
+    "DocumentIndex",
+    "ENGLISH_STOPWORDS",
+    "Hit",
+    "INDEX_FORMAT_VERSION",
+    "VECTOR_FILE_SUFFIX",
+    "document_search",
+    "tokens",
+]
 
 K1 = 1.5
 B = 0.75
@@ -83,9 +102,6 @@ Pass ``stopwords=`` to replace the list, and ``stopwords=()`` to search every wo
     DocumentIndex.from_texts(texts, stopwords=ENGLISH_STOPWORDS | {"depot"})
     DocumentIndex.from_texts(texts, stopwords=())
 """
-
-INDEX_FORMAT_VERSION = "1.0"
-"""What :meth:`DocumentIndex.save` writes and :meth:`DocumentIndex.load` reads."""
 
 _WORD = re.compile(r"[a-z0-9]+")
 
@@ -144,16 +160,11 @@ class DocumentIndex:
                                           "a2": "Corveth's seed round closed in March."})
         index = DocumentIndex.from_directory("corpus/", glob="*.md")
 
-    The identifier is what a search result names and what an answer cites. A title or heading
-    is indexed by writing it into the text::
+    The identifier is what a search result names and what an answer cites. A title is indexed
+    by writing it into the text. ``stopwords`` are dropped from a query before searching and
+    default to :data:`ENGLISH_STOPWORDS`; they reach the query and not the documents::
 
         DocumentIndex.from_texts({d["doc_id"]: f"{d['title']} {d['text']}" for d in docs})
-
-    ``stopwords`` are dropped from a query before searching and default to
-    :data:`ENGLISH_STOPWORDS`. They reach the query and not the documents, so a word listed
-    here is still findable in a passage, and a query of nothing but stopwords is searched as
-    written::
-
         DocumentIndex.from_texts(texts, stopwords={"part", "order", "the"})
         DocumentIndex.from_texts(texts, stopwords=())     # every word the query holds
 
@@ -167,9 +178,14 @@ class DocumentIndex:
         index = DocumentIndex.load("corpus.index", embeddings=embedder, ranking=Semantic())
 
     An index built without ``embeddings`` ranks
-    :class:`~simple_agents.builtins.ranking.Lexical`, which is what it can do with the words
-    alone. ``rerank`` defaults to nothing. ``vectors`` is where the vectors live and defaults
-    to :class:`~simple_agents.builtins.ranking.VectorScan`.
+    :class:`~simple_agents.builtins.ranking.Lexical`. ``rerank`` defaults to nothing, and
+    ``vectors`` defaults to :func:`~simple_agents.builtins.vectors.default_store`.
+
+    **The corpus grows without being rebuilt**, through :meth:`add`, :meth:`replace` and
+    :meth:`remove`::
+
+        index.add({"a3": "Corveth opened a second depot."}, retrieval=handle)
+        index.save("corpus.index")
     """
 
     documents: dict[str, str]
@@ -182,6 +198,15 @@ class DocumentIndex:
     _postings: dict[str, dict[str, int]] = field(default_factory=dict, init=False, repr=False)
     _lengths: dict[str, int] = field(default_factory=dict, init=False, repr=False)
     _average_length: float = field(default=0.0, init=False, repr=False)
+    _lock: threading.RLock = field(default_factory=threading.RLock, init=False, repr=False)
+    """Guards the documents, the postings and the lengths together.
+
+    A corpus that grows is read while it is written: a search scoring BM25 over the postings
+    runs on one thread while `add` writes into them on another, and a dict being resized under
+    an iterator raises. **Neither side holds it across a model call**: a search embeds its
+    query before taking it, and `add` embeds the new documents before taking it, so what
+    either one waits for is the other's bookkeeping.
+    """
 
     def __post_init__(self) -> None:
         self.stopwords = (
@@ -203,14 +228,33 @@ class DocumentIndex:
             self.ranking = Lexical()
         self._check_ranking()
         for doc_id, text in self.documents.items():
-            counts = Counter(tokens(text))
-            self._lengths[doc_id] = sum(counts.values())
-            for term, count in counts.items():
-                self._postings.setdefault(term, {})[doc_id] = count
+            self._index_words(doc_id, text)
+        self._set_average_length()
+        if self.ranking.needs_vectors:
+            if self.vectors is None:
+                self.vectors = default_store()
+            self._build_vectors()
+
+    def _index_words(self, doc_id: str, text: str) -> None:
+        """Put one document's words into the postings. The caller holds the lock."""
+        counts = Counter(tokens(text))
+        self._lengths[doc_id] = sum(counts.values())
+        for term, count in counts.items():
+            self._postings.setdefault(term, {})[doc_id] = count
+
+    def _unindex_words(self, doc_id: str) -> None:
+        """Take one document's words back out of the postings. The caller holds the lock."""
+        for term in set(tokens(self.documents.get(doc_id, ""))):
+            postings = self._postings.get(term)
+            if postings is not None:
+                postings.pop(doc_id, None)
+                if not postings:
+                    del self._postings[term]
+        self._lengths.pop(doc_id, None)
+
+    def _set_average_length(self) -> None:
         total = sum(self._lengths.values())
         self._average_length = total / len(self._lengths) if self._lengths else 0.0
-        if self.ranking.needs_vectors and self.vectors is None:
-            self._build_vectors()
 
     def _check_ranking(self) -> None:
         assert self.ranking is not None
@@ -235,14 +279,242 @@ class DocumentIndex:
                 )
 
     def _build_vectors(self) -> None:
-        """Embed every document once, at construction."""
-        store = VectorScan()
-        keys = list(self.documents)
-        response = self.embeddings.embed([self.documents[k] for k in keys])
-        response.check_against(keys)
-        store.add(keys, [normalise(v) for v in response.vectors])
-        self.vectors = store
-        self.embedded_by = self.embeddings.identity()
+        """Embed the documents the store does not already hold, at construction.
+
+        A store handed in already full is used as it is, which is what a loaded index and the
+        agent's own memory pass. An empty one is filled from the corpus. A partly filled one
+        has the rest embedded, so a store carried over from a smaller corpus is completed
+        rather than searched with holes in it.
+        """
+        missing = self._not_in_the_store(self.documents)
+        if missing and self.embeddings is None:
+            raise ConfigurationError(
+                f"DocumentIndex was given a vector ranking and a store holding "
+                f"{len(self.vectors or ())} of its {len(self.documents)} document(s), and no "
+                f"embedding client to make the rest.\n"
+                f"Pass embeddings= alongside the store, or hand in a store already holding a "
+                f"vector for every document."
+            )
+        if not missing:
+            # What made these vectors is unknown here: the store arrived full. A loaded
+            # index takes the model its file recorded, and one built with a client records
+            # that client when it embeds.
+            return
+        self._embed_into_store({doc_id: self.documents[doc_id] for doc_id in missing}, None)
+
+    def _not_in_the_store(self, texts: Mapping[str, str]) -> list[str]:
+        """Which of these documents the store holds no vector for."""
+        store = self.vectors
+        if store is None:
+            return list(texts)
+        held = store.ids() if has_method(store, "ids") else None
+        if held is None:
+            return [] if len(store) else list(texts)
+        known = set(held)
+        return [doc_id for doc_id in texts if doc_id not in known]
+
+    def _embed(self, texts: Mapping[str, str], retrieval: Retrieval | None) -> list[list[float]]:
+        """One unit-length vector per text, in the order given. Writes nothing.
+
+        ``retrieval`` is the handle, where there is one. Without it the call is made on the
+        client directly, which is what construction does and what a build script does. Inside
+        a running pipeline the handle is what makes the call recorded and replayable.
+        """
+        self._check_query_model(embedding="documents")
+        wanted = list(texts.values())
+        if retrieval is not None:
+            # The handle normalises what the backend returned, the same as the branch below.
+            return retrieval.embed(self.embeddings, wanted)
+        response = self.embeddings.embed(wanted)
+        response.check_against(wanted)
+        return [normalise(v) for v in response.vectors]
+
+    def _embed_into_store(self, texts: Mapping[str, str], retrieval: Retrieval | None) -> None:
+        """Embed these documents and write them to the store."""
+        assert self.vectors is not None
+        self.vectors.add(list(texts), self._embed(texts, retrieval))
+        if self.embedded_by is None:
+            self.embedded_by = self.embeddings.identity()
+
+    # -- growing ----------------------------------------------------------------------
+
+    def add(self, texts: Mapping[str, str], *, retrieval: Retrieval | None = None) -> DocumentIndex:
+        """Add documents to the corpus. Only these are embedded. Returns the index.
+
+        The words go into the postings and the vectors into the store, so a corpus that gains
+        a document a day is never rebuilt::
+
+            index.add({"a3": "The Ashford depot closes at 4pm."})
+            index.add(new_documents, retrieval=handle)     # inside a running pipeline
+
+        ``retrieval`` is the handle a tool asks the library for. **An add made inside a run
+        without it embeds outside every instrument**: the call is charged to no budget,
+        recorded in no trajectory, and made again on every replay. An add made from a build
+        script, before any run, needs none.
+
+        An identifier the index already holds is refused, because two documents under one name
+        would leave the postings holding both. Use :meth:`replace` to change one.
+        """
+        self._grow(dict(texts), retrieval, replacing=False)
+        return self
+
+    def replace(
+        self, texts: Mapping[str, str], *, retrieval: Retrieval | None = None
+    ) -> DocumentIndex:
+        """Change what documents say. Only these are re-embedded. Returns the index.
+
+        The old words come out of the postings and the old vectors out of the store::
+
+            index.replace({"a3": "The Ashford depot closes at 5pm."})
+
+        ``retrieval`` is the handle, and means here what it means on :meth:`add`. An
+        identifier the index does not hold is refused, naming :meth:`add`.
+        """
+        self._grow(dict(texts), retrieval, replacing=True)
+        return self
+
+    def remove(self, doc_ids: Iterable[str]) -> DocumentIndex:
+        """Drop documents from the corpus. Returns the index.
+
+        The words leave the postings and the vectors leave the store::
+
+            index.remove(["a3"])
+
+        An identifier the index does not hold is refused, and so is removing every document,
+        because an index with nothing in it answers every search the same way a corpus that
+        does not contain the answer does. A store that declares no ``remove`` is refused too.
+
+        An approximate :class:`~simple_agents.builtins.FaissVectors` cannot delete, so it
+        warns here and filters the document out of every later search until its ``rebuild()``
+        is called.
+        """
+        with self._lock:
+            wanted = list(dict.fromkeys(doc_ids))
+            unknown = sorted(doc_id for doc_id in wanted if doc_id not in self.documents)
+            if unknown:
+                raise ConfigurationError(
+                    f"DocumentIndex.remove was given {len(unknown)} identifier(s) the index "
+                    f"does not hold: {', '.join(unknown[:5])}"
+                    f"{f' and {len(unknown) - 5} more' if len(unknown) > 5 else ''}."
+                )
+            if len(wanted) == len(self.documents):
+                raise ConfigurationError(
+                    "DocumentIndex.remove was given every document the index holds. An index "
+                    "with no documents returns nothing to every search, and the agent has no "
+                    "way to tell that from a corpus that does not contain the answer.\n"
+                    "Keep at least one document, or build a new index when the corpus is "
+                    "next filled."
+                )
+            if self.vectors is not None and len(self.vectors):
+                self._require_removable_store()
+                self.vectors.remove(wanted)  # type: ignore[attr-defined]
+            for doc_id in wanted:
+                self._unindex_words(doc_id)
+                del self.documents[doc_id]
+            self._set_average_length()
+        return self
+
+    def _grow(
+        self, texts: Mapping[str, str], retrieval: Retrieval | None, *, replacing: bool
+    ) -> None:
+        """Embed these documents, then write them in. What :meth:`add` and :meth:`replace` do.
+
+        **The embedding call is made with the lock released**, so a search on another thread
+        waits for the bookkeeping and not for the model. The refusal is checked on both sides
+        of the call, because another thread can write the same identifier while it is in
+        flight.
+        """
+        if not texts:
+            return
+        with self._lock:
+            self._refuse_a_conflict(texts, replacing=replacing)
+        vectors = self._vectors_for(texts, retrieval, replacing=replacing)
+        with self._lock:
+            self._refuse_a_conflict(texts, replacing=replacing)
+            self._write(texts, vectors, replacing=replacing)
+
+    def _refuse_a_conflict(self, texts: Mapping[str, str], *, replacing: bool) -> None:
+        """Refuse an add over an identifier held, or a replace of one that is not."""
+        if replacing:
+            unknown = sorted(doc_id for doc_id in texts if doc_id not in self.documents)
+            if unknown:
+                raise ConfigurationError(
+                    f"DocumentIndex.replace was given {len(unknown)} identifier(s) the index "
+                    f"does not hold: {', '.join(unknown[:5])}"
+                    f"{f' and {len(unknown) - 5} more' if len(unknown) > 5 else ''}.\n"
+                    f"Use index.add({{...}}) for a document the corpus does not have yet."
+                )
+            return
+        held = sorted(doc_id for doc_id in texts if doc_id in self.documents)
+        if held:
+            raise ConfigurationError(
+                f"DocumentIndex.add was given {len(held)} identifier(s) the index already "
+                f"holds: {', '.join(held[:5])}"
+                f"{f' and {len(held) - 5} more' if len(held) > 5 else ''}.\n"
+                f"Use index.replace({{...}}) to change what a document says, or add them "
+                f"under identifiers the index does not hold."
+            )
+
+    def _write(
+        self,
+        texts: Mapping[str, str],
+        vectors: list[list[float]] | None,
+        *,
+        replacing: bool,
+    ) -> None:
+        """Put these documents into the postings and their vectors into the store."""
+        if replacing:
+            if self.vectors is not None and len(self.vectors):
+                # Checked again here as well as before the embedding call: the store can have
+                # been filled by another thread while that call was in flight.
+                self._require_removable_store()
+                self.vectors.remove(list(texts))  # type: ignore[attr-defined]
+            for doc_id in texts:
+                self._unindex_words(doc_id)
+        for doc_id, text in texts.items():
+            self.documents[doc_id] = text
+            self._index_words(doc_id, text)
+        self._set_average_length()
+        if vectors is not None:
+            assert self.vectors is not None
+            self.vectors.add(list(texts), vectors)
+            if self.embedded_by is None:
+                self.embedded_by = self.embeddings.identity()
+
+    def _vectors_for(
+        self, texts: Mapping[str, str], retrieval: Retrieval | None, *, replacing: bool
+    ) -> list[list[float]] | None:
+        """The vectors a write needs, or ``None`` where the index searches words alone.
+
+        **Everything that can fail on something outside this process happens here**, before
+        the corpus is touched: the embedding call, and the two refusals that depend on the
+        store. A call that failed after the words were written would leave the corpus holding
+        documents no vector search can reach.
+        """
+        assert self.ranking is not None
+        holding = self.vectors is not None and len(self.vectors)
+        if replacing and holding:
+            self._require_removable_store()
+        if not self.ranking.needs_vectors:
+            return None
+        if self.embeddings is None:
+            raise ConfigurationError(
+                "This index searches by vector and holds no embedding client, so a "
+                "document added to it cannot be embedded.\n"
+                "Pass embeddings= when building or loading it: DocumentIndex.load("
+                "'corpus.index', embeddings=embedder, ranking=Semantic())."
+            )
+        return self._embed(texts, retrieval)
+
+    def _require_removable_store(self) -> None:
+        if not has_method(self.vectors, "remove"):
+            raise ConfigurationError(
+                f"The vector store on this index, {type(self.vectors).__name__}, declares no "
+                f"remove(ids), so a document cannot be taken out of it and one left behind "
+                f"would keep being returned by searches.\n"
+                f"Add `def remove(self, ids: Sequence[str]) -> None` to it, or use "
+                f"vectors=NumpyVectors(), VectorScan() or FaissVectors(), which all have one."
+            )
 
     @classmethod
     def from_texts(
@@ -304,41 +576,26 @@ class DocumentIndex:
     # -- persistence ------------------------------------------------------------------
 
     def save(self, path: str | Path) -> Path:
-        """Write the documents and their vectors to one file. Returns the path written.
+        """Write the documents and their vectors. Returns the path of the JSON file.
 
-        Embedding a corpus is the expensive part of building an index, so a corpus that does
-        not change is embedded once and loaded thereafter::
+        Embedding a corpus is the expensive part of building an index, so a corpus is embedded
+        once and loaded thereafter::
 
-            DocumentIndex.from_texts(corpus, embeddings=embedder).save("corpus.index")
+            index = DocumentIndex.from_texts(corpus, embeddings=embedder, ranking=Semantic())
+            index.save("corpus.index")
 
-        The file records which model produced the vectors. Loading it under a different one is
-        refused rather than answered, because vectors from two models are not comparable.
+        **Two files are written**: ``corpus.index`` holds the documents and what they were
+        embedded with, and ``corpus.index.vec`` holds the vectors as raw ``float32``. A
+        million 768-dimension vectors are 3 GB, which does not fit in a JSON string.
+        :meth:`load` reads the pair, and moving an index means moving both.
+
+        The file records which model produced the vectors and how the text was cut into words.
+        Loading it under a different one of either is refused rather than answered.
         """
-        target = Path(path)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        packed = None
-        if self.vectors is not None and isinstance(self.vectors, VectorScan):
-            packed = base64.b64encode(
-                b"".join(array("f", v).tobytes() for v in self.vectors.all_vectors())
-            ).decode("ascii")
-        target.write_text(
-            json.dumps(
-                {
-                    "format_version": INDEX_FORMAT_VERSION,
-                    "documents": self.documents,
-                    "stopwords": sorted(self.stopwords),
-                    "embedded_by": (self.embedded_by.to_manifest() if self.embedded_by else None),
-                    "order": self.vectors.ids() if isinstance(self.vectors, VectorScan) else [],
-                    "dimensions": (
-                        self.vectors.dimensions if isinstance(self.vectors, VectorScan) else None
-                    ),
-                    "vectors": packed,
-                },
-                ensure_ascii=False,
-            ),
-            encoding="utf-8",
-        )
-        return target
+        # Held for the write. The identifiers and the vectors are read from the store as two
+        # calls, so an `add` landing between them would write a file whose counts disagree.
+        with self._lock:
+            return write_index(self, path)
 
     @classmethod
     def load(
@@ -348,6 +605,7 @@ class DocumentIndex:
         embeddings: Any = None,
         ranking: Ranking | None = None,
         rerank: Reranker | None = None,
+        vectors: VectorStore | None = None,
     ) -> DocumentIndex:
         """Read back an index written by :meth:`save`.
 
@@ -358,41 +616,35 @@ class DocumentIndex:
             index = DocumentIndex.load("corpus.index", embeddings=embedder,
                                        ranking=Hybrid(fuse=RRF(k=5)))
 
-        The stopword list the file was saved with is restored with it.
+        ``vectors`` is which store the vectors are read into, and defaults to the same one a
+        new index builds. A corpus large enough to want a different one says so here::
+
+            DocumentIndex.load("corpus.index", embeddings=embedder, ranking=Semantic(),
+                               vectors=FaissVectors(device="cuda"))
+
+        The stopword list the file was saved with is restored with it. Files written by
+        version ``1.0``, which packed the vectors into the JSON, are read as well.
         """
-        source = Path(path)
-        try:
-            raw = json.loads(source.read_text(encoding="utf-8"))
-        except (OSError, ValueError) as exc:
-            raise ConfigurationError(
-                f"Could not read a saved index at {source}: {exc}.\n"
-                f"Rebuild it with DocumentIndex.from_texts(corpus, embeddings=...).save("
-                f"{str(source)!r})."
-            ) from exc
-        stored = raw.get("embedded_by")
-        identity = ModelIdentity(**stored) if stored else None
-        if identity is not None and embeddings is not None:
-            _refuse_mismatch(identity, embeddings.identity(), str(source))
-        store = None
-        if raw.get("vectors") and raw.get("order"):
-            store = VectorScan()
-            width = int(raw["dimensions"])
-            flat = array("f")
-            flat.frombytes(base64.b64decode(raw["vectors"]))
-            order = list(raw["order"])
-            store.add(
-                order,
-                [list(flat[i * width : (i + 1) * width]) for i in range(len(order))],
-            )
+        parts = read_index(path, embeddings=embeddings)
+        store = vectors
+        if parts["vectors"] is not None:
+            order, held = parts["vectors"]
+            if store is None:
+                store = default_store()
+            store.add(order, held)
         index = cls(
-            documents=dict(raw.get("documents") or {}),
-            stopwords=frozenset(raw.get("stopwords") or ()),
+            documents=parts["documents"],
+            stopwords=parts["stopwords"],
             embeddings=embeddings,
             ranking=ranking,
             rerank=rerank,
             vectors=store,
         )
-        index.embedded_by = identity
+        # After construction, which is where a store handed in empty is filled: an index whose
+        # file carried no vectors embeds its corpus there and records what embedded it, and
+        # setting the file's `null` over that would leave the two-models refusal switched off.
+        if parts["embedded_by"] is not None:
+            index.embedded_by = parts["embedded_by"]
         return index
 
     # -- searching --------------------------------------------------------------------
@@ -416,24 +668,31 @@ class DocumentIndex:
 
             index.documents_containing("Ashford inseam")   # {"ashford": 3, "inseam": 0}
         """
-        return {term: len(self._postings.get(term, {})) for term in self.query_terms(query)}
+        with self._lock:
+            return {term: len(self._postings.get(term, {})) for term in self.query_terms(query)}
 
     def lexical_scores(self, query: str, top_k: int) -> list[tuple[str, float]]:
         """The best BM25 matches as ``(doc_id, score)``, highest first."""
         terms = self.query_terms(query)
         if not terms:
             return []
-        total_docs = len(self.documents)
         scores: dict[str, float] = {}
-        for term in terms:
-            postings = self._postings.get(term)
-            if not postings:
-                continue
-            idf = math.log(1 + (total_docs - len(postings) + 0.5) / (len(postings) + 0.5))
-            for doc_id, count in postings.items():
-                length = self._lengths[doc_id]
-                norm = K1 * (1 - B + B * length / self._average_length)
-                scores[doc_id] = scores.get(doc_id, 0.0) + idf * count * (K1 + 1) / (count + norm)
+        # Held for the scoring, which reads the postings, the lengths and the mean together.
+        # A document added on another thread lands either wholly inside this pass or wholly
+        # after it, so no query is scored against a length the postings do not match.
+        with self._lock:
+            total_docs = len(self.documents)
+            for term in terms:
+                postings = self._postings.get(term)
+                if not postings:
+                    continue
+                idf = math.log(1 + (total_docs - len(postings) + 0.5) / (len(postings) + 0.5))
+                for doc_id, count in postings.items():
+                    length = self._lengths[doc_id]
+                    norm = K1 * (1 - B + B * length / self._average_length)
+                    scores[doc_id] = scores.get(doc_id, 0.0) + idf * count * (K1 + 1) / (
+                        count + norm
+                    )
         ranked = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
         return ranked[:top_k]
 
@@ -481,16 +740,17 @@ class DocumentIndex:
         else:
             pool = self._merge(lexical, semantic, self.rerank.top_n)
             candidates = self._reranked(query, pool, top_k, retrieval, model)
-        return [
-            Hit(
-                doc_id=doc_id,
-                score=score,
-                text=self.documents.get(doc_id, ""),
-                retriever=retriever,
-                rank=position + 1,
-            )
-            for position, (doc_id, score, retriever) in enumerate(candidates)
-        ]
+        with self._lock:
+            return [
+                Hit(
+                    doc_id=doc_id,
+                    score=score,
+                    text=self.documents.get(doc_id, ""),
+                    retriever=retriever,
+                    rank=position + 1,
+                )
+                for position, (doc_id, score, retriever) in enumerate(candidates)
+            ]
 
     def _embed_query(self, query: str, retrieval: Retrieval | None) -> list[float]:
         if self.embeddings is None:
@@ -513,10 +773,13 @@ class DocumentIndex:
         self._check_query_model()
         return retrieval.embed(self.embeddings, [query])[0]
 
-    def _check_query_model(self) -> None:
+    def _check_query_model(self, *, embedding: str = "query") -> None:
+        """Refuse where this index's vectors and this client's are from two models."""
         if self.embedded_by is None:
             return
-        _refuse_mismatch(self.embedded_by, self.embeddings.identity(), "this index")
+        refuse_mismatch(
+            self.embedded_by, self.embeddings.identity(), "this index", embedding=embedding
+        )
 
     def _merge(
         self,
@@ -558,7 +821,8 @@ class DocumentIndex:
         if not pool:
             return []
         ids = [doc_id for doc_id, _, _ in pool]
-        texts = [self.documents.get(doc_id, "") for doc_id in ids]
+        with self._lock:
+            texts = [self.documents.get(doc_id, "") for doc_id in ids]
         if isinstance(self.rerank, ModelRerank):
             if model is None:
                 raise ConfigurationError(
@@ -586,35 +850,53 @@ class DocumentIndex:
         return [(ids[s.index], s.score, "rerank") for s in scored[:top_k]]
 
     def to_record(self) -> dict[str, Any]:
-        """How the manifest records what this index searches with."""
+        """What a run records about how this index searches.
+
+        The ranking, the fusion and its settings, the reranker, the store the vectors are in
+        and whether it is exact, the analyzer, and the model that embedded the corpus::
+
+            index.to_record()["store"]     # 'NumpyVectors'
+
+        This reaches the manifest and the results file on the entry for the tool that searches
+        the index, so a figure measured against an approximate store is told apart from one
+        measured against an exact scan rather than compared with it.
+
+        **How many documents the index holds is not part of it.** The tool entry is part of
+        `Pipeline.behaviour_fingerprint`, which a project writes beside every stored result to
+        tell a current one from a stale one, and a corpus that gains a document has not
+        changed how the pipeline behaves. The count is recorded on the manifest itself, under
+        `retrieval`.
+        """
         assert self.ranking is not None
         record = ranking_to_record(self.ranking, self.rerank)
-        record["documents"] = len(self.documents)
+        record.update(store_to_record(self.vectors))
+        record["analyzer"] = ANALYZER
         record["embedded_by"] = self.embedded_by.to_manifest() if self.embedded_by else None
         return record
 
+    def to_manifest(self) -> dict[str, Any]:
+        """What the manifest records about the corpus itself, counted when the run ends.
+
+        How many documents the index holds and which store they are in::
+
+            index.to_manifest()['documents']     # 7308
+
+        Separate from :meth:`to_record` because a run that adds to the corpus changes this and
+        changes nothing about how the pipeline behaves.
+        """
+        # Two counts read together, the same as everywhere else they are read together: a
+        # run that is still adding on another thread would otherwise record a corpus size and
+        # a vector count from either side of one write.
+        with self._lock:
+            return {
+                "documents": len(self.documents),
+                **store_to_record(self.vectors),
+                "vectors": len(self.vectors) if self.vectors is not None else 0,
+                "embedded_by": self.embedded_by.to_manifest() if self.embedded_by else None,
+            }
+
     def __len__(self) -> int:
         return len(self.documents)
-
-
-def _refuse_mismatch(stored: ModelIdentity, asked: ModelIdentity, where: str) -> None:
-    """Refuse a query embedded by a different model than the corpus was."""
-    if (stored.backend, stored.request_model) == (asked.backend, asked.request_model) and (
-        stored.model_revision == asked.model_revision
-        or stored.model_revision is None
-        or asked.model_revision is None
-    ):
-        return
-    raise ConfigurationError(
-        f"The vectors in {where} were made by {stored.request_model!r}"
-        f"{f'@{stored.model_revision}' if stored.model_revision else ''} and the query would "
-        f"be embedded by {asked.request_model!r}"
-        f"{f'@{asked.model_revision}' if asked.model_revision else ''}. Vectors from two "
-        f"models occupy different spaces, so comparing them returns confident nonsense with "
-        f"nothing raised.\n"
-        f"Use the model the corpus was embedded with, or re-embed the corpus with the new one "
-        f"and save it again: DocumentIndex.from_texts(corpus, embeddings=new).save(path)."
-    )
 
 
 def document_search(
@@ -675,6 +957,7 @@ def document_search(
             "documents_containing": index.documents_containing(query),
         }
 
+    search.searches = index
     return search
 
 
@@ -730,7 +1013,9 @@ def _searching_with_a_model(
 
     body.__doc__ = described
     body.__name__ = "search"
-    return tool(side_effect_class=SideEffectClass.READ_ONLY, name=name, version=version)(body)
+    built = tool(side_effect_class=SideEffectClass.READ_ONLY, name=name, version=version)(body)
+    built.searches = index
+    return built
 
 
 def _reply(

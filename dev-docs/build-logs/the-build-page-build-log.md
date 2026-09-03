@@ -11,7 +11,7 @@ Its `items/` record held the design and is folded into §2 here.
   moved between runs, the step card, and a banner of open decisions. Progress was legible only
   by counting boxes in the drawing.
 - **The manifest has carried `constants` since format `0.33`**
-  ([`manifest.py` `module_constants`](../../src/simple_agents/records/manifest.py#L830)): a `module`, a
+  ([`manifest.py` `module_constants`](../../src/simple_agents/records/manifest.py#L839)): a `module`, a
   `name` and the `value` the run started with, for every module-level number reached from the
   node callables. The view read none of it.
 - **A `constant` decision names the numbers it settled and a `prompt_rule` decision the nodes

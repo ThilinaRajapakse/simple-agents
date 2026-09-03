@@ -50,10 +50,9 @@ from .ranking import (
     Ranking,
     RRF,
     Semantic,
-    VectorScan,
-    VectorStore,
     WeightedScore,
 )
+from .vectors import FaissVectors, NumpyVectors, VectorScan, VectorStore, default_store
 from .rerank import CrossEncoderRerank, ModelRerank, Reranker
 from .search import ENGLISH_STOPWORDS, DocumentIndex, Hit, document_search
 from .websearch import SearchProvider, web_search
@@ -72,6 +71,9 @@ __all__ = [
     "WeightedScore",
     "VectorStore",
     "VectorScan",
+    "NumpyVectors",
+    "FaissVectors",
+    "default_store",
     "Reranker",
     "CrossEncoderRerank",
     "ModelRerank",

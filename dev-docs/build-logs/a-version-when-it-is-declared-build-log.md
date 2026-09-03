@@ -12,7 +12,7 @@ thing.
 nothing about the pipeline changed. `behaviour_fingerprint` is what `docs/shipping.md` §6 tells a
 project to write beside a stored result, so the query that finds stale rows was reading a value
 that moved on its own. The cause is
-[`manifest.py`](../../src/simple_agents/records/manifest.py#L581), `_closed_over`, rendering a captured
+[`manifest.py`](../../src/simple_agents/records/manifest.py#L590), `_closed_over`, rendering a captured
 dict by value, on a version recomputed every time the manifest was read.
 
 **Two tools one factory built shared a version.** `make_tool("https://one.example")` and

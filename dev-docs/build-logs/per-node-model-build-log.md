@@ -74,7 +74,7 @@ makes the docstring true.
   `models.configured` against the resuming client and reports `model` in `changed`.
 - [`_refuse_unstreamable`](../../src/simple_agents/pipeline/core.py#L858) checks the run-level
   client for `stream` and for a reasoning sink.
-- [`_stream_waivers`](../../src/simple_agents/pipeline/recording.py#L388) walks one client's wrappers.
+- [`_stream_waivers`](../../src/simple_agents/pipeline/recording.py#L400) walks one client's wrappers.
 - [`EvalSuite._eval_id`](../../src/simple_agents/evaluation/runner.py#L1162) hashes one identity,
   so two evaluations differing only in a node's model would write into one directory.
 - [`_pace_for`](../../src/simple_agents/evaluation/runner.py#L2862) paces one client.

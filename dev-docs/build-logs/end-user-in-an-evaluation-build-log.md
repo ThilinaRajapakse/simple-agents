@@ -162,7 +162,7 @@ because that is the path that ships. What the declaration buys is
 file rather than a finding that needed a dedicated probe twice.
 
 **A judge is the right reader for the residual three and could not be built here.**
-[`ConsultTool.read_answer`](../../src/simple_agents/tools.py#L1300) carries a documented
+[`ConsultTool.read_answer`](../../src/simple_agents/tools.py#L1304) carries a documented
 invariant, that it runs again on replay and on resume and must not do work beyond matching, so a
 model-backed `match=` would make a live, unrecorded, non-deterministic call on every replay.
 That is a blocker rather than a cost. It goes to [`plan.md` §2.1](../plan.md#L59) with the same
@@ -235,7 +235,7 @@ what it can see. `SimulatedEndUser` and `unattended()` declare their own.
 | The seed off the question | [`_asked_about`](../../src/simple_agents/evaluation/stand_in.py#L317) |
 | `instructions=` | Hashed into [`identity`](../../src/simple_agents/evaluation/stand_in.py#L170) |
 | `consult(reaches=)` | On `ConsultTool`, in the manifest tool entry, on every consultation record |
-| Answerers by name | [`_channel_in`](../../src/simple_agents/tools.py#L1369), `_playing`, `RunEnvelope(end_user={...})` |
+| Answerers by name | [`_channel_in`](../../src/simple_agents/tools.py#L1373), `_playing`, `RunEnvelope(end_user={...})` |
 | `declared_choice` | On `ModelAnswer`, on `Reply`, on the record; `per_node.consultation_misreadings` |
 | `unanswered_consultations` | Per rollout, off the trajectory in the pass that already reads it |
 | `may_suspend` | On the channel; `concurrent_tools` accepts a consult tool that declares it |

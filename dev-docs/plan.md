@@ -25,7 +25,6 @@ record belongs in the record, and this section is the header above and the table
 | Id | Item | State | What it is, and the record |
 |---|---|---|---|
 | P3-71 | **Working through dogfood #6's findings** | scheduled 2026-09-02; **the sitting was taken the same day** and scheduled `P3-72` to `P3-77`; 19 candidates, 0 open | `lost-the-plot`, a TV Time replacement with a Flutter app, built 2026-09-01 to 02 on PyPI `0.1.1` and `0.1.2`. [`runs/dogfood-6/findings.md`](runs/dogfood-6/findings.md#L1) is the evidence, [`inventory.md`](runs/dogfood-6/inventory.md#L1) §3 the queue. Done when the six are built |
-| P3-73 | **An index that grows, on the CPU or the GPU** | scheduled 2026-09-02 at `P3-71`'s sitting | `DocumentIndex.add`, numpy as the default store, FAISS with GPU as an optional extra, a binary save format, and the store on the record. [`items/an-index-that-grows.md`](items/an-index-that-grows.md#L1) |
 | P3-74 | **Dogfood #6's runtime fixes** | scheduled 2026-09-02 at `P3-71`'s sitting; the evaluation-isolation half ruled the same day, both halves | The slice terminal, run inputs on `NodeContext`, quota phrases per backend, a failed resume, `nearest_cross_split`, and an evaluation over a pipeline that reads back what it writes. [`items/dogfood-6-runtime-fixes.md`](items/dogfood-6-runtime-fixes.md#L1) |
 | P3-75 | **Which pipeline a run is** | scheduled 2026-09-02 at `P3-71`'s sitting | The registered name on the manifest and the results file, the three checks reading within it, FT-42 across roles, scripted runs marked, the view's constants. [`items/which-pipeline-a-run-is.md`](items/which-pipeline-a-run-is.md#L1) |
 | P3-76 | **What the procedure reaches** | scheduled 2026-09-02 at `P3-71`'s sitting | Adopted facilities read against the code, `rerun` where resumability is asked for, `not_applicable` re-asked, prompt text with a `prompt_rule`, and the product design section at `ship`. [`items/what-the-procedure-reaches.md`](items/what-the-procedure-reaches.md#L1) |
@@ -99,9 +98,9 @@ candidate.
 - **The analyzer in front of BM25 does nothing but lowercase.** Accepted 2026-08-19, raised by
   Thilina at the `docs/retrieval.md` review: *"BM25 should be implemented properly, not this
   half assed whole word match."* **The scoring is not the gap.**
-  [`lexical_scores`](../src/simple_agents/builtins/search.py#L421) is textbook BM25, with the
+  [`lexical_scores`](../src/simple_agents/builtins/search.py#L674) is textbook BM25, with the
   smoothed Robertson IDF, `K1 = 1.5` and `B = 0.75` and length normalisation against the mean.
-  **What does nothing is [`tokens`](../src/simple_agents/builtins/search.py#L93)**, which is
+  **What does nothing is [`tokens`](../src/simple_agents/builtins/search.py#L109)**, which is
   `[a-z0-9]+` over lowercased text: no stemming, no lemmatisation, no subword fallback. Measured
   2026-08-19 over a two-document index, `"books"` returns only the document saying *books* and
   `"book"` only the one saying *book*, so a plural does not find its singular. `docs/retrieval.md`
@@ -109,7 +108,7 @@ candidate.
   **What it would cost:** a stemmer, which is a language decision the library has half-made
   already, since `ENGLISH_STOPWORDS` ships as the default. It changes every lexical result, so
   every cassette holding a `document_search` re-records. And
-  [`DocumentIndex.save`](../src/simple_agents/builtins/search.py#L306) records which model made
+  [`DocumentIndex.save`](../src/simple_agents/builtins/search.py#L578) records which model made
   the vectors and says nothing about how the text was tokenised, so an index file written under
   one analyzer and loaded under another would mix silently, the way two embedding models are
   refused from doing.
@@ -171,6 +170,7 @@ candidate.
 Not decided whether to own at all. Each names what would decide it. **An entry carries the date it
 was deferred**, and `check_docs.py` reports one older than 21 days as due for re-decision.
 
+- *Deferred 2026-09-02.* **Splitting the lexical half out of `DocumentIndex`.** Raised by the shape ratchet at `P3-73`, which the class passed at 525 lines and 33 methods with a recorded reason. **What it would be:** a `Postings` object owning the documents, the postings, the lengths and the mean, with `DocumentIndex` coordinating it and the vector store. **Why it did not happen at `P3-73`:** one lock covers the documents, the postings and the store together, and three properties built there rest on that — a save excludes an add, an add releases the lock across its embedding call, and a search reads one consistent table. Two objects means that lock spans both or the properties weaken. **What would settle it:** a second reader of the postings that is not this index, or a third verb that pushes the class past what one reader holds. [`build-logs/an-index-that-grows-build-log.md`](build-logs/an-index-that-grows-build-log.md#L1) §3.
 - *Deferred 2026-09-02.* **The view's answer flow writing the brief through the writer.** Left open by `P3-72`. An answer given on the served page lands as a thread in `comments.toml` and the coding agent records it into the brief afterwards, now through `simple-agents record`. **What it would be:** the page writing the entry itself, stamped, with the thread kept as the record of the exchange. **What would settle it:** whether the coding agent's reading of an answer before it is recorded is worth keeping, which is `docs/view.md` §5's stated reason for the thread; one project where a builder's inline answer was recorded unchanged every time is the evidence for dropping it.
 - *Deferred 2026-08-29.* **`research.md`'s section heading is "What this turns on, having
   looked".** Noted while applying [`design/view.md`](design/view.md#L412) decision 29, which struck
@@ -264,7 +264,7 @@ was deferred**, and `check_docs.py` reports one older than 21 days as due for re
   byte-identical before and after. **What that costs:** FT-15 passes, FT-37 stays silent, FT-38
   stays silent, and `confirmed_against` still matches, so the one failure FT-37 exists for, a
   reported number produced by a pipeline the project no longer has, is invisible for this shape of
-  edit. [`source_version`](../src/simple_agents/records/manifest.py#L596) hashes a function's source and
+  edit. [`source_version`](../src/simple_agents/records/manifest.py#L605) hashes a function's source and
   what it closed over, and a module global is neither.
   **Why it is not already closed:** `P3-29`'s decision 4, 2026-08-27, put constants outside the
   fingerprint, and the reason holds for the other 47 of dogfood #5's 48, which are thresholds and
@@ -531,6 +531,7 @@ Not now. **This list means out for now rather than out forever**, on Thilina's r
 Newest first. **One line each: what shipped, what it cost, and a link to the build log**, and
 `check_docs.py` fails an entry over 450 characters, link targets aside. What an item found is its
 build log's job.
+- **An index that grows** (P3-73), 2026-09-02, out of `DF6-I14`. `add`, `replace` and `remove` embed only what changed; `NumpyVectors` is the default store and `FaissVectors` ships behind a new `ann` extra, exact or approximate, CPU or GPU; the vectors save to a binary file and the analyzer is recorded, unblocking §2.1's BM25 entry. Manifest `0.40`, index file `2.0`; 4,254 tests. [`build-logs/an-index-that-grows-build-log.md`](build-logs/an-index-that-grows-build-log.md#L1)
 - **The brief writer** (P3-72), 2026-09-02, out of `DF6-I09`. `simple-agents record answer` and `record decision` write one table of `brief.toml` stamped from the clock and leave the rest byte for byte, and `record set`, `confirmed`, `read-against` and `shape` cover the keys above the tables; FT-44 fails a stamp ahead of the clock. Twenty-seven checks, 44 taxonomy entries; no format moved; 4,165 tests. [`build-logs/the-brief-writer-build-log.md`](build-logs/the-brief-writer-build-log.md#L1)
 - **Going public** (P3-31), 2026-09-02. `0.1.0` to `0.1.2` on PyPI as `simple-llm-agents` by trusted publishing off a `v*` tag, the public repository from the scanned tree with this one kept as the archive, the scan gated in CI, and dogfood #6 installed from it cold. No format moved; 4,134 tests. [`build-logs/going-public-build-log.md`](build-logs/going-public-build-log.md#L1)
 - **The undocumented APIs** (P3-67), 2026-09-01. `OpenAIReranker` and the fakes into `docs/retrieval.md`, re-pricing as `docs/run-envelope.md` §4.5, `answer_shelved`'s return in `docs/product.md`; the §4.5 example is executed by a test, which failed its first two drafts. 4,115 tests. [`build-logs/the-undocumented-apis-build-log.md`](build-logs/the-undocumented-apis-build-log.md#L1)

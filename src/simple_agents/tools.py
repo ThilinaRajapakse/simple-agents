@@ -729,6 +729,10 @@ class Tool:
     """The ``HostPolicy`` declaration this tool was built with, or ``None``. A run binds its
     own copy of the declaration and fills the tool's ``HostPolicy`` parameter with the copy;
     a tool declaring none is filled from the pipeline's ``fetch_policy=``."""
+    searches: Any = field(default=None, repr=False, compare=False)
+    """The ``DocumentIndex`` this tool searches, or ``None``. Set by ``document_search``. The
+    manifest reads how the index ranks off it, and reads the size of the corpus off it again
+    when the run ends, since a run that adds documents changes that."""
     _validator: Callable[..., Any] | None = None
     _accepts: frozenset[str] | None = None
     _derived: str | None = field(default=None, repr=False)

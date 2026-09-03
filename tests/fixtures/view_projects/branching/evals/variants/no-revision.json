@@ -1,9 +1,9 @@
 {
   "variant_format_version": "0.3",
   "baseline": {
-    "eval_id": "eval_43ba83d51c6f",
+    "eval_id": "eval_a5b2bb34844f",
     "graph_fingerprint": "sha256:d755d943bc7de3eb",
-    "behaviour_fingerprint": "sha256:da935b68100f2403"
+    "behaviour_fingerprint": "sha256:3ccdcc9165842145"
   },
   "variants": {
     "no revision": {
@@ -69,7 +69,7 @@
             "status": "unchanged",
             "calls": "replayed",
             "estimated_calls": 1,
-            "estimated_cost": 0.0008856000000000001
+            "estimated_cost": 0.0008792000000000001
           },
           {
             "node_id": "escalate",
@@ -94,22 +94,15 @@
           }
         ]
       },
-      "eval_id": "eval_3ee65365fe4e",
+      "eval_id": "eval_dad3b69a290e",
       "graph_fingerprint": "sha256:e6aa2bd179c9a971",
-      "behaviour_fingerprint": "sha256:8b5c628b2fcbcb50",
+      "behaviour_fingerprint": "sha256:5230925f97114292",
       "comparison": {
         "comparison_format_version": "0.1",
         "shared_examples": 4,
         "only_before": [],
         "only_after": [],
         "changed": {
-          "baseline": [
-            {
-              "version": "sha256:52a243b152ac",
-              "source": "derived"
-            },
-            null
-          ],
           "nodes.critique.loop.max_iterations": [
             2,
             1
@@ -119,8 +112,8 @@
             "sha256:e6aa2bd179c9a971"
           ],
           "behaviour_fingerprint": [
-            "sha256:da935b68100f2403",
-            "sha256:8b5c628b2fcbcb50"
+            "sha256:3ccdcc9165842145",
+            "sha256:5230925f97114292"
           ]
         },
         "moved": [],
@@ -688,8 +681,8 @@
         "groups": {}
       },
       "cost": {
-        "baseline": 0.0015361,
-        "variant": 0.0015361
+        "baseline": 0.0015297000000000004,
+        "variant": 0.0015297000000000004
       },
       "tool_spend": {
         "baseline": 0.008,
@@ -703,7 +696,7 @@
             "type": "unknown",
             "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
           },
-          "output": 1839
+          "output": 1823
         },
         "variant": {
           "input_uncached": 8005,
@@ -712,7 +705,7 @@
             "type": "unknown",
             "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
           },
-          "output": 1839
+          "output": 1823
         }
       }
     }

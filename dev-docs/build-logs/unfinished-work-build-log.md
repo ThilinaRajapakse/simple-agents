@@ -68,7 +68,7 @@ invalidated, because a cassette is keyed on the request rather than on the recor
 - **`node_metrics(run_dir)`** publishes `per_node` over a directory rather than adding a
   reader, with `role`, `live`, `since` and `last`.
 - **The manifest carries `unfinished`**, read off the trajectory
-  [`recording.py` `_close_manifest`](../../src/simple_agents/pipeline/recording.py#L653) already reads back at the end of
+  [`recording.py` `_close_manifest`](../../src/simple_agents/pipeline/recording.py#L679) already reads back at the end of
   every run for cost, so it costs no extra I/O and agrees with the file by construction:
   payload sampling has already run by then, so the manifest says what a reader of that
   trajectory can see and no more.

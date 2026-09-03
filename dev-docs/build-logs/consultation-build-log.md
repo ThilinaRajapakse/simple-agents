@@ -34,7 +34,7 @@ shape on something found by reading the source or the runs rather than the recor
 
 [`trajectory.py`, `ConsultationRecord`](../../src/simple_agents/records/trajectory.py#L456) declares six
 resolutions: `pending`, `answered`, `unmatched`, `declined`, `timed_out`, `defaulted`.
-[`tools.py`, `ConsultTool.resolve`](../../src/simple_agents/tools.py#L1392) produces four.
+[`tools.py`, `ConsultTool.resolve`](../../src/simple_agents/tools.py#L1396) produces four.
 **`timed_out` and `defaulted` are produced by nothing.**
 
 [`docs/trajectory-format.md` §4.3](../../docs/trajectory-format.md#L368) tells a reader
@@ -418,7 +418,7 @@ documentation correction §4 left for the code.
 | `Unavailable(reason=...)` | A `str` subclass whose text is the instruction the model reads, carrying `reason`. [`consult.py`, `Unavailable`](../../src/simple_agents/builtins/consult.py#L135) |
 | `unattended()` | A shipped channel returning nothing else, declaring `answered_by` of `nobody` |
 | `ask_on_stdin` | Shipped, declaring no answerer of its own. §7.3 is why |
-| The `unavailable` resolution | Produced by [`ConsultTool.resolve`](../../src/simple_agents/tools.py#L1392); `timed_out` and `defaulted` are gone from the enum and from `docs/trajectory-format.md` §4.3 |
+| The `unavailable` resolution | Produced by [`ConsultTool.resolve`](../../src/simple_agents/tools.py#L1396); `timed_out` and `defaulted` are gone from the enum and from `docs/trajectory-format.md` §4.3 |
 | Told once, then answered without the channel | [`RunContext.note_no_one_to_ask`](../../src/simple_agents/context.py#L1263) and [`nodes.py`, `_no_one_answered`](../../src/simple_agents/runtime/consultation.py#L144) |
 | `on_reply(unavailable=...)` | Required, waivable by `exhaustive=True` with the other two |
 | `answered_by`, declared and recorded | `consult(answered_by=...)`, required; on every `consultation`; on the manifest tool entry ([`pipeline.py`, `_tool_entry`](../../src/simple_agents/pipeline/recording.py#L147)); counted as `per_node.consultation_answered_by` |

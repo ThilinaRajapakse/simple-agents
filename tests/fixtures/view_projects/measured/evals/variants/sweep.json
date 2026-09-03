@@ -1,9 +1,9 @@
 {
   "variant_format_version": "0.3",
   "baseline": {
-    "eval_id": "eval_6a1476bb4acb",
+    "eval_id": "eval_695a0500918f",
     "graph_fingerprint": "sha256:61d487b2d4086ca8",
-    "behaviour_fingerprint": "sha256:bf66760225290cfd"
+    "behaviour_fingerprint": "sha256:95c80c13532a85e1"
   },
   "variants": {
     "finance without the registry": {
@@ -94,9 +94,9 @@
           }
         ]
       },
-      "eval_id": "eval_c72effafd811",
+      "eval_id": "eval_7ac9f64f8102",
       "graph_fingerprint": "sha256:61d487b2d4086ca8",
-      "behaviour_fingerprint": "sha256:c6065c8cd9560f4c",
+      "behaviour_fingerprint": "sha256:5769e8c9ef9b5cc7",
       "comparison": {
         "comparison_format_version": "0.1",
         "shared_examples": 30,
@@ -114,10 +114,6 @@
               "policy_lookup"
             ]
           ],
-          "behaviour_fingerprint": [
-            "sha256:bf66760225290cfd",
-            "sha256:c6065c8cd9560f4c"
-          ],
           "tools.vendor_registry": [
             {
               "name": "vendor_registry",
@@ -125,6 +121,10 @@
               "side_effect_class": "spends_money"
             },
             null
+          ],
+          "behaviour_fingerprint": [
+            "sha256:95c80c13532a85e1",
+            "sha256:5769e8c9ef9b5cc7"
           ]
         },
         "moved": [
@@ -1003,9 +1003,9 @@
           }
         ]
       },
-      "eval_id": "eval_a74a57afed93",
+      "eval_id": "eval_3ae028b8f598",
       "graph_fingerprint": "sha256:77508166ba81039b",
-      "behaviour_fingerprint": "sha256:d90a9d3cdda1c904",
+      "behaviour_fingerprint": "sha256:3a0777c5b9e167b7",
       "comparison": {
         "comparison_format_version": "0.1",
         "shared_examples": 30,
@@ -1021,8 +1021,8 @@
             "sha256:77508166ba81039b"
           ],
           "behaviour_fingerprint": [
-            "sha256:bf66760225290cfd",
-            "sha256:d90a9d3cdda1c904"
+            "sha256:95c80c13532a85e1",
+            "sha256:3a0777c5b9e167b7"
           ]
         },
         "moved": [],

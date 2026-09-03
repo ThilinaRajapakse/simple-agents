@@ -5,7 +5,7 @@ stage = "build"
 understanding_confirmed_at = "build"
 design_confirmed_at = "build"
 research_confirmed_at = "build"
-confirmed_against = "sha256:add27436ac048be7"
+confirmed_against = "sha256:f328fa575225d020"
 
 [entries.what_it_does]
 status = "answered"

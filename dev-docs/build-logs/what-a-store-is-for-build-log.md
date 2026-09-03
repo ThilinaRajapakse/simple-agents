@@ -75,7 +75,7 @@ the store to declare and the argument to pass; a store with no scope names the a
 Both fire before the run directory exists.
 
 **What the build found that the design did not know.**
-[`Manifest.restore`](../../src/simple_agents/records/manifest.py#L455) **drops three fields the run
+[`Manifest.restore`](../../src/simple_agents/records/manifest.py#L463) **drops three fields the run
 recorded**, found when the digest check read `manifest.memory` on a resume and got `None`.
 Measured rather than reasoned: a run making one model call, suspending and resuming leaves a
 manifest whose `schemas` map is empty while its own trajectory record names a block by digest, so

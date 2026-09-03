@@ -3,7 +3,7 @@ stage = "ship"
 understanding_confirmed_at = "ship"
 design_confirmed_at = "ship"
 research_confirmed_at = "ship"
-confirmed_against = "sha256:bf66760225290cfd"
+confirmed_against = "sha256:95c80c13532a85e1"
 results = "evals/results/held-out.json"
 comments_block_gates = false
 
@@ -250,6 +250,11 @@ considered = ["escalating anything ambiguous"]
 because = "a claim that breaks a rule is refused, and sending it on would read as approval"
 produces = ["decide"]
 
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-08-26T10:00:00Z"
+answer = "Reporting; comments are answered in batches."
+
 # The four the `ship` gate requires, and the two decision kinds nothing else records.
 
 [entries.someone_there]
@@ -296,8 +301,3 @@ recorded_at = "2026-08-27T09:14:02Z"
 chose = "a claim is right when the decision matches and every field read off it matches"
 considered = ["the decision alone"]
 because = "a right decision reached off a misread total is right by accident"
-
-[entries.comments_block_gates]
-status = "answered"
-recorded_at = "2026-08-26T10:00:00Z"
-answer = "Reporting; comments are answered in batches."

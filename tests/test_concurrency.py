@@ -1345,7 +1345,7 @@ class TestTheVectorStoreUnderOverlap:
 
     def test_two_writers_never_file_a_vector_under_another_id(self) -> None:
         """A mispairing is silent: the scores are right and the documents named are not."""
-        from simple_agents.builtins.ranking import VectorScan
+        from simple_agents.builtins.vectors import VectorScan
 
         store = VectorScan()
         threads, each = 8, 300
@@ -1376,7 +1376,7 @@ class TestTheVectorStoreUnderOverlap:
         assert mispaired == []
 
     def test_a_search_beside_a_write_reads_one_consistent_table(self) -> None:
-        from simple_agents.builtins.ranking import VectorScan
+        from simple_agents.builtins.vectors import VectorScan
 
         store = VectorScan()
         store.add(["seed"], [[1.0, 0.0]])

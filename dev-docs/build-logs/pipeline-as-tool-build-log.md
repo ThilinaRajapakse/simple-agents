@@ -53,7 +53,7 @@ signature asks for a handle is not keyed in the cassette and its body runs again
 pipeline-as-tool is that case.
 
 Checked against [`context.py` `call_tool`](../../src/simple_agents/context.py#L593) and
-[`tools.py` `re_executed`](../../src/simple_agents/tools.py#L797). The mechanism is
+[`tools.py` `re_executed`](../../src/simple_agents/tools.py#L801). The mechanism is
 `Tool.re_executed`, which is `True` for a tool holding a `ModelHandle` or a `Workspace`
 (`RE_EXECUTED_HANDLE_TYPES`), and `call_tool` returns before keying anything when it is.
 

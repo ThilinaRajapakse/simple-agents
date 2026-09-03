@@ -493,14 +493,14 @@ measures hybrid against one arm, and a reranked search against the same search w
 | "**Lexical retrieval relies on (sub)word overlap.**" | it matches whole words and stems nothing |
 
 **The third was factual and the truth is more useful than the claim.**
-[`tokens`](../../src/simple_agents/builtins/search.py#L93) is `[a-z0-9]+` over lowercased text.
+[`tokens`](../../src/simple_agents/builtins/search.py#L109) is `[a-z0-9]+` over lowercased text.
 Measured over a two-document index, `"books"` returns only the document saying *books* and
 `"book"` only the one saying *book*. "(sub)word" would have a builder expect a plural to find its
 singular.
 
 **That produced a `plan.md` §2.1 entry, and his framing was narrowed.** He asked for BM25 to be
 "implemented properly, not this half assed whole word match".
-[`lexical_scores`](../../src/simple_agents/builtins/search.py#L421) **is** textbook BM25:
+[`lexical_scores`](../../src/simple_agents/builtins/search.py#L674) **is** textbook BM25:
 smoothed Robertson IDF, `K1 = 1.5`, `B = 0.75`, length normalisation against the mean. The gap
 is the analyzer in front of it, which is a smaller and differently-shaped piece of work, and the
 entry says so rather than accepting the premise.

@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.29",
-  "eval_id": "eval_320dd2a44191",
-  "created_at": "2026-08-28T21:41:27.579Z",
+  "eval_id": "eval_90dfe4824953",
+  "created_at": "2026-09-02T17:32:49.484Z",
   "config": {
     "split": "held_out",
     "k": 2,
@@ -394,7 +394,30 @@
       }
     ],
     "graph_fingerprint": "sha256:7fea42ff55becbdb",
-    "behaviour_fingerprint": "sha256:0f9e53bd63a0333d",
+    "tools": [
+      {
+        "name": "handbook_lookup",
+        "version": "sha256:7c92a3187881",
+        "side_effect_class": "read_only"
+      },
+      {
+        "name": "web_search",
+        "version": "sha256:c67d962aeb11",
+        "side_effect_class": "spends_money"
+      },
+      {
+        "name": "consult",
+        "version": "sha256:ffdee4e0bb7e",
+        "side_effect_class": "read_only"
+      }
+    ],
+    "budget": {
+      "max_steps": 14,
+      "max_tokens": 60000,
+      "max_cost": 0.2,
+      "max_wall_clock_ms": null
+    },
+    "behaviour_fingerprint": "sha256:1e0c1a5be52dab5e",
     "prompts": {
       "classify": {
         "version": "sha256:41be87db262d",
@@ -417,23 +440,6 @@
         "source": "derived"
       }
     },
-    "tools": [
-      {
-        "name": "handbook_lookup",
-        "version": "sha256:7c92a3187881",
-        "side_effect_class": "read_only"
-      },
-      {
-        "name": "web_search",
-        "version": "sha256:c67d962aeb11",
-        "side_effect_class": "spends_money"
-      },
-      {
-        "name": "consult",
-        "version": "sha256:ffdee4e0bb7e",
-        "side_effect_class": "read_only"
-      }
-    ],
     "model": {
       "backend": "hosted_api",
       "request_model": "gemini-3.1-flash-lite",
@@ -456,12 +462,6 @@
       "misses": 0,
       "recorded": 32,
       "diverged": 0
-    },
-    "budget": {
-      "max_steps": 14,
-      "max_tokens": 60000,
-      "max_cost": 0.2,
-      "max_wall_clock_ms": null
     },
     "max_spend": 2.0,
     "scored_from": "rollouts",
@@ -809,7 +809,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 6916,
+      "wall_clock_ms": 7409,
       "absent_outputs": 4,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -890,7 +890,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 6,
+      "wall_clock_ms": 2,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -963,7 +963,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 6027,
+      "wall_clock_ms": 6612,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1044,7 +1044,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3629,
+      "wall_clock_ms": 3726,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1127,7 +1127,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3224,
+      "wall_clock_ms": 3178,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1360,7 +1360,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 1,
+      "wall_clock_ms": 0,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1441,7 +1441,7 @@
       },
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3,
+      "wall_clock_ms": 2,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1501,7 +1501,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-export-filter-0",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-export-filter-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-export-filter-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {
@@ -1580,7 +1580,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-export-filter-1",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-export-filter-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-export-filter-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {
@@ -1662,7 +1662,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-nonsense-0",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-nonsense-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-nonsense-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {
@@ -1737,7 +1737,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-nonsense-1",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-nonsense-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-nonsense-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {
@@ -1809,7 +1809,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-seat-count-0",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-seat-count-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-seat-count-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {
@@ -1888,7 +1888,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-seat-count-1",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-seat-count-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-seat-count-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {
@@ -1970,7 +1970,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-thanks-0",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-thanks-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-thanks-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {
@@ -2045,7 +2045,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-thanks-1",
-      "trajectory": "runs/eval/eval_320dd2a44191/t-thanks-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_90dfe4824953/t-thanks-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "classify": {

@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "P3-72: FT-44 joins checks.py, and _parser gains the record command's one registration call",
+  "reason": "P3-73: DocumentIndex gains add, replace and remove, and the file format left it for builtins/index_file.py; the four record units gain one field each",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -55,7 +55,7 @@
       "function lines": 69
     },
     "src/simple_agents/builtins/search.py::class::DocumentIndex": {
-      "class lines": 366
+      "class lines": 542
     },
     "src/simple_agents/builtins/websearch.py::function::web_search": {
       "function lines": 74
@@ -350,7 +350,7 @@
       "function branches": 13
     },
     "src/simple_agents/pipeline/recording.py::function::_close_manifest": {
-      "function lines": 60
+      "function lines": 66
     },
     "src/simple_agents/pipeline/recording.py::function::_new_manifest": {
       "function lines": 54
@@ -367,14 +367,14 @@
       "class lines": 214
     },
     "src/simple_agents/records/manifest.py::class::Manifest": {
-      "class lines": 396
+      "class lines": 405
     },
     "src/simple_agents/records/manifest.py::function::Manifest.restore": {
-      "function branches": 36,
-      "function lines": 65
+      "function branches": 37,
+      "function lines": 66
     },
     "src/simple_agents/records/manifest.py::function::Manifest.to_json": {
-      "function lines": 71
+      "function lines": 72
     },
     "src/simple_agents/records/suspension.py::function::ValueCodec.decode": {
       "function branches": 14,
@@ -423,14 +423,14 @@
       "function lines": 56
     },
     "src/simple_agents/tools.py::module": {
-      "module lines": 926
+      "module lines": 930
     },
     "src/simple_agents/view/cards.py::function::_type_name": {
       "function branches": 14
     },
     "src/simple_agents/view/discovery.py::function::load_project": {
       "function branches": 14,
-      "function lines": 65
+      "function lines": 61
     },
     "src/simple_agents/view/evaluation.py::function::read_evaluation": {
       "function lines": 51
@@ -439,7 +439,7 @@
       "function branches": 14
     },
     "src/simple_agents/view/findings.py::module": {
-      "module lines": 1173
+      "module lines": 896
     },
     "src/simple_agents/view/operating.py::function::read_operating": {
       "function lines": 53
@@ -473,7 +473,7 @@
     "src/simple_agents/builtins/http.py::function::http_fetch._fetch": "The transport half of the tool, closed over its policy.",
     "src/simple_agents/builtins/http.py::function::read_page": "One shipped tool; the length is its reading's steps.",
     "src/simple_agents/builtins/memory.py::function::memory_search": "One shipped tool; the branches are the query shapes it accepts.",
-    "src/simple_agents/builtins/search.py::class::DocumentIndex": "One index: build, search, snippet; kept whole at P3-63 and its packed stopword list feeds recorded digests.",
+    "src/simple_agents/builtins/search.py::class::DocumentIndex": "One index: build, grow, search, snippet. The file format left it at P3-73. What holds the rest together is one lock over the documents, the postings and the store: a save excludes an add, and an add releases it across the embedding call. Splitting the lexical half out puts that lock across two objects, which plan.md 2.2 carries.",
     "src/simple_agents/builtins/websearch.py::function::web_search": "One shipped tool; the length is its provider handling.",
     "src/simple_agents/cli/main.py::function::_comments": "One subcommand's rendering; each branch is one field's presence rule.",
     "src/simple_agents/cli/main.py::function::_parser": "The command tree declared once; the length is the commands'.",
