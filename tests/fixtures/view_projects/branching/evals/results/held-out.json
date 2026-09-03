@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.31",
-  "eval_id": "eval_c98a800fac80",
-  "created_at": "2026-09-03T18:46:36.351Z",
+  "eval_id": "eval_fd56c1f0d78e",
+  "created_at": "2026-09-03T23:13:06.603Z",
   "config": {
     "split": "held_out",
     "k": 2,
@@ -417,27 +417,48 @@
       "max_cost": 0.2,
       "max_wall_clock_ms": null
     },
-    "behaviour_fingerprint": "sha256:3ccdcc9165842145",
+    "behaviour_fingerprint": "sha256:3de4f99b40fc9229",
     "prompts": {
       "classify": {
-        "version": "sha256:41be87db262d",
-        "source": "derived"
+        "version": "sha256:debf80e31c98",
+        "source": "derived",
+        "text": "written",
+        "observed": {
+          "sha256:6a1dc63f35f4": 1
+        },
+        "distinct": 1
       },
       "research.read_source": {
-        "version": "sha256:8f997861297d",
-        "source": "derived"
+        "version": "sha256:f600cd14f75e",
+        "source": "derived",
+        "text": "written",
+        "observed": {
+          "sha256:29f7f5f982d0": 2
+        },
+        "distinct": 1
       },
       "draft": {
-        "version": "sha256:ad41bef6a03f",
-        "source": "derived"
+        "version": "sha256:230752cc2a9d",
+        "source": "derived",
+        "text": "written",
+        "observed": {
+          "sha256:e42adbf50719": 1
+        },
+        "distinct": 1
       },
       "critique": {
-        "version": "sha256:a0dddd175518",
-        "source": "derived"
+        "version": "sha256:e1ca2de3ccdb",
+        "source": "derived",
+        "text": "written",
+        "observed": {
+          "sha256:e232dfead79a": 1
+        },
+        "distinct": 1
       },
       "answer_directly": {
-        "version": "sha256:c93081d3dd51",
-        "source": "derived"
+        "version": "sha256:6a76d50ed2fd",
+        "source": "derived",
+        "text": "written"
       }
     },
     "model": {
@@ -894,7 +915,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 7596,
+      "wall_clock_ms": 7755,
       "absent_outputs": 3,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -975,7 +996,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 1,
+      "wall_clock_ms": 3,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1048,7 +1069,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 6332,
+      "wall_clock_ms": 6343,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1129,7 +1150,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 4099,
+      "wall_clock_ms": 4462,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1212,7 +1233,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3498,
+      "wall_clock_ms": 3944,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1299,7 +1320,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3695,
+      "wall_clock_ms": 3645,
       "absent_outputs": 0,
       "unfinished_executions": 1,
       "unfinished_items": 0,
@@ -1539,7 +1560,7 @@
       },
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 5,
+      "wall_clock_ms": 3,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1599,7 +1620,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-export-filter-0",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-export-filter-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-export-filter-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1684,7 +1705,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-export-filter-1",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-export-filter-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-export-filter-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1772,7 +1793,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-nonsense-0",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-nonsense-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-nonsense-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1853,7 +1874,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-nonsense-1",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-nonsense-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-nonsense-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -1931,7 +1952,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-seat-count-0",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-seat-count-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-seat-count-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2016,7 +2037,7 @@
       "outcome": "correct",
       "answer": "critique",
       "run_id": "t-seat-count-1",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-seat-count-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-seat-count-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2101,7 +2122,7 @@
       "outcome": "correct",
       "answer": "answer_directly",
       "run_id": "t-thanks-0",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-thanks-0/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-thanks-0/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {
@@ -2189,7 +2210,7 @@
         "reason": "escalated to the rota, so no reply went out"
       },
       "run_id": "t-thanks-1",
-      "trajectory": "runs/eval/eval_c98a800fac80/t-thanks-1/trajectory.jsonl",
+      "trajectory": "runs/eval/eval_fd56c1f0d78e/t-thanks-1/trajectory.jsonl",
       "error": null,
       "nodes": {
         "intake": {

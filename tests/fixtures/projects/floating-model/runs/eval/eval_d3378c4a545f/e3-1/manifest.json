@@ -1,0 +1,446 @@
+{
+  "format_version": "0.42",
+  "trajectory_format_version": "0.30",
+  "library_version": "0.1.2",
+  "run_id": "e3-1",
+  "pipeline": "answer",
+  "role": "agent",
+  "scripted": false,
+  "live": false,
+  "end_user": null,
+  "evaluation": {
+    "eval_id": "eval_d3378c4a545f",
+    "example": "e3",
+    "rollout": 1,
+    "turn": 1
+  },
+  "conversation": null,
+  "started_at": "2026-09-03T23:07:45.893Z",
+  "ended_at": "2026-09-03T23:07:45.902Z",
+  "outcome": "completed",
+  "stopped_early": null,
+  "seed": 1272963495,
+  "concurrency": 1,
+  "budget": {
+    "max_steps": null,
+    "max_tokens": 200000,
+    "max_cost": null,
+    "max_wall_clock_ms": 600000
+  },
+  "cost_basis": {
+    "kind": "price",
+    "currency": "USD",
+    "input_uncached_per_mtok": 0.15,
+    "input_cache_read_per_mtok": 0.015,
+    "input_cache_write_per_mtok": null,
+    "cache_write_per_mtok_by_ttl": {},
+    "output_per_mtok": 0.6
+  },
+  "models": {
+    "configured": {
+      "backend": "hosted_api",
+      "request_model": "mistral-small-latest",
+      "model_revision": null
+    },
+    "observed": [
+      {
+        "backend": "hosted_api",
+        "request_model": "mistral-small-2603",
+        "response_model": "mistral-small-2603",
+        "model_revision": null,
+        "calls": 3
+      }
+    ]
+  },
+  "prompts": {
+    "hunt": {
+      "version": "sha256:c90cb48eb20f",
+      "source": "derived",
+      "text": "written",
+      "observed": {
+        "sha256:d954bf38a1cc": 1
+      },
+      "distinct": 1
+    },
+    "verify": {
+      "version": "sha256:bdf8377e06fc",
+      "source": "derived",
+      "text": "written",
+      "observed": {
+        "sha256:9946ff7a5dcc": 1
+      },
+      "distinct": 1
+    }
+  },
+  "slice": null,
+  "nodes": [
+    {
+      "node_id": "hunt",
+      "node_kind": "agent",
+      "successors": [
+        "verify"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:220e748d69ffc27c",
+      "accepts": null,
+      "tools": [
+        "catalogue_search"
+      ],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "allow_unfinished": false,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": 0.0,
+        "max_output_tokens": null,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": {
+        "max_steps": 6,
+        "max_tokens": 30000,
+        "max_cost": null,
+        "max_wall_clock_ms": 120000
+      },
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    },
+    {
+      "node_id": "verify",
+      "node_kind": "llm",
+      "successors": [],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": "sha256:220e748d69ffc27c",
+      "accepts": null,
+      "tools": [],
+      "planned": false,
+      "touches": [],
+      "allow_unknown": true,
+      "context_builder": {
+        "name": "AppendAll",
+        "config": {
+          "max_input_tokens": null
+        }
+      },
+      "stream": false,
+      "model": null,
+      "sampling": {
+        "temperature": 0.0,
+        "max_output_tokens": null,
+        "extra": {}
+      },
+      "finish_check": null,
+      "node_budget": null,
+      "node_budget_per_item": null,
+      "fan_out": {
+        "over": null,
+        "keep": [],
+        "max_failures": null
+      }
+    }
+  ],
+  "containers": [],
+  "tools": [
+    {
+      "name": "catalogue_search",
+      "version": "sha256:d4c17414dd9d",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null,
+      "retrieval": null
+    }
+  ],
+  "constants": [
+    {
+      "module": "record_backend_cassettes",
+      "name": "SEED",
+      "value": 41
+    },
+    {
+      "module": "record_backend_cassettes",
+      "name": "EVAL_SEED",
+      "value": 41
+    },
+    {
+      "module": "record_backend_cassettes",
+      "name": "EVAL_K",
+      "value": 3
+    }
+  ],
+  "redaction": {
+    "enabled": true,
+    "builtin": true,
+    "at_boundary": [
+      "secret_env",
+      "sensitive_keys",
+      "builtin"
+    ],
+    "builtin_rules": [
+      "aws_access_key_id",
+      "bearer_token",
+      "github_token",
+      "google_api_key",
+      "huggingface_token",
+      "jwt",
+      "private_key_block",
+      "sk_prefixed_key",
+      "slack_token"
+    ],
+    "declared_rules": [],
+    "sensitive_keys": [
+      "access_token",
+      "api_key",
+      "apikey",
+      "auth_token",
+      "authorization",
+      "client_secret",
+      "cookie",
+      "passwd",
+      "password",
+      "proxy_authorization",
+      "refresh_token",
+      "secret",
+      "set_cookie",
+      "x_api_key",
+      "x_auth_token"
+    ],
+    "secret_env": [],
+    "secret_env_unusable": []
+  },
+  "recording": {
+    "payload_rate": 1.0,
+    "payloads": "kept"
+  },
+  "schemas": {
+    "sha256:7c2bf2deba2f578c": [
+      {
+        "name": "catalogue_search",
+        "description": "Search the retailer notes. Returns the matching entries, or a note that none matched.\n\nPass a few words, such as a retailer name or a garment name.",
+        "input_schema": {
+          "properties": {
+            "query": {
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "name": "finish",
+        "description": "Call this tool with the final answer. Its arguments are the answer itself and are validated against the required schema.\nA field that accepts `unknown` takes either form, and both are answers:\n  \"inseam_cm\": 81\n  \"inseam_cm\": {\"type\": \"unknown\", \"reason\": \"not listed on the page\"}\nSend the object, not the word. A guess presented as a fact is not an answer, and neither is the string \"unknown\" where the object belongs.",
+        "input_schema": {
+          "$defs": {
+            "Unknown": {
+              "description": "The value the field asks for, where the agent established that it is not available. Supply `reason` saying what was looked for and what was found instead.",
+              "properties": {
+                "type": {
+                  "const": "unknown",
+                  "default": "unknown",
+                  "title": "Type",
+                  "type": "string"
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "description": "What was looked for, and what was found instead.",
+                  "title": "Reason"
+                }
+              },
+              "title": "Unknown",
+              "type": "object"
+            }
+          },
+          "properties": {
+            "answer": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/Unknown"
+                }
+              ],
+              "description": "The value itself, or {\"type\": \"unknown\", \"reason\": \"...\"} where it is not available. Send the object, not the word \"unknown\".",
+              "title": "Answer"
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Source"
+            }
+          },
+          "required": [
+            "answer"
+          ],
+          "title": "Answer",
+          "type": "object"
+        }
+      }
+    ],
+    "sha256:6057c0b2ecfeaef7": {
+      "$defs": {
+        "Unknown": {
+          "description": "The value the field asks for, where the agent established that it is not available. Supply `reason` saying what was looked for and what was found instead.",
+          "properties": {
+            "type": {
+              "const": "unknown",
+              "default": "unknown",
+              "title": "Type",
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "What was looked for, and what was found instead.",
+              "title": "Reason"
+            }
+          },
+          "title": "Unknown",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "answer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/Unknown"
+            }
+          ],
+          "description": "The value itself, or {\"type\": \"unknown\", \"reason\": \"...\"} where it is not available. Send the object, not the word \"unknown\".",
+          "title": "Answer"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        }
+      },
+      "required": [
+        "answer"
+      ],
+      "title": "Answer",
+      "type": "object"
+    }
+  },
+  "graph_fingerprint": "sha256:66cf6414b271c82e",
+  "behaviour_fingerprint": "sha256:0642295e279281e6",
+  "fetch_policy": [],
+  "mcp": [],
+  "unfinished": {},
+  "suspensions": [],
+  "resume_waivers": [],
+  "stream_waivers": [],
+  "cassette": {
+    "mode": "replay",
+    "path": "tests/cassettes/eval.jsonl",
+    "dropped": null,
+    "hits": 4,
+    "misses": 0,
+    "recorded": 0,
+    "diverged": 0
+  },
+  "memory": null,
+  "retrieval": [],
+  "paths": {
+    "trajectory": "runs/eval/eval_d3378c4a545f/e3-1/trajectory.jsonl",
+    "workspace": "runs/eval/eval_d3378c4a545f/e3-1/workspace"
+  },
+  "counts": {
+    "records": 8,
+    "run_start": 1,
+    "node_execution": 2,
+    "model_call": 3,
+    "tool_call": 2,
+    "consultation": 0,
+    "delegation": 0,
+    "resource_access": 0
+  },
+  "totals": {
+    "tokens": {
+      "input_uncached": 247,
+      "input_cache_read": 992,
+      "input_cache_write": 0,
+      "output": 100
+    },
+    "cost": {
+      "value": 0.00011193,
+      "currency": "USD",
+      "basis": "price",
+      "is_upper_bound": false,
+      "reason": null,
+      "measured": 0.00011193,
+      "priced_calls": 3,
+      "unpriced_calls": 0
+    },
+    "tool_spend": {
+      "amount": null,
+      "currency": null,
+      "calls": 0,
+      "source": null
+    },
+    "charged_cost": 0.00011193,
+    "held_back_ms": 0
+  }
+}

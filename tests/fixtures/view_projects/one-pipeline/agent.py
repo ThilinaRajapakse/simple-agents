@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from simple_agents import Budget, Deterministic, LLMNode, Maybe, Pipeline, pipeline_factory
+from simple_agents import Budget, Deterministic, LLMNode, Maybe, Pipeline, Prompt, pipeline_factory
 
 
 class Summary(BaseModel):
@@ -14,7 +14,7 @@ def load_note(inputs, ctx):
 
 
 def write_summary(inputs, ctx):
-    return f"Summarise in three lines:\n{inputs}"
+    return Prompt.user('Summarise in three lines:\n{inputs}', inputs=inputs)
 
 
 @pipeline_factory("summarise")

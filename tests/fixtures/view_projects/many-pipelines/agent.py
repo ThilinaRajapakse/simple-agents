@@ -3,6 +3,7 @@
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     NotBuilt,
     Budget,
@@ -60,11 +61,11 @@ def keep(inputs, ctx):
 
 
 def choose(inputs, ctx):
-    return "Pick the titles worth recommending, search the web where unsure."
+    return Prompt.user('Pick the titles worth recommending, search the web where unsure.')
 
 
 def write_recap(inputs, ctx):
-    return f"Write a recap of: {inputs}"
+    return Prompt.user('Write a recap of: {inputs}', inputs=inputs)
 
 
 @pipeline_factory("ingest")

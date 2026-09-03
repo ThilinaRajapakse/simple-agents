@@ -9,6 +9,7 @@ resource the first one reads, so the system level has a real flow to draw.
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     DeclaredCost,
@@ -91,10 +92,7 @@ def intake(inputs: dict, ctx) -> dict:
 
 def classify(inputs: dict, ctx) -> str:
     return (
-        "Read this support ticket and fill the fields. `needs_handbook` is true when "
-        "answering it needs the product handbook. `questions` are the handbook questions "
-        "worth asking, at most two. Say the topic is unknown only when the ticket makes no "
-        f"sense at all.\n\nTicket: {inputs['ticket']}"
+        Prompt.user('Read this support ticket and fill the fields. `needs_handbook` is true when ' 'answering it needs the product handbook. `questions` are the handbook questions ' 'worth asking, at most two. Say the topic is unknown only when the ticket makes no ' 'sense at all.\n\nTicket: {ticket}', ticket=inputs['ticket'])
     )
 
 
@@ -111,20 +109,19 @@ def pick_sources(inputs: Ticket, ctx) -> dict:
 
 
 def read_source(inputs: dict, ctx) -> str:
-    return f"In one sentence, what does this passage say?\n\n{inputs['sources']}"
+    return Prompt.user('In one sentence, what does this passage say?\n\n{sources}', sources=inputs['sources'])
 
 
 def draft_reply(inputs: Join, ctx) -> str:
     earlier = "" if "critique" in inputs.absent else (
         f"\n\nThe last draft was turned down: {inputs['critique'].why}"
     )
-    return f"Write a short support reply from these notes:\n\n{inputs['research']}{earlier}"
+    return Prompt.user('Write a short support reply from these notes:\n\n{research}{earlier}', research=inputs['research'], earlier=earlier)
 
 
 def judge_draft(inputs: Reply, ctx) -> str:
     return (
-        "Is this support reply good enough to send? It is good enough when it answers in "
-        f"plain words and invents nothing.\n\n{inputs.body}"
+        Prompt.user('Is this support reply good enough to send? It is good enough when it answers in ' 'plain words and invents nothing.\n\n{body}', body=inputs.body)
     )
 
 
@@ -134,9 +131,7 @@ def revise_or_send(output: Verdict, ctx) -> str:
 
 def answer_from_memory(inputs: Ticket, ctx) -> str:
     return (
-        "Answer this ticket. The handbook comes first; the web search is for when the "
-        "handbook has nothing; the rota answers one question where the handbook is "
-        f"unclear.\n\nTopic: {inputs.topic}"
+        Prompt.user('Answer this ticket. The handbook comes first; the web search is for when the ' 'handbook has nothing; the rota answers one question where the handbook is ' 'unclear.\n\nTopic: {topic}', topic=inputs.topic)
     )
 
 

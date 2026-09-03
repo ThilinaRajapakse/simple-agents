@@ -1,1 +1,0 @@
-{"eval_id": "eval_c8e159503a47", "finished": 60, "total": 60, "resumed": 0, "outcomes": {"correct": 36, "correct_abstention": 8, "false_confidence": 13, "missed": 1, "partially_correct": 2}, "cost": 0.017242400000000005, "currency": "USD", "elapsed_s": 132.62315405499976, "remaining_s": null, "updated_at": "2026-09-03T18:50:24.691Z"}

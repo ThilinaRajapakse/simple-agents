@@ -19,6 +19,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from simple_agents import (
+    Prompt,
     AgentNode,
     Budget,
     DeclaredCost,
@@ -183,10 +184,7 @@ def intake(inputs: dict, ctx) -> dict:
 
 def extract(inputs: dict, ctx) -> str:
     return (
-        "Read this expense claim and fill every field. Claims arrive as app entries, emails "
-        "or scanned receipts, so the text can be terse or noisy. Do not decide anything; "
-        f"only read what it says.\n\nSubmitted on: {inputs['submitted_on']}\n\n"
-        f"Claim:\n{inputs['claim']}"
+        Prompt.user('Read this expense claim and fill every field. Claims arrive as app entries, emails ' 'or scanned receipts, so the text can be terse or noisy. Do not decide anything; ' 'only read what it says.\n\nSubmitted on: {submitted_on}\n\nClaim:\n{claim}', submitted_on=inputs['submitted_on'], claim=inputs['claim'])
     )
 
 
@@ -246,9 +244,7 @@ def _facts_and_note(inputs: Any) -> tuple[dict, str]:
 def decide(inputs: Any, ctx) -> str:
     facts, sent_back = _facts_and_note(inputs)
     return (
-        f"{POLICY_TEXT}\n\nDecide this claim: approve, reject, or escalate to finance. The "
-        f"checks were computed from the claim and may be wrong where a field was misread; "
-        f"the facts above them are what to decide on.\n\n{_facts(facts)}{sent_back}"
+        Prompt.user(POLICY_TEXT + '\n\nDecide this claim: approve, reject, or escalate to finance. The checks were ' 'computed from the claim and may be wrong where a field was misread; the facts above ' 'them are what to decide on.\n\n{facts}{sent_back}', facts=_facts(facts), sent_back=sent_back)
     )
 
 
@@ -256,10 +252,7 @@ def decide_v1(inputs: Any, ctx) -> str:
     """The prompt as first written, kept so an earlier evaluation measures a different behaviour."""
     facts, _ = _facts_and_note(inputs)
     return (
-        "Decide this expense claim under the usual policy: receipts over £25, nothing older "
-        "than 90 days, category limits (meals 75, travel 400, equipment 500, software 200, "
-        "other 100), software needs a PO. Answer approve, reject, or escalate to finance.\n\n"
-        f"{_facts(facts)}"
+        Prompt.user('Decide this expense claim under the usual policy: receipts over £25, nothing older ' 'than 90 days, category limits (meals 75, travel 400, equipment 500, software 200, ' 'other 100), software needs a PO. Answer approve, reject, or escalate to ' 'finance.\n\n{facts}', facts=_facts(facts))
     )
 
 
@@ -267,9 +260,7 @@ def audit(inputs: Join, ctx) -> str:
     facts = inputs["policy_check"]
     decision = inputs["decide"]
     return (
-        f"{POLICY_TEXT}\n\nA colleague decided this claim: {decision.decision} "
-        f"({decision.reason}). Check the decision against the policy and the facts. Say "
-        f"whether it follows the policy, and what the policy gives.\n\n{_facts(facts)}"
+        Prompt.user(POLICY_TEXT + '\n\nA colleague decided this claim: {decision} ({reason}). Check the decision against ' 'the policy and the facts. Say whether it follows the policy, and what the policy ' 'gives.\n\n{facts}', decision=decision.decision, reason=decision.reason, facts=_facts(facts))
     )
 
 
@@ -297,11 +288,7 @@ def dispatch_route(output: dict, ctx) -> list:
 
 def finance_prompt(inputs: dict, ctx) -> str:
     return (
-        "A claim has been escalated to finance. Rule: a claim from an approved supplier is "
-        "approved; look the vendor up in the registry to find out. Where the vendor is not "
-        "an approved supplier, or no vendor is named, ask the finance lead whether to approve "
-        "it, and park the claim if no answer comes. Reject only where the claim breaks a rule "
-        f"outright.\n\n{_facts(inputs)}"
+        Prompt.user('A claim has been escalated to finance. Rule: a claim from an approved supplier is ' 'approved; look the vendor up in the registry to find out. Where the vendor is not ' 'an approved supplier, or no vendor is named, ask the finance lead whether to ' 'approve it, and park the claim if no answer comes. Reject only where the claim ' 'breaks a rule outright.\n\n{facts}', facts=_facts(inputs))
     )
 
 

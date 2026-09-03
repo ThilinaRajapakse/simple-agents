@@ -3,6 +3,7 @@
 from pydantic import BaseModel
 
 from simple_agents import (
+    Prompt,
     Budget,
     Deterministic,
     LLMNode,
@@ -29,7 +30,7 @@ def gather_pool(inputs, ctx):
 
 
 def present(inputs, ctx):
-    return f"Write three picks, one line each: {inputs}"
+    return Prompt.user('Write three picks, one line each: {inputs}', inputs=inputs)
 
 
 @pipeline_factory("next_pick")

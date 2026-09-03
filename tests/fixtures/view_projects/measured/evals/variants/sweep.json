@@ -1,9 +1,9 @@
 {
   "variant_format_version": "0.3",
   "baseline": {
-    "eval_id": "eval_695a0500918f",
+    "eval_id": "eval_327199d4d96f",
     "graph_fingerprint": "sha256:61d487b2d4086ca8",
-    "behaviour_fingerprint": "sha256:95c80c13532a85e1"
+    "behaviour_fingerprint": "sha256:1eab0a26f3fd978e"
   },
   "variants": {
     "finance without the registry": {
@@ -94,9 +94,9 @@
           }
         ]
       },
-      "eval_id": "eval_7ac9f64f8102",
+      "eval_id": "eval_da43ea70c8fd",
       "graph_fingerprint": "sha256:61d487b2d4086ca8",
-      "behaviour_fingerprint": "sha256:5769e8c9ef9b5cc7",
+      "behaviour_fingerprint": "sha256:0023ad4811ad5a96",
       "comparison": {
         "comparison_format_version": "0.1",
         "shared_examples": 30,
@@ -127,8 +127,8 @@
             null
           ],
           "behaviour_fingerprint": [
-            "sha256:95c80c13532a85e1",
-            "sha256:5769e8c9ef9b5cc7"
+            "sha256:1eab0a26f3fd978e",
+            "sha256:0023ad4811ad5a96"
           ]
         },
         "moved": [
@@ -1007,9 +1007,9 @@
           }
         ]
       },
-      "eval_id": "eval_3ae028b8f598",
+      "eval_id": "eval_47263c1d296a",
       "graph_fingerprint": "sha256:77508166ba81039b",
-      "behaviour_fingerprint": "sha256:3a0777c5b9e167b7",
+      "behaviour_fingerprint": "sha256:29356babbd0ec8fa",
       "comparison": {
         "comparison_format_version": "0.1",
         "shared_examples": 30,
@@ -1029,8 +1029,8 @@
             "sha256:77508166ba81039b"
           ],
           "behaviour_fingerprint": [
-            "sha256:95c80c13532a85e1",
-            "sha256:3a0777c5b9e167b7"
+            "sha256:1eab0a26f3fd978e",
+            "sha256:29356babbd0ec8fa"
           ]
         },
         "moved": [],

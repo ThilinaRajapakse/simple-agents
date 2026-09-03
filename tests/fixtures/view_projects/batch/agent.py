@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from simple_agents import Budget, Deterministic, LLMNode, Maybe, Pipeline, pipeline_factory
+from simple_agents import Budget, Deterministic, LLMNode, Maybe, Pipeline, Prompt, pipeline_factory
 from simple_agents.tools import SideEffectClass, tool
 
 
@@ -21,7 +21,7 @@ def gather(inputs, ctx):
 
 
 def write_digest(inputs, ctx):
-    return f"Write the daily digest from: {inputs}"
+    return Prompt.user('Write the daily digest from: {inputs}', inputs=inputs)
 
 
 def keep(inputs, ctx):

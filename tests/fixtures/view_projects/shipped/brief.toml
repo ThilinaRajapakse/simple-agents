@@ -3,7 +3,7 @@ stage = "ship"
 understanding_confirmed_at = "ship"
 design_confirmed_at = "ship"
 research_confirmed_at = "ship"
-confirmed_against = "sha256:95c80c13532a85e1"
+confirmed_against = "sha256:1eab0a26f3fd978e"
 results = "evals/results/held-out.json"
 comments_block_gates = false
 

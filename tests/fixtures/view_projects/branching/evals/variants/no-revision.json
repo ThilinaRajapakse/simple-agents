@@ -1,9 +1,9 @@
 {
   "variant_format_version": "0.3",
   "baseline": {
-    "eval_id": "eval_a5b2bb34844f",
+    "eval_id": "eval_bef404865882",
     "graph_fingerprint": "sha256:d755d943bc7de3eb",
-    "behaviour_fingerprint": "sha256:3ccdcc9165842145"
+    "behaviour_fingerprint": "sha256:3de4f99b40fc9229"
   },
   "variants": {
     "no revision": {
@@ -69,7 +69,7 @@
             "status": "unchanged",
             "calls": "replayed",
             "estimated_calls": 1,
-            "estimated_cost": 0.0008496
+            "estimated_cost": 0.0008964000000000001
           },
           {
             "node_id": "escalate",
@@ -94,9 +94,9 @@
           }
         ]
       },
-      "eval_id": "eval_dad3b69a290e",
+      "eval_id": "eval_a01a516a48ac",
       "graph_fingerprint": "sha256:e6aa2bd179c9a971",
-      "behaviour_fingerprint": "sha256:5230925f97114292",
+      "behaviour_fingerprint": "sha256:67126b672402e301",
       "comparison": {
         "comparison_format_version": "0.1",
         "shared_examples": 4,
@@ -116,8 +116,8 @@
             "sha256:e6aa2bd179c9a971"
           ],
           "behaviour_fingerprint": [
-            "sha256:3ccdcc9165842145",
-            "sha256:5230925f97114292"
+            "sha256:3de4f99b40fc9229",
+            "sha256:67126b672402e301"
           ]
         },
         "moved": [],
@@ -685,8 +685,8 @@
         "groups": {}
       },
       "cost": {
-        "baseline": 0.0015001,
-        "variant": 0.0015001
+        "baseline": 0.0015469000000000001,
+        "variant": 0.0015469000000000001
       },
       "tool_spend": {
         "baseline": 0.008,
@@ -700,7 +700,7 @@
             "type": "unknown",
             "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
           },
-          "output": 1749
+          "output": 1866
         },
         "variant": {
           "input_uncached": 8005,
@@ -709,7 +709,7 @@
             "type": "unknown",
             "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
           },
-          "output": 1749
+          "output": 1866
         }
       }
     }
