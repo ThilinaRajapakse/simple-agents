@@ -1,0 +1,628 @@
+<title>The Prompt Surface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Tokens lifted from src/simple_agents/view/template.html so this reads as the view it
+   would live in, rather than as a mock in someone else's palette. */
+:root{
+  --ground:#F7F5F0; --surface:#FFFFFF; --sunk:#F0EDE6;
+  --ink:#1E1C18; --muted:#57524A; --faint:#6A665C;
+  --line:#DFDAD0; --line-strong:#C2BCB0;
+  --accent:#0A6E52; --accent-soft:#D6EDE3;
+  --attention:#A8283F; --attention-soft:#F8DDE2;
+  --note:#8A5210; --note-soft:#F7E8D2;
+  --data:#3546C4; --data-soft:#E0E4FB;
+  --shadow:0 1px 2px rgba(22,27,25,.05),0 10px 26px -16px rgba(22,27,25,.25);
+  --s-1:12.5px; --s0:14px; --s1:16px; --s2:19px; --s3:24px;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:"Source Serif 4",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D1311; --surface:#151C19; --sunk:#101715;
+    --ink:#E7EEEA; --muted:#9AAAA3; --faint:#8A9A93;
+    --line:#28332F; --line-strong:#3A4842;
+    --accent:#4ECFAF; --accent-soft:#12332C;
+    --attention:#F0798F; --attention-soft:#3A171C;
+    --note:#F0A24F; --note-soft:#382812;
+    --data:#8FA0F5; --data-soft:#1B2245;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D1311; --surface:#151C19; --sunk:#101715;
+  --ink:#E7EEEA; --muted:#9AAAA3; --faint:#8A9A93;
+  --line:#28332F; --line-strong:#3A4842;
+  --accent:#4ECFAF; --accent-soft:#12332C;
+  --attention:#F0798F; --attention-soft:#3A171C;
+  --note:#F0A24F; --note-soft:#382812;
+  --data:#8FA0F5; --data-soft:#1B2245;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:var(--s0);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto;padding:22px 26px 70px}
+
+header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:12px}
+header h1{font-size:var(--s3);font-weight:700;margin:0;letter-spacing:-.01em}
+.chip{font-family:var(--mono);font-size:var(--s-1);border:1px solid var(--line-strong);
+  border-radius:999px;padding:2px 10px;color:var(--muted)}
+.stamp{margin-left:auto;color:var(--faint);font-size:var(--s-1);font-family:var(--mono)}
+nav.stages{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px;flex-wrap:wrap}
+nav.stages a{font-size:var(--s-1);font-family:var(--mono);color:var(--muted);text-decoration:none;
+  padding:8px 13px;border-bottom:2px solid transparent}
+nav.stages a.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+nav.stages a:hover{color:var(--accent)}
+nav.stages a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:3px}
+
+.rtitle{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.rtitle h2{font-size:var(--s2);margin:0;font-weight:600;letter-spacing:-.01em}
+.rtitle .count{margin-left:auto;font-family:var(--mono);font-size:var(--s-1);color:var(--faint)}
+.lede{color:var(--muted);max-width:80ch;margin:8px 0 0}
+
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 16px}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden}
+.seg button{font:inherit;font-size:var(--s-1);font-family:var(--mono);background:var(--surface);
+  color:var(--muted);border:0;padding:5px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.picker{font-family:var(--mono);font-size:var(--s-1);color:var(--muted);
+  border:1px solid var(--line);border-radius:7px;padding:5px 10px;background:var(--sunk)}
+.picker b{color:var(--ink);font-weight:500}
+
+/* ---- two columns: the path on the left, the prompts on the right ---- */
+.cols{display:grid;grid-template-columns:264px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.cols{grid-template-columns:minmax(0,1fr)}.tree{position:static}}
+
+.tree{position:sticky;top:14px;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:12px 10px 14px;box-shadow:var(--shadow);max-height:calc(100vh - 40px);
+  overflow:auto}
+.tree h3{font-family:var(--mono);font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);font-weight:500;margin:2px 0 8px 8px}
+.tree .pipe{margin-bottom:6px}
+.tree .pname{display:flex;gap:7px;align-items:center;width:100%;text-align:left;font:inherit;
+  font-family:var(--mono);font-size:var(--s-1);font-weight:500;color:var(--ink);background:none;
+  border:0;padding:5px 8px;border-radius:6px;cursor:pointer}
+.tree .pname:hover{background:var(--sunk)}
+.tree .pname .tw{color:var(--faint);width:9px;display:inline-block;transition:transform .12s}
+.tree .pipe.shut .tw{transform:rotate(-90deg)}
+.tree .pipe.shut ul{display:none}
+.tree ul{list-style:none;margin:0;padding:0 0 0 8px;border-left:1px solid var(--line);margin-left:13px}
+.tree li a{display:block;text-decoration:none;color:var(--muted);font-size:var(--s-1);
+  padding:4px 8px;border-radius:6px;border-left:2px solid transparent;margin-left:-1px}
+.tree li a:hover{background:var(--sunk);color:var(--ink)}
+.tree li a.here{background:var(--sunk);color:var(--ink);border-left-color:var(--accent);font-weight:500}
+.tree li a span{display:block;font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:1px}
+.tree li a.warn span{color:var(--note)}
+.tree li.gap{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--faint);
+  padding:3px 8px 4px;opacity:.85}
+.tree .sub{padding-left:14px;margin-left:20px}
+.tree .filters{display:flex;gap:6px;flex-wrap:wrap;padding:10px 8px 2px;border-top:1px solid var(--line);
+  margin-top:8px}
+
+.stack{display:grid;gap:14px;min-width:0}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:14px 20px 18px;box-shadow:var(--shadow);scroll-margin-top:16px}
+.step.shut{padding-bottom:14px}
+.step.shut .msgs,.step.shut .rule,.step.shut .turns{display:none}
+.shead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.shead button.id{font:inherit;font-family:var(--mono);font-size:var(--s1);color:var(--ink);
+  font-weight:500;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.shead button.id:hover{color:var(--accent)}
+.shead .tw{color:var(--faint);font-family:var(--mono);font-size:11px;margin-right:2px}
+.shead .kind{font-family:var(--mono);font-size:var(--s-1);color:var(--faint)}
+.badge{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;border:1px solid currentColor;
+  border-radius:4px;padding:1px 7px;white-space:nowrap}
+.badge.acc{color:var(--accent)} .badge.warn{color:var(--note)}
+.badge.mut{color:var(--faint)} .badge.data{color:var(--data)}
+.rule{color:var(--muted);font-size:var(--s-1);margin:7px 0 0;max-width:84ch}
+.rule b{color:var(--ink);font-weight:500}
+
+.msgs{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px 14px;margin-top:14px;
+  align-items:start}
+.msg{display:contents}
+.role{padding-top:8px}
+.role b{display:block;font-family:var(--mono);font-size:var(--s-1);color:var(--ink);
+  letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.role span{display:block;font-size:11.5px;color:var(--faint);line-height:1.35;margin-top:3px}
+.body{border:1px solid var(--line);border-left:2px solid var(--accent);border-radius:0 8px 8px 0;
+  background:var(--sunk);padding:11px 14px;font-family:var(--serif);font-size:15.5px;line-height:1.62;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.carried .body{border-left-color:var(--line-strong);color:var(--muted)}
+.msg.owned .body{border-left-color:var(--data)}
+.body .fixed{cursor:text}
+.body .fixed::selection{background:var(--note-soft)}
+
+.v{background:var(--accent-soft);border-radius:4px;padding:1px 4px;font-family:var(--mono);
+  font-size:13px;cursor:pointer;border:1px solid transparent}
+.v:hover,.v:focus-visible{border-color:var(--accent);outline:none}
+.v.capped{background:var(--note-soft)}
+.v.owned{background:var(--data-soft)}
+.v .nm{font-size:10.5px;letter-spacing:.04em;color:var(--faint);vertical-align:.55em;margin-left:3px}
+.tpl .v .nm{display:none}
+.sel{background:var(--note-soft);box-shadow:0 -2px 0 var(--note) inset}
+
+.vpanel{display:none;grid-column:2;border:1px solid var(--line-strong);border-radius:8px;
+  background:var(--surface);padding:10px 14px 12px;font-size:var(--s-1);color:var(--muted);
+  margin-top:-6px}
+.vpanel.open{display:block}
+.vpanel dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 14px;margin:0}
+.vpanel dt{font-family:var(--mono);color:var(--faint)}
+.vpanel dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.vpanel .warnline{color:var(--note);margin:8px 0 0}
+
+.acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:var(--s-1);font-family:var(--mono);border:1px solid var(--line-strong);
+  background:var(--surface);color:var(--muted);border-radius:7px;padding:4px 11px;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.primary{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.thread{grid-column:2;border:1px solid var(--line);border-radius:8px;background:var(--surface);
+  padding:11px 14px}
+.thread .at{font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.04em}
+.thread .said{margin:6px 0 0;font-family:var(--serif);font-size:15px}
+.thread .said.agent{color:var(--muted);border-left:2px solid var(--line);padding-left:10px;margin-top:9px}
+.thread .who{font-family:var(--mono);font-size:11.5px;color:var(--accent);letter-spacing:.04em}
+.thread .who.agent{color:var(--faint)}
+.composer{grid-column:2;border:1px dashed var(--line-strong);border-radius:8px;background:var(--surface);
+  padding:11px 14px}
+.composer p{margin:0 0 8px;font-size:var(--s-1);color:var(--faint);font-family:var(--mono)}
+.composer .fake{border:1px solid var(--line);border-radius:6px;background:var(--sunk);padding:9px 11px;
+  font-family:var(--serif);font-size:15px;color:var(--ink);white-space:pre-wrap}
+.composer .cur{border-left:1.5px solid var(--accent);margin-left:1px;animation:blink 1.1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.composer .cur{animation:none}}
+
+/* the loop's later turns */
+.turns{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.turns>button{font:inherit;font-family:var(--mono);font-size:var(--s-1);background:none;border:0;
+  color:var(--muted);cursor:pointer;padding:2px 0}
+.turns>button:hover{color:var(--accent)}
+.turnlist{display:none;margin-top:8px}
+.turnlist.open{display:block}
+.turn{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;padding:6px 0;
+  border-top:1px solid var(--line);font-size:var(--s-1);align-items:baseline}
+.turn .n{font-family:var(--mono);color:var(--faint)}
+.turn .what{color:var(--ink);overflow-wrap:anywhere}
+.turn .what em{color:var(--muted);font-style:normal;font-family:var(--mono);font-size:11.5px}
+.turn .cost{font-family:var(--mono);color:var(--faint);font-variant-numeric:tabular-nums;text-align:right}
+.collapsed{color:var(--muted);font-size:var(--s-1)}
+.note{font-size:var(--s-1);color:var(--faint);margin:14px 0 0;font-family:var(--mono)}
+
+.asks{margin-top:26px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);
+  padding:18px 22px 20px}
+.asks h2{font-size:var(--s2);margin:0 0 4px;font-weight:600}
+.asks>p{color:var(--muted);margin:0 0 14px;max-width:78ch}
+.ask{border-top:1px solid var(--line);padding:14px 0 2px;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:18px}
+.ask h3{margin:0;font-size:var(--s1);font-weight:600}
+.ask p{margin:5px 0 0;color:var(--muted);max-width:54ch}
+.opts{display:grid;gap:8px;align-content:start}
+.opt{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:var(--sunk)}
+.opt.mine{border-color:var(--accent);background:var(--accent-soft)}
+.opt b{display:block;font-size:var(--s0);font-weight:600}
+.opt span{font-size:var(--s-1);color:var(--muted)}
+.opt.mine span{color:var(--ink)}
+@media (max-width:900px){.ask{grid-template-columns:minmax(0,1fr)}
+  .msgs{grid-template-columns:minmax(0,1fr)}
+  .role{padding-top:0}.vpanel,.thread,.composer{grid-column:1}}
+footer{color:var(--faint);font-size:var(--s-1);font-family:var(--mono);margin-top:26px}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>atlas</h1>
+  <span class="chip">build</span>
+  <span class="chip">3 pipelines</span>
+  <span class="stamp">a wireframe, not a built page</span>
+</header>
+
+<nav class="stages">
+  <a href="#">brainstorm</a><a href="#">research</a><a href="#">shape</a>
+  <a href="#" class="on">build · prompts</a><a href="#">measure</a><a href="#">ship</a><a href="#">operate</a>
+</nav>
+
+<div class="rtitle">
+  <h2>Prompts</h2>
+  <span class="badge warn">1 step has no agreed rule</span>
+  <span class="badge warn">1 value is cut short</span>
+  <span class="count">5 prompts · 3 pipelines · 212 runs</span>
+</div>
+<p class="lede">Every instruction this project sends to a model. Each step shows the text as it was
+written, and the values that were dropped into it on one real run. Every part is labelled with
+where it came from. Select any of it to comment, and the coding agent answers in the thread.</p>
+
+<div class="controls">
+  <span class="seg" role="group" aria-label="How the prompt is shown">
+    <button id="b-sent" aria-pressed="true">As sent</button>
+    <button id="b-tpl" aria-pressed="false">As written</button>
+  </span>
+  <span class="picker">filled from <b>trip-plan/paris-3</b>, run <b>2026-09-03 14:02</b></span>
+  <span class="picker">every step used one text across all <b>212 runs</b></span>
+</div>
+
+<div class="cols">
+  <!-- ---------------- the path ---------------- -->
+  <nav class="tree" aria-label="Prompts by pipeline path">
+    <h3>The path</h3>
+
+    <div class="pipe">
+      <button class="pname"><span class="tw">▾</span>trip-plan</button>
+      <ul>
+        <li><a href="#s1" class="here">extract_request<span>rule agreed</span></a></li>
+        <li><a href="#s2">shortlist_places<span>2 items this run</span></a></li>
+        <li><a href="#s3" class="warn">plan_days<span>no rule · 1 value cut short</span></a></li>
+        <li class="gap">2 steps with no prompt</li>
+      </ul>
+    </div>
+
+    <div class="pipe">
+      <button class="pname"><span class="tw">▾</span>concierge</button>
+      <ul>
+        <li><a href="#s4">reply_in_voice<span>the traveller sets this text</span></a></li>
+      </ul>
+    </div>
+
+    <div class="pipe">
+      <button class="pname"><span class="tw">▾</span>nightly_refresh</button>
+      <ul>
+        <li><a href="#s5">refresh_hours<span>rule agreed</span></a></li>
+      </ul>
+    </div>
+
+    <div class="filters">
+      <button class="btn">Only unagreed</button>
+      <button class="btn">Only changed</button>
+    </div>
+  </nav>
+
+  <!-- ---------------- the prompts ---------------- -->
+  <div class="stack">
+
+    <!-- step 1 -->
+    <section class="step" id="s1">
+      <div class="shead">
+        <button class="id"><span class="tw">▾</span>extract_request</button>
+        <span class="kind">one model call · trip-plan · gpt-4.1-mini</span>
+        <span class="badge acc">rule agreed</span>
+      </div>
+      <p class="rule"><b>Agreed rule:</b> the model reads the traveller's message and nothing else,
+      and returns unknown for a date the message does not give.</p>
+
+      <div class="msgs">
+        <div class="msg">
+          <div class="role"><b>user</b><span>written in the project's code</span></div>
+          <div class="body"><span class="fixed">Read the traveller's message and return the cities, the dates and the budget.
+Use only what the message says. Where it gives no date, return unknown.
+
+</span><span class="v" data-panel="p1" tabindex="0" role="button">The trip is Paris then Lyon in early May, I have about 900 euros.<span class="nm">message</span></span><span class="fixed">
+
+The traveller has booked with us </span><span class="v" data-panel="p2" tabindex="0" role="button">4<span class="nm">past_trips</span></span><span class="fixed"> times before.</span></div>
+        </div>
+        <div class="vpanel" id="p1">
+          <dl>
+            <dt>value</dt><dd>message</dd>
+            <dt>from</dt><dd>the traveller's own words, as the app received them</dd>
+            <dt>size</dt><dd>63 characters</dd>
+            <dt>across runs</dt><dd>present in all 212</dd>
+          </dl>
+          <div class="acts"><button class="btn">Comment on this value</button></div>
+        </div>
+        <div class="vpanel" id="p2">
+          <dl>
+            <dt>value</dt><dd>past_trips</dd>
+            <dt>from</dt><dd>the bookings store, read by this step</dd>
+            <dt>size</dt><dd>1 character</dd>
+          </dl>
+          <div class="acts"><button class="btn">Comment on this value</button></div>
+        </div>
+        <div class="msg"><div class="role"></div>
+          <div class="acts" style="margin-top:0">
+            <button class="btn">Comment on this prompt</button>
+            <button class="btn">Select any words to comment on them</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- step 2, collapsed -->
+    <section class="step shut" id="s2">
+      <div class="shead">
+        <button class="id"><span class="tw">▸</span>shortlist_places</button>
+        <span class="kind">one model call per city · trip-plan · gpt-4.1-mini</span>
+        <span class="badge acc">rule agreed</span>
+        <span class="badge mut">2 items this run</span>
+      </div>
+      <p class="collapsed">Both items used the same text. Open to read it.</p>
+      <p class="rule"><b>Agreed rule:</b> only places open on the day, and no more than fifteen
+      candidates per city.</p>
+      <div class="msgs">
+        <div class="msg">
+          <div class="role"><b>user</b><span>written in the project's code</span></div>
+          <div class="body"><span class="fixed">Find up to fifteen places worth a stop in </span><span class="v" tabindex="0" role="button">Paris<span class="nm">city</span></span><span class="fixed"> for someone who likes </span><span class="v" tabindex="0" role="button">quiet museums, markets, walking<span class="nm">tastes</span></span><span class="fixed">.
+Give the opening hours for each one and leave out anything closed on </span><span class="v" tabindex="0" role="button">Tuesday 5 May<span class="nm">arrival</span></span><span class="fixed">.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- step 3 -->
+    <section class="step" id="s3">
+      <div class="shead">
+        <button class="id"><span class="tw">▾</span>plan_days</button>
+        <span class="kind">an agent loop · trip-plan · claude-sonnet-5</span>
+        <span class="badge warn">no agreed rule</span>
+      </div>
+      <p class="rule">This text tells the model six things and none of them is recorded as a
+      decision.<button class="btn" style="margin-left:8px">Ask the coding agent to write the rule</button></p>
+
+      <div class="msgs">
+        <div class="msg">
+          <div class="role"><b>system</b><span>written in the project's code</span></div>
+          <div class="body"><span class="fixed">You are planning a day-by-day itinerary. Work one day at a time and check
+opening hours before you commit to a stop. Never plan more than three stops in a day.</span></div>
+        </div>
+
+        <div class="msg">
+          <div class="role"><b>user</b><span>written in the project's code, with five values</span></div>
+          <div class="body"><span class="fixed">Plan </span><span class="v" data-panel="p3" tabindex="0" role="button">4<span class="nm">days</span></span><span class="fixed"> days in </span><span class="v" data-panel="p4" tabindex="0" role="button">Paris<span class="nm">city</span></span><span class="fixed"> for a traveller who likes </span><span class="v" data-panel="p5" tabindex="0" role="button">quiet museums, markets, walking<span class="nm">tastes</span></span><span class="fixed">.
+
+Places already shortlisted:
+</span><span class="v" data-panel="p6" tabindex="0" role="button">1. Musée de l'Orangerie, open 09:00-18:00, closed Tuesday
+2. Marché d'Aligre, mornings only
+3. Canal Saint-Martin walk, any time
+… 9 more<span class="nm">shortlist × 12</span></span><span class="fixed">
+
+You can call: </span><span class="v" data-panel="p7" tabindex="0" role="button">opening_hours(place), walking_time(a, b), book_table(place, time)<span class="nm">tools</span></span><span class="fixed">
+
+Notes from the traveller's file: </span><span class="v capped" data-panel="p8" tabindex="0" role="button">Prefers hotels near a metro stop. Vegetarian. Travelling with a partner who uses a wheelchair, so step-free acce<span class="nm">notes</span></span></div>
+        </div>
+
+        <div class="vpanel" id="p8">
+          <dl>
+            <dt>value</dt><dd>notes</dd>
+            <dt>from</dt><dd>the traveller_files store, read by this step</dd>
+            <dt>size</dt><dd>220 of 1,940 characters</dd>
+            <dt>across runs</dt><dd>cut short in 189 of 212</dd>
+          </dl>
+          <p class="warnline">The step's own code cuts this at 220 characters. The sentence about
+          step-free access stops halfway, and the model reads none of the rest.</p>
+          <div class="acts">
+            <button class="btn primary">Comment on this</button>
+            <button class="btn">Read the other 1,720 characters</button>
+          </div>
+        </div>
+        <div class="vpanel" id="p6">
+          <dl>
+            <dt>value</dt><dd>shortlist</dd>
+            <dt>written as</dt><dd>one line per place, 12 places on this run</dd>
+            <dt>from</dt><dd>the shortlist_places step</dd>
+            <dt>size</dt><dd>1,104 characters</dd>
+          </dl>
+          <div class="acts"><button class="btn">Comment on this value</button></div>
+        </div>
+        <div class="vpanel" id="p3"><dl><dt>value</dt><dd>days</dd><dt>from</dt><dd>the extract_request step</dd></dl></div>
+        <div class="vpanel" id="p4"><dl><dt>value</dt><dd>city</dd><dt>from</dt><dd>the extract_request step, city 1 of 2</dd></dl></div>
+        <div class="vpanel" id="p5"><dl><dt>value</dt><dd>tastes</dd><dt>from</dt><dd>the traveller's answers at sign-up</dd></dl></div>
+        <div class="vpanel" id="p7"><dl><dt>value</dt><dd>tools</dd><dt>from</dt><dd>the three tools this step declares</dd></dl></div>
+
+        <div class="thread">
+          <span class="at">on the cut in notes · you opened this 2 days ago</span>
+          <p class="said"><span class="who">you</span> Cutting the file at 220 characters loses the
+          wheelchair sentence, and that is the one thing the plan has to get right. Send the whole
+          file, or cut it somewhere that keeps the access notes.</p>
+          <p class="said agent"><span class="who agent">coding agent</span> Agreed. The cut goes,
+          and access notes move to the front of the file so a later cut cannot reach them. Landing
+          today, and the rule goes into the record as a prompt decision.</p>
+        </div>
+      </div>
+
+      <div class="turns">
+        <button id="t-open">▸ 17 more turns in this loop, from the run above</button>
+        <div class="turnlist" id="t-list">
+          <div class="turn"><span class="n">turn 2</span>
+            <span class="what">called <em>opening_hours("Musée de l'Orangerie")</em> and read
+            <em>closed Tuesday</em></span><span class="cost">1.2s · 430 tokens</span></div>
+          <div class="turn"><span class="n">turn 3</span>
+            <span class="what">"Day 1 has to move the Orangerie to Wednesday. Checking the market
+            hours next."</span><span class="cost">2.0s · 512 tokens</span></div>
+          <div class="turn"><span class="n">turn 4</span>
+            <span class="what">called <em>walking_time("Marché d'Aligre", "Canal Saint-Martin")</em>
+            and read <em>26 minutes</em></span><span class="cost">0.9s · 388 tokens</span></div>
+          <div class="turn"><span class="n">turn 5</span>
+            <span class="what">"That walk is too long after a market morning. Dropping the canal
+            from day 2."</span><span class="cost">1.7s · 505 tokens</span></div>
+          <div class="turn"><span class="n">turns 6-18</span>
+            <span class="what">eleven more tool calls and seven more replies, ending with the
+            four-day plan</span><span class="cost">21.4s · 6,180 tokens</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- step 4 -->
+    <section class="step" id="s4">
+      <div class="shead">
+        <button class="id"><span class="tw">▾</span>reply_in_voice</button>
+        <span class="kind">one model call · concierge · claude-haiku-4.5</span>
+        <span class="badge data">the traveller sets this text</span>
+      </div>
+      <p class="rule">The voice comes from the app's settings screen, so the traveller writes it and
+      the project sends it as the system message. The project adds nothing around it.</p>
+
+      <div class="msgs">
+        <div class="msg owned">
+          <div class="role"><b>system</b><span>set by the traveller, in the app</span></div>
+          <div class="body"><span class="v owned" data-panel="p9" tabindex="0" role="button">Talk to me like a local friend. Short sentences. Always tell me what the weather will be doing.<span class="nm">voice</span></span></div>
+        </div>
+        <div class="vpanel" id="p9">
+          <dl>
+            <dt>value</dt><dd>voice</dd>
+            <dt>from</dt><dd>the traveller, on the app's settings screen</dd>
+            <dt>seen</dt><dd>1,908 different texts across 4,102 runs</dd>
+            <dt>longest</dt><dd>2,340 characters</dd>
+          </dl>
+          <p class="warnline">The project sets no length limit here and wraps the text in no
+          instruction of its own, so a traveller can send the model anything it will accept.</p>
+          <div class="acts"><button class="btn primary">Comment on what a traveller may set</button></div>
+        </div>
+
+        <div class="msg">
+          <div class="role"><b>user</b><span>written in the project's code</span></div>
+          <div class="body"><span class="fixed">Here is the plan: </span><span class="v" data-panel="p10" tabindex="0" role="button">Day 1 Orangerie then Tuileries, Day 2 …<span class="nm">plan</span></span><span class="fixed">
+
+</span><span class="sel">Answer in at most 120 words</span><span class="fixed"> and never say that a plan was generated.</span></div>
+        </div>
+        <div class="vpanel" id="p10"><dl><dt>value</dt><dd>plan</dd><dt>from</dt><dd>the plan_days step</dd></dl></div>
+
+        <div class="composer">
+          <p>commenting on the selected words · reply_in_voice · as sent 2026-09-03</p>
+          <div class="fake">120 words is too short once there are four days. Make it 120 words a day, or drop the limit and shorten the plan instead.<span class="cur">&nbsp;</span></div>
+          <div class="acts">
+            <button class="btn primary">Send to the coding agent</button>
+            <button class="btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- step 5, a background pipeline -->
+    <section class="step shut" id="s5">
+      <div class="shead">
+        <button class="id"><span class="tw">▸</span>refresh_hours</button>
+        <span class="kind">one model call per place · nightly_refresh · gpt-4.1-mini</span>
+        <span class="badge acc">rule agreed</span>
+        <span class="badge mut">ran 4 hours ago</span>
+      </div>
+      <p class="collapsed">Runs on a schedule rather than for a traveller. Open to read it.</p>
+      <p class="rule"><b>Agreed rule:</b> read the hours off the page as printed, and return unknown
+      rather than guessing when the page is unclear.</p>
+      <div class="msgs">
+        <div class="msg">
+          <div class="role"><b>user</b><span>written in the project's code</span></div>
+          <div class="body"><span class="fixed">Read the opening hours for </span><span class="v" tabindex="0" role="button">Musée de l'Orangerie<span class="nm">place</span></span><span class="fixed"> off this page.
+Return one line per day. Where the page does not say, return unknown for that day.
+
+</span><span class="v" tabindex="0" role="button">Horaires : 9h00-18h00, fermé le mardi. Dernière entrée 17h15.<span class="nm">page_text</span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="note">Threads here go to comments.toml beside the brief, the same file the rest of
+    the page writes to. The coding agent reads them with <b>simple-agents comments</b>.</p>
+  </div>
+</div>
+
+<section class="asks">
+  <h2>Settled, 3 September</h2>
+  <p>The page above is built to these three. Everything else about it stays open until it is
+  read in a browser.</p>
+
+  <div class="ask">
+    <div>
+      <h3>1. Where prompts live</h3>
+      <p>A page of its own in the stage strip, which is what the path down the left side is for.
+      Other pages carry a link into it where that helps: the build page from its prompt rules, and
+      any step in the drawing from its own card.</p>
+    </div>
+    <div class="opts">
+      <div class="opt mine"><b>A page of its own</b><span>Ruled 3 September. Reads in one sitting
+      and stays readable at forty steps.</span></div>
+      <div class="opt"><b>A section on the build page</b><span>Set aside. A long project made a
+      very long page.</span></div>
+    </div>
+  </div>
+
+  <div class="ask">
+    <div>
+      <h3>2. What opens first</h3>
+      <p>The page opens on one real run, with the traveller's own words in place. The text as
+      written is one click away and stays available on every step.</p>
+    </div>
+    <div class="opts">
+      <div class="opt mine"><b>As sent</b><span>Ruled 3 September. A cut sentence or a mangled
+      list only shows itself in the filled text.</span></div>
+      <div class="opt"><b>As written</b><span>Set aside as the opening state, kept as the
+      toggle.</span></div>
+    </div>
+  </div>
+
+  <div class="ask">
+    <div>
+      <h3>3. What a comment attaches to</h3>
+      <p>All three: a value, a whole prompt, and any words you select. A selection thread keeps
+      the words and the run they came from, so it still reads correctly after the text changes.</p>
+    </div>
+    <div class="opts">
+      <div class="opt mine"><b>All three</b><span>Ruled 3 September. Selecting words is how you
+      comment on wording, and wording is most of what there is to say.</span></div>
+      <div class="opt"><b>Whole prompt and named values only</b><span>Set aside.</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>atlas is invented for this wireframe. Values, counts and runs are illustrative.</footer>
+</div>
+
+<script>
+(function(){
+  var sent = document.getElementById("b-sent"), tpl = document.getElementById("b-tpl");
+  function show(asWritten){
+    sent.setAttribute("aria-pressed", String(!asWritten));
+    tpl.setAttribute("aria-pressed", String(asWritten));
+    document.querySelectorAll(".v").forEach(function(v){
+      if(asWritten){
+        if(!v.dataset.filled){ v.dataset.filled = v.firstChild.nodeValue || ""; }
+        v.firstChild.nodeValue = "{" + v.querySelector(".nm").textContent.split(" ")[0] + "}";
+      } else if(v.dataset.filled){
+        v.firstChild.nodeValue = v.dataset.filled;
+      }
+    });
+    document.querySelectorAll(".body").forEach(function(b){ b.classList.toggle("tpl", asWritten); });
+  }
+  sent.onclick = function(){ show(false); };
+  tpl.onclick = function(){ show(true); };
+
+  document.querySelectorAll("[data-panel]").forEach(function(v){
+    function toggle(){
+      var panel = document.getElementById(v.dataset.panel);
+      var open = panel.classList.contains("open");
+      document.querySelectorAll(".vpanel.open").forEach(function(p){ p.classList.remove("open"); });
+      if(!open){ panel.classList.add("open"); }
+    }
+    v.onclick = toggle;
+    v.onkeydown = function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggle(); } };
+  });
+
+  document.querySelectorAll(".shead button.id").forEach(function(b){
+    b.onclick = function(){
+      var step = b.closest(".step");
+      step.classList.toggle("shut");
+      b.querySelector(".tw").textContent = step.classList.contains("shut") ? "▸" : "▾";
+    };
+  });
+
+  document.querySelectorAll(".tree .pname").forEach(function(b){
+    b.onclick = function(){ b.parentElement.classList.toggle("shut"); };
+  });
+
+  var to = document.getElementById("t-open"), tl = document.getElementById("t-list");
+  to.onclick = function(){
+    tl.classList.toggle("open");
+    to.textContent = (tl.classList.contains("open") ? "▾" : "▸") +
+      " 17 more turns in this loop, from the run above";
+  };
+
+  document.querySelectorAll('.tree a[href^="#s"]').forEach(function(a){
+    a.onclick = function(){
+      document.querySelectorAll(".tree a.here").forEach(function(x){ x.classList.remove("here"); });
+      a.classList.add("here");
+      var step = document.querySelector(a.getAttribute("href"));
+      if(step){ step.classList.remove("shut"); var t = step.querySelector(".shead .tw");
+        if(t){ t.textContent = "▾"; } }
+    };
+  });
+})();
+</script>
