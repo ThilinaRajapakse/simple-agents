@@ -509,6 +509,142 @@ class TestTheEntryNodeReceivesTheRunInputs:
         assert seen == ["Join", "Join"]
 
 
+class TestEveryNodeCanReadTheRunInputs:
+    """`ctx.run_inputs` is what the run was given, for a node that did not receive it.
+
+    A node reads what the node before it produced, so a step after a model call had no path
+    to the run's own inputs and `keep=` travels through a fan-out only. Dogfood #6's project
+    kept a module-level dict from `run_id` to a database path, written by its first node and
+    read by its last, which two rollouts at `concurrency=2` in one process cannot serve.
+    """
+
+    def test_a_node_after_another_reads_what_the_run_was_given(self, envelope) -> None:
+        seen: list = []
+
+        def last(inputs, ctx: NodeContext):
+            seen.append(ctx.run_inputs)
+            return {"db": ctx.run_inputs["database"]}
+
+        pipeline = Pipeline(
+            [
+                Deterministic(unannotated, node_id="first", successors=["last"]),
+                Deterministic(last, node_id="last", successors=[]),
+            ],
+            budget=_budget(),
+        )
+        result = pipeline.run({"database": "shows.db"}, envelope=envelope, run_id=RUN_ID)
+
+        assert result.output == {"db": "shows.db"}
+        assert seen == [{"database": "shows.db"}]
+
+    def test_a_fan_out_item_reads_the_runs_inputs_and_the_item_stays_the_argument(
+        self, envelope
+    ) -> None:
+        def per_item(item, ctx: NodeContext):
+            return {"item": item["pages"], "db": ctx.run_inputs["database"]}
+
+        pipeline = Pipeline(
+            [
+                Deterministic(
+                    lambda inputs, ctx: {"pages": [1, 2]}, node_id="list", successors=["read"]
+                ),
+                Deterministic(per_item, node_id="read", over="pages", successors=[]),
+            ],
+            budget=_budget(),
+        )
+        result = pipeline.run({"database": "shows.db"}, envelope=envelope, run_id=RUN_ID)
+
+        assert [o.value for o in result.output.outcomes] == [
+            {"item": 1, "db": "shows.db"},
+            {"item": 2, "db": "shows.db"},
+        ]
+
+    def test_an_llm_node_reads_them_in_its_prompt(self, envelope) -> None:
+        seen: list = []
+
+        def prompt(inputs, ctx: NodeContext) -> str:
+            seen.append(ctx.run_inputs)
+            return "answer it"
+
+        pipeline = Pipeline(
+            [
+                Deterministic(unannotated, node_id="first", successors=["ask"]),
+                LLMNode(prompt, node_id="ask", output_schema=Answer, successors=[]),
+            ],
+            budget=_budget(),
+        )
+        pipeline.run({"question": "how long?"}, envelope=envelope, model=_client(), run_id=RUN_ID)
+
+        assert seen == [{"question": "how long?"}]
+
+    def test_a_pipeline_used_as_a_node_reads_the_outer_runs_inputs(self, envelope) -> None:
+        """The same rule as `run_id`: it describes the run, not the step."""
+        seen: list = []
+
+        def inner_last(inputs, ctx: NodeContext):
+            seen.append(ctx.run_inputs)
+            return {"done": True}
+
+        inner = Pipeline(
+            [Deterministic(inner_last, node_id="step", successors=[])],
+            budget=_budget(),
+            node_id="inner",
+        )
+        outer = Pipeline(
+            [
+                Deterministic(unannotated, node_id="first", successors=["inner"]),
+                inner,
+            ],
+            budget=_budget(),
+        )
+        outer.run({"database": "shows.db"}, envelope=envelope, run_id=RUN_ID)
+
+        assert seen == [{"database": "shows.db"}]
+
+    def test_a_run_given_nothing_reads_none(self, envelope) -> None:
+        seen: list = []
+
+        def only(inputs, ctx: NodeContext):
+            seen.append(ctx.run_inputs)
+            return {"ok": True}
+
+        pipeline = Pipeline([Deterministic(only, node_id="only")], budget=_budget())
+        pipeline.run(None, envelope=envelope, run_id=RUN_ID)
+
+        assert seen == [None]
+
+
+class TestTheOrderOfWhatANodeContextCarries:
+    """A project that builds one to test its own node function may pass positionally, so a
+    field inserted among these silently lands where another was. `run_inputs` went in after
+    them for that reason."""
+
+    def test_the_fields_a_caller_passes_positionally_keep_their_places(self) -> None:
+        held = list(NodeContext.__dataclass_fields__)
+
+        assert held[:8] == [
+            "run_id",
+            "node_id",
+            "workspace",
+            "seed",
+            "budget",
+            "item_index",
+            "conversation",
+            "fetch_policy",
+        ]
+
+    def test_the_four_a_context_builder_reads_are_still_the_last_four(self) -> None:
+        """`NodeContext`'s own docstring says so."""
+        public = [f for f in NodeContext.__dataclass_fields__ if not f.startswith("_")]
+
+        assert public[-4:] == [
+            "last_input_tokens",
+            "last_input_chars",
+            "last_call_index",
+            "last_item_index",
+        ]
+
+
 class TestTheNoteOnAnExceptionFromANode:
     """Where nothing was declared, the failure is still the node's and says so."""
 

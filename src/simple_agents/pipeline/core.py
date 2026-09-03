@@ -572,6 +572,7 @@ class Pipeline:
             model=model,
             seed=seed,
             concurrency=concurrency,
+            inputs=inputs,
             on_token=on_token,
             on_reasoning=on_reasoning,
             on_progress=on_progress,
@@ -762,6 +763,9 @@ class Pipeline:
             # back. A typo in `answers=` is the likeliest mistake a caller makes here, and the
             # refusal invites a corrected retry, which needs the suspension to still be there.
             restored_inputs = codec.decode(state.inputs, source=None)
+            # Set here rather than on the constructor: the inputs are rebuilt from the
+            # suspension through the codec, which needs the graph's declared schemas.
+            run.run_inputs = restored_inputs
             for_nodes = self._answers_for(state, answer, answers)
         except Exception:
             release_claim(root)
@@ -1011,14 +1015,8 @@ class Pipeline:
             acting = pipeline if pipeline is not None else _JUST_RECORDS_IT
             envelope = envelope if envelope is not None else RunEnvelope(run_dir=run_dir)
             _refuse_unreachable_memory(acting, envelope, memory_scope, "answer_shelved")
-            run, envelope, paths, writer, manifest, defaulted = acting._start_run(
-                run_id=run_id,
-                envelope=envelope,
-                model=model,
-                seed=seed,
-                concurrency=1,
-                memory_scope=memory_scope,
-            )
+            # Built before the run starts, because it is what the run is given and so what
+            # `ctx.run_inputs` reads.
             answered = Answered(
                 about=found.about,
                 prompt=found.prompt,
@@ -1027,6 +1025,15 @@ class Pipeline:
                 asked_at=found.asked_at,
                 asking_run_id=found.run_id,
                 asking_record_id=found.record_id,
+            )
+            run, envelope, paths, writer, manifest, defaulted = acting._start_run(
+                run_id=run_id,
+                envelope=envelope,
+                model=model,
+                seed=seed,
+                concurrency=1,
+                inputs=answered,
+                memory_scope=memory_scope,
             )
         except BaseException:
             release_shelf(root)
@@ -1062,6 +1069,7 @@ class Pipeline:
         model: ModelClient | None,
         seed: int | None,
         concurrency: int,
+        inputs: Any = None,
         on_token: Any = None,
         on_reasoning: Any = None,
         on_progress: Any = None,
@@ -1108,6 +1116,7 @@ class Pipeline:
             writer=writer,
             budget=self.budget,
             workspace=paths.workspace,
+            run_inputs=inputs,
             seed=seed,
             manifest=manifest,
             cassette=envelope.cassette,

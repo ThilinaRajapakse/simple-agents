@@ -1024,6 +1024,7 @@ That annotation is checked against what reaches the node. A node whose predecess
 |---|---|
 | `run_id`, `node_id` | Identify the run and the node. |
 | `workspace` | A fresh directory per run. Files the run produces go here, beside the trajectory that records what it did with them. Input data is read from wherever the project keeps it. `docs/tools.md` §4 covers the scoped file I/O built on it. **It is not a way to pass a value between nodes**: see below. |
+| `run_inputs` | What `Pipeline.run(inputs)` was given, for a step that did not receive it. See below. |
 | `seed` | The run seed, and `None` on a `Deterministic` node, which does not sample. |
 | `budget` | What is left of the run budget, narrowed by the node's own where it has one. |
 | `item_index` | Which item is being processed under `over=`, and `None` otherwise. |
@@ -1049,6 +1050,17 @@ That annotation is checked against what reaches the node. A node whose predecess
 | `iteration` | Which time round the enclosing cycle this execution is, counting from 1 per entry, and `None` for a node in no cycle. |
 
 The library records the node, and every model call and tool call made inside it, including when the node raises (FT-13). The one thing a node function adds to the trajectory itself is a resource access, and it adds nothing else.
+
+**A step reads the run's own inputs at `ctx.run_inputs`.** A node is handed what the node before it produced, so a step after a model call has no other path to what the run was asked for, and `keep=` travels through a fan-out only:
+
+```python
+def store_the_picks(picks: Queue, ctx: NodeContext) -> Receipt:
+    return write_to(ctx.run_inputs["database"], picks)
+
+node = Deterministic(store_the_picks, touches="queue")
+```
+
+It is always the run's inputs: inside a fan-out the item is the function's first argument, and a pipeline used as a node reads the outer run's, as `run_id` does. A resumed run carries what it was restored with. It is handed as the object the run was given rather than a copy, so it is read and not modified: a node that changes it changes what every later node reads, and nodes that overlap under `concurrency` would be writing to one value.
 
 **A node reaching a store in its own code records the access.** A store reached through a tool is a `tool_call` record holding what was asked for and what came back. The same store reached directly is invisible unless the node says so, and `touches=` alone names it without saying what happened:
 

@@ -202,6 +202,7 @@ class LLMNode:
             run_id=run.run_id,
             node_id=execution.node_id,
             workspace=run.workspace,
+            run_inputs=run.run_inputs,
             seed=run.seed,
             budget=execution.budget,
             conversation=_thread_view(run),

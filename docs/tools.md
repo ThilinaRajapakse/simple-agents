@@ -469,7 +469,7 @@ def rank(query: str, pool: Annotated[list[dict], NodeInput("pool")]) -> list[str
 | Handle | What it is | Re-run on replay |
 |---|---|---|
 | `ModelHandle` | a model call from inside a tool | yes |
-| `Workspace` | the run's own directory (`docs/pipeline.md` §1.10) | yes |
+| `Workspace` | the run's own directory (`docs/pipeline.md` §3.1) | yes |
 | `Memory` | the memory this run reaches (`docs/memory.md` §2.2) | yes |
 | `Conversation` | the conversation the run is a turn of (`docs/conversation.md` §5) | yes |
 | `Retrieval` | the recorded path for a search's embedding and rerank calls | yes |

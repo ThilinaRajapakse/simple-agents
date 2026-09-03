@@ -145,6 +145,7 @@ class Deterministic:
             run_id=run.run_id,
             node_id=execution.node_id,
             workspace=run.workspace,
+            run_inputs=run.run_inputs,
             # deterministic nodes do not sample; `docs/trajectory-format.md` §3 requires null
             seed=None,
             budget=execution.budget,
@@ -207,6 +208,7 @@ class Deterministic:
                 run_id=run.run_id,
                 node_id=execution.node_id,
                 workspace=run.workspace,
+                run_inputs=run.run_inputs,
                 # deterministic nodes do not sample; `docs/trajectory-format.md` §3 requires null
                 seed=None,
                 budget=execution.budget,

@@ -145,6 +145,30 @@ class TestARefusedResumeKeepsTheRun:
         assert not run_path(tmp_path, RUN_ID, "suspension.claimed.json").exists()
 
 
+class TestAResumedRunStillReadsWhatItWasGiven:
+    def test_run_inputs_are_restored_from_the_suspension(self, envelope, tmp_path):
+        """They are rebuilt through the codec, so they are set after the context is built."""
+        seen: list = []
+        fn, tool = _asks("Which fit?", ["slim", "regular"])
+
+        def store(inputs, ctx):
+            seen.append(ctx.run_inputs)
+            return ctx.run_inputs["database"]
+
+        pipeline = Pipeline(
+            [
+                Deterministic(fn, tools=[tool], node_id="ask", successors=["store"]),
+                Deterministic(store, node_id="store", successors=[]),
+            ],
+            budget=Budget.unbounded(),
+        )
+        with pytest.raises(RunSuspended):
+            pipeline.run({"database": "shows.db"}, envelope=envelope, run_id=RUN_ID, seed=41)
+
+        assert pipeline.resume(RUN_ID, envelope=envelope, answer="slim").output == "shows.db"
+        assert seen == [{"database": "shows.db"}]
+
+
 class TestTheManifestRecordsEveryStop:
     def test_two_arms_stopping_at_once_are_both_recorded(self, envelope, tmp_path):
         pipeline = _two_stops()

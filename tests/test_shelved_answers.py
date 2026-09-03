@@ -168,6 +168,27 @@ class TestFilingAnAnswer:
     def test_the_question_leaves_the_inbox(self, acted, tmp_path):
         assert Pipeline.shelved(tmp_path) == []
 
+    def test_the_work_reads_the_answer_at_ctx_run_inputs(self, asked, tmp_path):
+        """The `Answered` is what this run was given, so it is what `ctx.run_inputs` reads."""
+        seen: list = []
+
+        def act(inputs, ctx):
+            seen.append(ctx.run_inputs)
+            return {"about": inputs.about}
+
+        Pipeline.answer_shelved(
+            tmp_path,
+            about="show:1421",
+            answer="drop",
+            pipeline=Pipeline(
+                [Deterministic(act, node_id="act", output_schema=None)], budget=BUDGET
+            ),
+            envelope=asked,
+            run_id="thursday",
+        )
+
+        assert [(one.about, one.answer.chose) for one in seen] == [("show:1421", "drop")]
+
     def test_answering_it_twice_is_refused(self, acted, tmp_path, asked):
         with pytest.raises(CallerFacingError) as exc:
             Pipeline.answer_shelved(tmp_path, about="show:1421", answer="keep", envelope=asked)

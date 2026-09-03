@@ -370,6 +370,9 @@ class RunContext:
     workspace: Path
     seed: int
     manifest: Manifest
+    run_inputs: Any = None
+    """What ``Pipeline.run(inputs)`` was given, which every node in the run can read. A
+    resumed run carries what it was restored with. ``None`` where the run was given nothing."""
     cassette: Cassette = field(default_factory=Cassette.off)
     cost_basis: CostBasis | None = None
     redaction: Redaction = field(default_factory=Redaction)
@@ -1401,6 +1404,21 @@ class NodeContext:
     """This run's copy of the pipeline's declared ``HostPolicy``, or ``None`` where the
     pipeline declares none. ``ctx.fetch_policy.admit(host, reason=...)`` brings a host into
     scope for the rest of the run."""
+    run_inputs: Any = None
+    """What ``Pipeline.run(inputs)`` was given, for a node that needs it and did not receive
+    it. A node reads what the node before it produced, so a step after a model call cannot
+    otherwise reach the run's own inputs::
+
+        def store_the_picks(picks: Queue, ctx: NodeContext) -> Receipt:
+            return write_to(ctx.run_inputs["database"], picks)
+
+    Always the run's inputs: the item's inputs inside a fan-out are the function's first
+    argument, and a pipeline used as a node reads the outer run's, as ``run_id`` does. A
+    resumed run carries what it was restored with.
+
+    Handed as the object the run was given rather than a copy, so it is read and not
+    modified. A node that changes it changes what every later node reads, and nodes that
+    overlap under ``concurrency`` would be writing to one value."""
     last_input_tokens: int | Unknown | None = None
     last_input_chars: int | None = None
     last_call_index: int | None = None
