@@ -233,6 +233,38 @@ def served_with_runs(tmp_path):
     server.server_close()
 
 
+class TestReadingEveryRunForThePrompts:
+    """`/prompts/every-run`: the button beside a step no recent run reached.
+
+    The page reads back through the newest runs of each pipeline, which leaves a step down a
+    branch nothing recent took without a filled prompt. This reads the lot instead.
+    """
+
+    def test_it_returns_the_page_read_over_every_run(self, served_with_runs) -> None:
+        _root, base = served_with_runs
+        status, body = call(base, "/prompts/every-run")
+        assert status == 200
+        held = json.loads(body)
+        assert held["counts"]["prompts"] == 5
+        assert held["counts"]["unfilled"] == 0
+        assert [one["name"] for one in held["pipelines"]] == ["triage"]
+        assert all(step["filled"] for one in held["pipelines"] for step in one["steps"])
+
+    def test_it_finds_a_step_the_bounded_read_would_not(self, served_with_runs) -> None:
+        """`most_runs=0` is the bounded read at its limit, and this is what it misses."""
+        from simple_agents.view.assemble import assemble
+        from simple_agents.view.prompts import read_prompts
+
+        root, base = served_with_runs
+        data = assemble(root)
+        declared = [p for p in data["pipelines"] if p["origin"] == "declared"]
+        bounded = read_prompts(root, declared, None, most_runs=0)
+        assert bounded["counts"]["unfilled"] == 5
+
+        status, body = call(base, "/prompts/every-run")
+        assert status == 200 and json.loads(body)["counts"]["unfilled"] == 0
+
+
 class TestTheFullRecord:
     """`/record/<run>/<sequence>`: the full record behind a clipped value on the page."""
 

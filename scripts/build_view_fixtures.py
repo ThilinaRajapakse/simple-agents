@@ -49,7 +49,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VIEW = ROOT / "tests" / "fixtures" / "view_projects"
 
 # Projects whose runs are recorded here, in the order they are made.
-RECORDED = ("one-pipeline", "branching", "measured")
+RECORDED = ("one-pipeline", "branching", "measured", "prompted")
 
 # Derived, not recorded: `shipped` is `measured` at stage `ship` with its product declared and
 # two live runs replayed from the committed cassettes. See `build_shipped`.

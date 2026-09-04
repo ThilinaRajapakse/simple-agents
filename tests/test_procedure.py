@@ -76,7 +76,9 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # `because` opened with the same two lines, and the feature index line for naming a pipeline.
 # And from 3897 on 2026-09-03 for the prompts document, which the index has to name: a
 # capability nothing in the index points at is one a coding agent has to find by accident.
-WORD_BUDGET = 3959
+# And from 3959 on 2026-09-05, for the prompts page: a builder who never sees a prompt cannot
+# agree to one, and a coding agent that does not know the page exists cannot point at it.
+WORD_BUDGET = 3998
 # Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
 # three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
 # `simple-agents record` command, seven words over the ceiling across eight sentences.

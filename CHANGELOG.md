@@ -2,7 +2,7 @@
 
 All notable changes to Simple Agents are documented in this file, including every change to
 an on-disk format a project holds: trajectory, manifest, suspension, shelf, conversation,
-results file and variant comparison.
+comments, results file and variant comparison.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -46,6 +46,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   ship, of forty-five taxonomy entries.
 - `simple-agents record decision --from-comment <id>`, which copies what the builder said on
   the view into `considered`, agrees the decision and stamps it.
+- A prompts page in `simple-agents view`: every instruction the project sends, as written and
+  as one real run sent it, with the pipeline path down the side, each value named with where
+  it came from and what a `cap` cut, and an agent loop's later turns from the run.
+  `docs/view.md` §6.10.
+- Three comment addresses for a prompt: the whole prompt, one value in it, and words selected
+  in it. A selection is filed under a digest of the words and keeps them, the run they were
+  read in, and the digest the fixed text had.
 
 ### Changed
 
@@ -54,6 +61,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `ModelHandle.complete`, and in a consultation reader's `Reading.complete`. Text a project has
   already assembled goes through as the fixed text, `Prompt.user(text)`; text that arrived from
   outside the project goes in as a value, since a brace in it would read as a gap.
+- `simple-agents comments` prints the words a thread about a prompt quotes and the run they
+  were read in, and `--json` carries all four snapshot fields.
+- `docs/trajectory-format.md` §6 said prompt text was not in the format, which stopped being
+  true at `0.30`: a call built from a prompt carries its fixed text in `inputs.assembly`.
+  What the manifest holds and the record does not is the prompt's version.
+- Comments format `2`. A thread may carry `quoted`, `quoted_chars`, `run` and `instruction`,
+  which is what a thread about words in a prompt keeps so it still reads after the wording is
+  rewritten. Every field is optional and a `1` file reads unchanged.
 - Trajectory format `0.30`. A `model_call` carries `inputs.assembly`: the fixed text of each
   message, the values that filled it, what any of them cut, `instruction` digesting everything
   fixed about the prompt, and `templates` for the distinct pieces it was built from. Absent on a call whose messages are a conversation, which is every turn of an agent

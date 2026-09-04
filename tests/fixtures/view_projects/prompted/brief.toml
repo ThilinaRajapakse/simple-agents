@@ -1,0 +1,56 @@
+tier = "prototype"
+stage = "build"
+comments_block_gates = false
+
+[entries.purpose]
+status = "answered"
+recorded_at = "2026-09-04T09:14:02Z"
+source = "builder"
+answer = "Plan a short trip from one message, and answer in the voice the traveller set."
+
+[entries.end_user]
+status = "answered"
+recorded_at = "2026-09-04T09:14:02Z"
+source = "builder"
+answer = "The traveller, through the app they booked in."
+
+[entries.what_it_does]
+status = "answered"
+recorded_at = "2026-09-04T09:14:02Z"
+source = "builder"
+answer = "Reads the message, shortlists places city by city, plans the days, and writes the reply."
+
+[entries.used_through]
+status = "answered"
+recorded_at = "2026-09-04T09:14:02Z"
+source = "builder"
+answer = "The app's trip screen. The reply appears there."
+
+[entries.how_far]
+status = "answered"
+recorded_at = "2026-09-04T09:14:02Z"
+source = "builder"
+answer = "It plans and writes. It books nothing."
+
+[entries.comments_block_gates]
+status = "answered"
+recorded_at = "2026-09-04T09:14:02Z"
+answer = "Reporting; comments are answered in batches."
+
+[decisions.what_the_reader_is_told]
+kind = "prompt_rule"
+status = "agreed"
+recorded_at = "2026-09-04T09:14:02Z"
+produces = ["read_request"]
+chose = "read_request uses the traveller's message alone, and returns unknown for a date the message does not give"
+considered = ["letting it fill in a likely date"]
+because = "a guessed date is read as the traveller's own by every step after it"
+
+[decisions.three_stops_a_day]
+kind = "prompt_rule"
+status = "agreed"
+recorded_at = "2026-09-04T09:14:02Z"
+produces = ["plan_days"]
+chose = "plan_days checks the opening hours before it commits to a stop"
+considered = ["planning first and checking afterwards"]
+because = "a plan built on a closed day has to be redone rather than corrected"

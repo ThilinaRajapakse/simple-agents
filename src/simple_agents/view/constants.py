@@ -25,7 +25,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-__all__ = ["read_constants", "read_prompt_rules"]
+__all__ = ["read_constants", "read_prompt_rules", "across_the_runs"]
 
 
 # How many of the newest runs are read. A project's numbers and prompts are gathered across
@@ -35,7 +35,7 @@ __all__ = ["read_constants", "read_prompt_rules"]
 MOST_RUNS = 200
 
 
-def _across_the_runs(root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def across_the_runs(root: str | Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Every number and every prompt the project's own runs recorded, newest value first.
 
     An evaluation's rollouts are left out: a rollout is measurement, and the numbers it ran
@@ -54,7 +54,7 @@ def _across_the_runs(root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """
     from ..envelope import runs
 
-    directory = root / "runs"
+    directory = Path(root).expanduser() / "runs"
     if not directory.is_dir():
         return [], {}
     read = runs(directory, scripted=None)[:MOST_RUNS]
@@ -64,12 +64,41 @@ def _across_the_runs(root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         for one in _constants_of(handle):
             numbers.setdefault(str(one.get("name") or ""), {**one, "last_seen": _day(handle)})
         for node_id, one in (handle.manifest.get("prompts") or {}).items():
-            prompts.setdefault(str(node_id), one)
+            _keep_the_prompt(prompts, str(node_id), one)
     still_there = _what_the_code_still_has(read)
     return [
         {**held, "gone": still_there is not None and name not in still_there}
         for name, held in numbers.items()
     ], prompts
+
+
+def _keep_the_prompt(held: dict[str, Any], node_id: str, one: Any) -> None:
+    """Keep the newest run's account of one prompt, with every instruction the runs saw.
+
+    The version, the source and the shape of the text are the newest run's, which is what the
+    code had last. ``observed`` is the union: a step whose instruction arrives as data sends a
+    different one each run, and reading the newest run alone would report one.
+
+    ``distinct`` is the count of what was seen, and no smaller than the largest a single run
+    reported: a run that sent more than the twenty a manifest lists carries the true count
+    there and not the digests behind it.
+    """
+    if not isinstance(one, dict):
+        return
+    # Seeded without the counts, so the run that seeds it is added once like every other.
+    kept = held.setdefault(node_id, {k: v for k, v in one.items() if k != "observed"})
+    seen = dict(kept.get("observed") or {})
+    for digest, calls in (one.get("observed") or {}).items():
+        seen[str(digest)] = seen.get(str(digest), 0) + _a_count(calls)
+    if not seen:
+        return
+    kept["observed"] = seen
+    kept["distinct"] = max(len(seen), _a_count(kept.get("distinct")), _a_count(one.get("distinct")))
+
+
+def _a_count(value: Any) -> int:
+    """One number a manifest recorded, and ``0`` for anything that is not one."""
+    return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
 def _constants_of(handle: Any) -> list[dict[str, Any]]:
@@ -151,6 +180,7 @@ def read_constants(
     root: str | Path,
     pipelines: list[dict[str, Any]],
     brief: Any,
+    across: tuple[list[dict[str, Any]], dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Every module-level number the project's runs carried, with the decision that names it.
 
@@ -165,6 +195,9 @@ def read_constants(
     page's **Unconfirmed**. Empty where the project has no run, since the numbers are read
     from what a run recorded.
 
+    ``across`` is what `across_the_runs` read, which the prompt rules and the prompt page read
+    too. Passing it shares one reading of the manifests between the three.
+
     ``gone`` is true where the newest run of every pipeline that recorded the number no longer
     carries it, and ``last_seen`` is the day the newest run that did began. The page shows
     those as removed from the code and offers no agreement on them: agreeing to a number
@@ -175,7 +208,7 @@ def read_constants(
     numbers between them, and a number deleted from that module reads as gone once either of
     them has run.
     """
-    numbers, _prompts = _across_the_runs(Path(root).expanduser())
+    numbers, _prompts = across if across is not None else across_the_runs(root)
     agreed = _named_by(brief, "constant")
     rows = []
     for held in numbers:
@@ -198,6 +231,7 @@ def read_prompt_rules(
     root: str | Path,
     pipelines: list[dict[str, Any]],
     brief: Any,
+    across: tuple[list[dict[str, Any]], dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Every prompt the project's runs recorded, with the rule decision that names its step.
 
@@ -209,8 +243,11 @@ def read_prompt_rules(
 
     ``decision`` is ``None`` where no ``prompt_rule`` decision names the step, which is the
     page's **Unconfirmed**: the prompt tells the model something and nobody said it should.
+
+    ``across`` is what `across_the_runs` read, which the constants and the prompt page read
+    too. Passing it shares one reading of the manifests between the three.
     """
-    _numbers, prompts = _across_the_runs(Path(root).expanduser())
+    _numbers, prompts = across if across is not None else across_the_runs(root)
     agreed = _named_by(brief, "prompt_rule")
     rows = []
     for node_id, held in prompts.items():

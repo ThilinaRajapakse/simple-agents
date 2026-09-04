@@ -21,8 +21,9 @@ from ..errors import ConfigurationError
 from .cards import _pipeline_card, _resources
 from .checks import read_checks
 from .claims import read_claims, read_seams
-from .constants import read_constants, read_prompt_rules
+from .constants import across_the_runs, read_constants, read_prompt_rules
 from .product import read_product
+from .prompts import read_prompts
 from .discovery import load_project
 from .evaluation import read_evaluation
 from .elicitation import read_idea, read_stages
@@ -637,6 +638,10 @@ def _comment_rows(root: Path, problems: list[str]) -> list[dict[str, Any]]:
             "kind": c.kind,
             "said": c.said,
             "about": c.about,
+            "quoted": c.quoted,
+            "quoted_chars": c.quoted_chars,
+            "run": c.run,
+            "instruction": c.instruction,
             "when": c.when,
             "status": c.status,
             "addressed_by": c.addressed_by,
@@ -757,8 +762,11 @@ def _second_pass(
     data["claims"] = read_claims(declared, brief, data["coverage"], data["measured"])
     data["seams"] = read_seams(declared, brief, data["claims"])
     data["product"] = read_product(root, loaded, declared, data["resources"])
-    data["constants"] = read_constants(root, declared, brief)
-    data["prompt_rules"] = read_prompt_rules(root, declared, brief)
+    # One reading of the newest manifests, shared by the three things that read them.
+    across = across_the_runs(root)
+    data["constants"] = read_constants(root, declared, brief, across)
+    data["prompt_rules"] = read_prompt_rules(root, declared, brief, across)
+    data["prompts"] = read_prompts(root, declared, brief, across[1])
     data["moved"] = {p["name"]: lines for p in declared if (lines := _between_runs(p))}
     data["asked"] = _every_question(data["pipelines"])
     data["findings"] = _findings(data)

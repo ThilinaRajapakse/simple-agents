@@ -16,6 +16,8 @@
   --o-right:#06654B; --o-absent:#209E78; --o-partial:#D6455A; --o-missed:#AA1338; --o-wrong:#6B1424; --o-none:#6A665C;
   --shadow:0 1px 2px rgba(22,27,25,.05),0 10px 26px -16px rgba(22,27,25,.25);
   --s-1:.8125rem; --s0:.9375rem; --s1:1.0625rem; --s2:1.35rem; --s3:1.9rem; --s4:2.3rem;
+  /* Fonts sit in the base block alone: a palette changes colours and nothing else. */
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme]){
@@ -160,6 +162,106 @@ header h1{font-size:var(--s3);font-weight:700}
 .stagestrip .youarehere{margin-left:auto;color:var(--faint);font-size:var(--s-1)}
 .pageempty{color:var(--muted);border:1px dashed var(--line-strong);border-radius:9px;
   padding:14px 16px;margin-top:18px}
+/* the prompts page: the path down the left, the prompts beside it */
+.stagestrip button.aside{color:var(--accent)}
+.phead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:4px}
+.phead h2{font-size:var(--s2);margin:0;font-weight:600}
+.phead .count{margin-left:auto;font-family:var(--mono);font-size:var(--s-1);color:var(--faint)}
+.plede{color:var(--muted);max-width:88ch;margin:8px 0 0}
+.pcontrols{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 16px}
+.pseg{display:inline-flex;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden}
+.pseg button{font:inherit;font-size:var(--s-1);font-family:var(--mono);background:var(--surface);
+  color:var(--muted);border:0;padding:5px 12px;cursor:pointer}
+.pseg button+button{border-left:1px solid var(--line)}
+.pseg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.ppicker{font-family:var(--mono);font-size:var(--s-1);color:var(--muted);
+  border:1px solid var(--line);border-radius:7px;padding:5px 10px;background:var(--sunk)}
+.ppicker b{color:var(--ink);font-weight:600}
+.pcols{display:grid;grid-template-columns:264px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1100px){.pcols{grid-template-columns:minmax(0,1fr)}.ptree{position:static}}
+.ptree{position:sticky;top:14px;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:12px 10px 14px;max-height:calc(100vh - 40px);overflow:auto}
+.ptree h3{font-family:var(--mono);font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;margin:2px 0 8px 8px}
+.ptree .pipe{margin-bottom:6px}
+.ptree .pname{display:flex;gap:7px;align-items:center;width:100%;text-align:left;font:inherit;
+  font-family:var(--mono);font-size:var(--s-1);font-weight:600;color:var(--ink);background:none;
+  border:0;padding:5px 8px;border-radius:6px;cursor:pointer}
+.ptree .pname:hover{background:var(--sunk)}
+.ptree .pname .tw{color:var(--faint);width:11px;display:inline-block;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:11px}
+.ptree ul{list-style:none;margin:0 0 0 13px;padding:0 0 0 8px;border-left:1px solid var(--line)}
+.ptree li a{display:block;text-decoration:none;color:var(--muted);font-size:var(--s-1);
+  padding:4px 8px;border-radius:6px;border-left:2px solid transparent;margin-left:-1px;cursor:pointer}
+.ptree li a:hover{background:var(--sunk);color:var(--ink)}
+.ptree li a.here{background:var(--sunk);color:var(--ink);border-left-color:var(--accent);font-weight:600}
+.ptree li a span{display:block;font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:1px}
+.ptree li a.warn span{color:var(--note)}
+.ptree li.gap{font-size:12px;color:var(--faint);padding:3px 8px 4px;font-style:italic}
+.ptree .filters{display:flex;gap:6px;flex-wrap:wrap;padding:10px 8px 2px;
+  border-top:1px solid var(--line);margin-top:8px}
+.pstack{display:grid;gap:14px;min-width:0}
+.pstep{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:14px 20px 18px;scroll-margin-top:16px}
+.pstep.shut{padding-bottom:14px}
+.pstep.shut .pmsgs,.pstep.shut .pnotes,.pstep.shut .pturns{display:none}
+.shead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.shead button.id{font:inherit;font-family:var(--mono);font-size:var(--s1);color:var(--ink);
+  font-weight:600;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.shead button.id:hover{color:var(--accent)}
+.shead .tw{color:var(--faint);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:12px;margin-right:4px}
+.shead .kind{font-family:var(--mono);font-size:var(--s-1);color:var(--faint)}
+.prule{color:var(--muted);font-size:var(--s-1);margin:7px 0 0;max-width:92ch}
+.prule b{color:var(--ink);font-weight:600}
+.pnotes{margin:8px 0 0;display:grid;gap:5px}
+.pnote{font-size:var(--s-1);color:var(--note);border-left:2px solid var(--note);padding-left:9px}
+.pnote.plain{color:var(--muted);border-left-color:var(--line-strong)}
+.pmsgs{display:grid;grid-template-columns:126px minmax(0,1fr);gap:12px 14px;margin-top:14px;
+  align-items:start}
+.pmsg{display:contents}
+.prole{padding-top:8px}
+.prole b{display:block;font-family:var(--mono);font-size:var(--s-1);color:var(--ink);
+  letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.prole span{display:block;font-size:11.5px;color:var(--faint);line-height:1.35;margin-top:3px}
+.pbody{border:1px solid var(--line);border-left:2px solid var(--accent);border-radius:0 8px 8px 0;
+  background:var(--sunk);padding:11px 14px;font-size:15px;line-height:1.62;
+  white-space:pre-wrap;overflow-wrap:anywhere;max-width:96ch}
+.pmsg.carried .pbody{border-left-color:var(--line-strong);color:var(--muted)}
+.pmsg.outside .pbody{border-left-color:var(--note)}
+.pv{background:var(--accent-soft);border-radius:4px;padding:1px 4px;font-family:var(--mono);
+  font-size:13px;cursor:pointer;border:1px solid transparent}
+.pv:hover,.pv:focus-visible{border-color:var(--accent);outline:none}
+.pv.capped{background:var(--note-soft)}
+.pv .nm{font-size:11px;letter-spacing:.04em;color:var(--faint);vertical-align:.5em;margin-left:3px}
+.pbody.tpl .pv .nm{display:none}
+.pvpanel{grid-column:2;border:1px solid var(--line-strong);border-radius:8px;
+  background:var(--surface);padding:10px 14px 12px;font-size:var(--s-1);color:var(--muted);
+  margin-top:-6px}
+.pvpanel dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 14px;margin:0}
+.pvpanel dt{font-family:var(--mono);color:var(--faint)}
+.pvpanel dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.pvpanel .warnline{color:var(--note);margin:8px 0 0}
+.pacts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.pacts.wide{grid-column:2}
+.pturns{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.pturns>button{font:inherit;font-size:var(--s-1);background:none;border:0;
+  color:var(--muted);cursor:pointer;padding:2px 0}
+.pturns>button:hover{color:var(--accent)}
+.pturn{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:12px;padding:6px 0;
+  border-top:1px solid var(--line);font-size:var(--s-1);align-items:baseline}
+.pturn .n{font-family:var(--mono);color:var(--faint)}
+.pturn .what{color:var(--ink);overflow-wrap:anywhere}
+.pturn .what em{color:var(--muted);font-style:normal;font-family:var(--mono);font-size:11.5px}
+.pturn .cost{font-family:var(--mono);color:var(--faint);font-variant-numeric:tabular-nums;
+  text-align:right}
+.pshut{color:var(--muted);font-size:var(--s-1);margin:7px 0 0}
+.thread .quoted{border-left:2px solid var(--note);background:var(--note-soft);padding:6px 10px;
+  border-radius:0 6px 6px 0;margin:0 0 8px;font-size:var(--s-1)}
+@media (max-width:900px){
+  .pmsgs{grid-template-columns:minmax(0,1fr)}
+  .prole{padding-top:0}.pvpanel,.pacts.wide{grid-column:1}
+}
 /* the measure page: a grid of regions, and nothing that is a chart collapses */
 .mpage{display:grid;gap:12px}
 .mregion{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 20px 14px;min-width:0}
@@ -975,9 +1077,18 @@ const ALL_STAGES = ["brainstorm", "research", "shape", "build", "measure", "ship
 /* `operate` is not a stage: the ship gate never closes, and a project with live runs has a
    page about what they are doing. It appears when there are live runs and not before. */
 const OPERATE = "operate";
+/* Nor is `prompts`: the words a project sends are read on their own page, linked from the
+   build page's prompt rules and from any step's card. */
+const PROMPTS = "prompts";
 function stageSet() {
   const held = DATA.stages || [];
   const stages = held.length ? held.slice() : ALL_STAGES.slice();
+  /* Prompts is a page rather than a stage: it appears once a step calls a model, and sits
+     where the words are written, which is beside `build`. */
+  if (((DATA.prompts || {}).counts || {}).prompts) {
+    const after = stages.indexOf("build");
+    stages.splice(after < 0 ? stages.length : after + 1, 0, PROMPTS);
+  }
   if (DATA.operating) stages.push(OPERATE);
   return stages;
 }
@@ -999,7 +1110,7 @@ function anchorStage() {
 const MAP_PAGES = ["shape", "build", "measure"];
 /* Which page a section lives on, for a finding that points at one from any page. */
 function sectionPage(id) {
-  const fixed = {conversation: "ship", claims: "build", asked: "ship",
+  const fixed = {prompts: PROMPTS, conversation: "ship", claims: "build", asked: "ship",
                  history: DATA.operating ? OPERATE : "ship",
                  checks: "ship", product: "ship", retention: "ship",
                  workspace: "ship", notes: "ship", problems: "ship",
@@ -1035,6 +1146,10 @@ function renderStageStrip() {
     if (s === OPERATE) {
       return `<button data-page="${esc(s)}" class="operate" aria-pressed="${s === shownStage}"
         title="Live runs are on record"><span class="mark">◆</span>Operate</button>`;
+    }
+    if (s === PROMPTS) {
+      return `<button data-page="${esc(s)}" class="aside" aria-pressed="${s === shownStage}"
+        title="Every prompt this project sends"><span class="mark">✎</span>Prompts</button>`;
     }
     const state = at < 0 ? "ahead" : i < at ? "done" : i === at ? "here" : "ahead";
     const mark = state === "done" ? "✓" : state === "here" ? "●" : "○";
@@ -1162,11 +1277,27 @@ function select(address, label, kind) {
   selected = {address, label, kind: kind || "comment"};
   renderComposer();
 }
+/* One `prompt:` address split the way `simple_agents.records.comments` splits it, or null.
+   Every place on the page that reads one reads it here. */
+function promptParts(address) {
+  if (!address.startsWith("prompt:")) return null;
+  const [where, part] = address.slice(7).split("#");
+  const cut = where.indexOf("/");
+  if (cut < 1 || cut === where.length - 1) return null;
+  return {pipeline: where.slice(0, cut), step: where.slice(cut + 1), where, part: part || ""};
+}
 /* The address a thread is filed under, named for a reader. A step, edge, pipeline or
    resource is already called what the drawing calls it; a question or a decision is filed
    under a brief key, and the key is the library's vocabulary rather than the project's. */
 function addressName(address) {
   const brief = DATA.brief || {};
+  const held = promptParts(address);
+  if (held) {
+    if (!held.part) return `the prompt for ${held.step}`;
+    return held.part.startsWith("words-")
+      ? `words in the prompt for ${held.step}`
+      : `the ${held.part} value in the prompt for ${held.step}`;
+  }
   for (const [prefix, rows] of [["question:", brief.entries], ["decision:", brief.decisions]]) {
     if (!address.startsWith(prefix)) continue;
     const key = address.slice(prefix.length);
@@ -1323,6 +1454,7 @@ function actionLabel(finding) {
   if (target.node) return `Open ${target.node}`;
   if (target.resource) return `Open ${target.resource}`;
   if (target.pipeline) return `Open ${target.pipeline}`;
+  if (target.section === "prompts") return "Read the prompt";
   if (target.section === "questions") return "Review decisions";
   if (target.section === "measure") return "Review evaluation";
   return "Open details";
@@ -2775,6 +2907,13 @@ function renderThread(c, {withMeta = true} = {}) {
         r.when ? " · " + esc(String(r.when).slice(0, 10)) : ""}</span>
         <span class="said">${esc(r.said)}</span></div>`),
   ].join("");
+  /* A thread about words in a prompt carries them, so the thread reads after the wording
+     has been rewritten and no longer holds them. */
+  const quoted = c.quoted
+    ? `<div class="quoted">“${esc(c.quoted)}”${c.quoted_chars
+        ? ` <span class="asks">of ${fmt(c.quoted_chars)} characters</span>` : ""}${
+        c.run ? `<span class="asks"> · read in ${esc(c.run)}</span>` : ""}</div>`
+    : "";
   const state = c.status === "open" ? "Open"
     : c.status === "withdrawn" ? "Taken back · not being acted on"
     : "Addressed" + (c.addressed_by ? " by " + esc(c.addressed_by) : "");
@@ -2790,7 +2929,7 @@ function renderThread(c, {withMeta = true} = {}) {
         ? `<button class="btn" data-withdraw="${esc(c.id)}">Take it back</button>` : "");
     }
   }
-  return `<div class="thread ${esc(c.status)}" data-thread="${esc(c.id)}">${kind}${turns}
+  return `<div class="thread ${esc(c.status)}" data-thread="${esc(c.id)}">${kind}${quoted}${turns}
     ${withMeta ? `<div class="meta"><span>${esc(addressName(c.at))}</span><span>${state}</span>${actions.join("")}</div>` : ""}
     <div class="replyslot"></div>
   </div>`;
@@ -3488,7 +3627,12 @@ function renderComposer() {
         draft ? "Copy the words and the address" : "Copy the address"}</button>
         <span class="sent" id="sent"></span></div>`;
     box.querySelector("#copy-addr").onclick = () => {
-      const words = draft ? `${selected.address}: ${draft}` : selected.address;
+      /* A selection's address is a digest of the words, which says nothing on its own, so
+         the words go with it. */
+      const quoted = promptSelection && /#words-/.test(selected.address)
+        ? ` about “${promptSelection.quoted}”` : "";
+      const words = draft
+        ? `${selected.address}${quoted}: ${draft}` : `${selected.address}${quoted}`;
       navigator.clipboard && navigator.clipboard.writeText(words);
       const sent = box.querySelector("#sent");
       sent.textContent = "copied";
@@ -3515,7 +3659,11 @@ function renderComposer() {
   box.querySelector("#composer-send").onclick = async () => {
     if (!text.value.trim()) { text.focus(); return; }
     try {
-      await post("/api/comment", {at: selected.address, said: text.value, kind: selected.kind});
+      /* A thread on words in a prompt carries them, the run they were read in and the
+         digest the fixed text had, so it still reads after the wording is rewritten. */
+      const words = /#words-/.test(selected.address) ? (promptSelection || {}) : {};
+      await post("/api/comment", {at: selected.address, said: text.value, kind: selected.kind,
+                                  ...words});
       delete drafts[selected.address + "|" + selected.kind];
       flash = "sent";
       await refresh();
@@ -5138,7 +5286,10 @@ function promptRulesRegion() {
   const rows = DATA.prompt_rules || [];
   if (!rows.length) {
     return `<div class="mregion">${measureTitle("Prompt rules", "None recorded")}
-      <p>A run records the prompt each model call used. This project has no runs yet.</p></div>`;
+      <p>A run records the prompt each model call used, and this project's runs record
+      none so far.${((DATA.prompts || {}).counts || {}).prompts
+        ? ` The words each step holds are on the
+        <button class="btn" data-goprompts="1">prompts page</button>.` : ""}</p></div>`;
   }
   const open = rows.filter(r => !r.decision).length;
   const body = rows.map(r => `<div class="numrow${r.decision ? "" : " open"}">
@@ -5156,7 +5307,8 @@ function promptRulesRegion() {
   return `<div class="mregion">${measureTitle("Prompt rules",
     `${fmt(rows.length)} · ${open ? `${fmt(open)} unconfirmed` : "all confirmed"}`)}
     <p>What each prompt tells the model to do, where a decision records it. Select a step's
-    name to open the code that builds its prompt.</p>
+    name to open the code that builds its prompt, or read the words themselves on the
+    <button class="btn" data-goprompts="1">prompts page</button>.</p>
     ${body}</div>`;
 }
 
@@ -5565,6 +5717,470 @@ function workspaceSection(sections) {
     held.total ? `${fmt(held.total)} files` : "empty", inner, false));
 }
 
+/* ---------- the prompts page ---------- */
+/* Every instruction the project sends, as it was written and as it was sent. The record
+   keeps the fixed text and each value's length apart, so the page can say which words the
+   project wrote and which arrived at run time (`docs/view.md` §6.10). */
+let promptShow = "sent";          // "sent" or "written"
+let promptFilter = null;          // null, "unagreed" or "changed"
+let promptHere = null;            // the step the path has selected
+const promptShut = new Set();     // steps the reader has closed
+const promptOpen = new Set();     // steps the reader has opened past the default
+const promptValue = {};           // step key -> the value panel showing
+const promptTurns = new Set();    // steps whose later turns are open
+const promptShutPipes = new Set(); // pipelines the reader has collapsed in the path
+let promptSelection = null;       // the words a selection thread carries with it
+
+const promptKey = s => s.pipeline + "/" + s.node_id;
+function promptSteps() {
+  return (((DATA.prompts || {}).pipelines) || []).flatMap(p => p.steps || []);
+}
+function promptKept(step) {
+  if (promptFilter === "unagreed") return !step.decision && !step.planned;
+  if (promptFilter === "changed") return !!step.changed;
+  return true;
+}
+/* Ten prompts or fewer and every one opens open. Above that only the selected step and the
+   ones carrying something to read open, so a forty-step project is readable at the top. */
+function promptIsOpen(step, many) {
+  const key = promptKey(step);
+  if (promptShut.has(key)) return false;
+  if (promptOpen.has(key) || promptHere === key) return true;
+  return !many || step.notes.length > 0;
+}
+/* What the path says under a step's name, and what its shut card says instead of the text. */
+function promptWarnings(step) {
+  const out = [];
+  if (!step.decision && !step.planned) out.push("no agreed rule");
+  if (step.changed) out.push("edited since this run");
+  if (step.notes.some(n => n.kind === "cut")) out.push("a value is cut short");
+  if (step.notes.some(n => n.kind === "varies")) out.push("the words come from the run");
+  return out;
+}
+
+function promptTree() {
+  const held = ((DATA.prompts || {}).pipelines) || [];
+  const groups = held.map(one => {
+    const rows = one.steps.filter(promptKept).map(step => {
+      const key = promptKey(step);
+      const warn = promptWarnings(step);
+      const under = warn.length ? warn.join(" · ")
+        : step.planned ? "not built yet"
+        : step.filled ? "rule agreed"
+        : "read from the code";
+      const gap = (one.gaps || {})[step.node_id];
+      return `<li><a data-pstep="${esc(key)}" class="${promptHere === key ? "here" : ""} ${
+        warn.length ? "warn" : ""}" tabindex="0">${esc(step.short)}<span>${esc(under)}</span></a></li>`
+        + (gap ? `<li class="gap">${fmt(gap)} step${gap === 1 ? "" : "s"} with no prompt</li>` : "");
+    }).join("");
+    const before = (one.gaps || {})[""];
+    const shut = promptShutPipes.has(one.name);
+    return `<div class="pipe"><button class="pname" data-ppipe="${esc(one.name)}">
+      <span class="tw">${shut ? "▸" : "▾"}</span>${esc(one.name)}</button>
+      <ul${shut ? ` style="display:none"` : ""}>${
+      before ? `<li class="gap">${fmt(before)} step${before === 1 ? "" : "s"} with no prompt</li>` : ""
+      }${rows || `<li class="gap">nothing under this filter</li>`}</ul></div>`;
+  }).join("");
+  const filter = (name, label) => `<button class="btn ${promptFilter === name ? "primary" : ""}"
+    data-pfilter="${name}">${label}</button>`;
+  return `<nav class="ptree" aria-label="Prompts by pipeline path"><h3>The path</h3>${groups}
+    <div class="filters">${filter("unagreed", "Only unagreed")}${
+      filter("changed", "Only changed")}</div>
+  </nav>`;
+}
+
+/* One message, drawn from the fixed text and the values the record kept apart.
+
+   The two views are the same pieces: as sent puts each value's own words in the gap, as
+   written puts the gap's name back. Both come from the record, so a step whose source the
+   page cannot read still reads correctly in either. */
+function promptBody(step, message, index) {
+  const key = promptKey(step);
+  const written = promptShow === "written";
+  const inner = (message.pieces || []).map((piece, i) => {
+    if (piece.kind === "fixed") return esc(piece.text);
+    const id = `${key}#${piece.name}#${index}#${i}`;   // the panel's own key, not an address
+    const shown = written || !piece.text ? "{" + piece.name + "}" : piece.text;
+    return `<span class="pv ${piece.capped_from ? "capped" : ""}" tabindex="0" role="button"
+      data-pvalue="${esc(id)}">${esc(shown)}${written || !piece.text ? "" :
+      `<span class="nm">${esc(piece.name)}</span>`}</span>`;
+  }).join("");
+  const instead = message.blocks
+    ? message.blocks.join(", ") + " sent as content that is not text"
+    : message.how === "run_time" ? "The text is chosen while the run happens, so it is in the "
+      + "record of a run rather than in the code."
+    : message.how === "interpolated" ? "A value is formatted into the text itself, so there is "
+      + "no fixed text to read here. The words are in the record of a run."
+    : message.how === "carried" ? "The conversation so far, carried in."
+    : "empty";
+  return `<div class="pbody ${promptShow === "written" ? "tpl" : ""}"
+    data-pmsg="${esc(key + "#" + index)}">${inner
+      || `<span class="pshut">${esc(instead)}</span>`}</div>`;
+}
+
+/* The call one step's shown prompt was read from, where a run filled it. */
+const filledOf = step => (step.filled && step.filled.sequence ? step.filled : null);
+
+function valuePanel(step, message, index) {
+  const key = promptKey(step);
+  const showing = promptValue[key];
+  if (!showing || !showing.startsWith(`${key}#`)) return "";
+  const parts = showing.split("#");
+  if (Number(parts[2]) !== index) return "";
+  const piece = (message.pieces || [])[Number(parts[3])];
+  if (!piece || piece.kind !== "value") return "";
+  const rows = [
+    ["value", piece.name],
+    piece.origin ? ["from", piece.origin] : null,
+    piece.unfilled
+      ? ["size", "unknown; this is the text as the code writes it"]
+      : ["size", piece.capped_from
+          ? `${fmt(piece.chars)} of ${fmt(piece.capped_from)} characters`
+          : `${fmt(piece.chars)} character${piece.chars === 1 ? "" : "s"}`],
+    piece.parts ? ["written as", `${fmt(piece.parts)} parts, joined`] : null,
+    piece.section ? ["built from", "a named section of its own"] : null,
+  ].filter(Boolean);
+  return `<div class="pvpanel"><dl>${rows.map(([k, v]) =>
+    `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${piece.capped_from ? `<p class="warnline">The step's own code cuts this at ${
+      fmt(piece.chars)} characters, so the other ${fmt(piece.capped_from - piece.chars)}
+      never reached the model.</p>` : ""}
+    ${piece.clipped ? `<p class="warnline">The page carries the first ${
+      fmt(piece.text.length)} characters of it.${live() && filledOf(step)
+        ? "" : " The run's record holds the rest."}</p>` : ""}
+    ${piece.clipped && live() && filledOf(step) ? `<div class="pacts">
+      <button class="btn" data-pwhole="${esc(filledOf(step).run)}/${filledOf(step).sequence}"
+        >Read the whole record it came from</button></div>
+      <div class="fullrec" data-pwholerec="${esc(filledOf(step).run)}/${
+        filledOf(step).sequence}" hidden></div>` : ""}
+    <div class="pacts"><button class="btn" data-pcomment="${esc(step.at)}#${esc(piece.name)}"
+      data-plabel="${piece.unfilled ? "read from the code" : fmt(piece.chars) + " characters"}${
+        piece.origin ? ", from " + esc(piece.origin) : ""}"
+      >Comment on this value</button></div></div>`;
+}
+
+function turnLine(turn, label) {
+  const called = turn.called.length
+    ? `called <em>${turn.called.map(esc).join(", ")}</em>` : "";
+  const got = turn.got.length
+    ? " and " + turn.got.map(g => `${g.failed ? "the call failed" : g.asked_a_person
+        ? "was told" : "read"} <em>${esc(g.text)}</em>`).join(" · ") : "";
+  const said = turn.said ? `“${esc(turn.said)}”` : "";
+  const cost = [turn.ms !== null && turn.ms !== undefined ? (turn.ms / 1000).toFixed(1) + "s" : null,
+    turn.tokens !== null && turn.tokens !== undefined
+      ? fmt(turn.tokens) + (turn.tokens_partial ? "+ tokens" : " tokens") : null]
+    .filter(Boolean).join(" · ");
+  return `<div class="pturn"><span class="n">${esc(label || "turn " + turn.n)}</span>
+    <span class="what">${called + got || said || "no answer recorded"}</span>
+    <span class="cost">${esc(cost)}</span></div>`;
+}
+
+function promptTurnsBlock(step) {
+  const filled = step.filled;
+  if (!filled || !filled.answered) return "";
+  const key = promptKey(step);
+  const open = promptTurns.has(key);
+  const answered = step.kind === "agent" ? "turn 1" : "it answered";
+  const grouped = filled.grouped ? `<div class="pturn"><span class="n">turns ${
+    filled.grouped.from}-${filled.grouped.to}</span><span class="what">${
+    fmt(filled.grouped.turns)} more turns, calling ${fmt(filled.grouped.called)} tool${
+    filled.grouped.called === 1 ? "" : "s"}</span><span class="cost">${
+    [filled.grouped.ms !== null ? (filled.grouped.ms / 1000).toFixed(1) + "s" : null,
+     filled.grouped.tokens !== null ? fmt(filled.grouped.tokens) + " tokens" : null]
+      .filter(Boolean).join(" · ")}</span></div>` : "";
+  const more = filled.total
+    ? `<button data-pturns="${esc(key)}">${open ? "▾" : "▸"} ${fmt(filled.total)} more turn${
+        filled.total === 1 ? "" : "s"} in this loop, on the run above</button>` : "";
+  const rows = turnLine(filled.answered, answered)
+    + (open ? filled.turns.map(one => turnLine(one)).join("") : "");
+  return `<div class="pturns">${rows}${more}${open ? grouped : ""}</div>`;
+}
+
+function promptStep(step, many) {
+  const key = promptKey(step), open = promptIsOpen(step, many);
+  const filled = step.filled;
+  const warn = promptWarnings(step);
+  const badges = [
+    step.decision
+      ? `<span class="badge acc">rule agreed</span>`
+      : step.planned ? `<span class="badge mut">not built yet</span>`
+      : `<span class="badge warn">no agreed rule</span>`,
+    filled && filled.items ? `<span class="badge mut">${fmt(filled.items)} items this run</span>` : "",
+    step.changed ? `<span class="badge warn">edited since this run</span>` : "",
+  ].join("");
+  const rule = step.decision
+    ? `<p class="prule"><b>Agreed rule:</b> ${esc(step.decision.chose)}</p>`
+    : step.planned
+    ? `<p class="prule">${esc(step.does || "This step is declared and not built yet.")}</p>`
+    : `<p class="prule">The words below tell the model what to do, and no decision records
+       them. <button class="btn" data-pask="${esc(step.node_id)}">Ask for the rule</button></p>`;
+  /* A step no run has reached still has its words in the code, so the page reads them from
+     the source and says so. The text of a message the run decides exists only once it has
+     run, and the page says that in its place. */
+  const readFromCode = {written: "written in the project's code",
+    carried: "carried from the conversation", interpolated: "written in the project's code",
+    blocks: "written in the project's code", run_time: "chosen while the run happens"};
+  const messages = filled && filled.messages.length
+    ? filled.messages
+    : step.written.map(w => ({role: w.role, origin: readFromCode[w.how] || readFromCode.written,
+        pieces: w.pieces, fromCode: true, how: w.how}));
+  const body = messages.map((message, index) => {
+    const outside = /^set outside/.test(message.origin || "");
+    return `<div class="pmsg ${message.carried ? "carried" : ""} ${outside ? "outside" : ""}">
+      <div class="prole"><b>${esc(message.role || "carried")}</b><span>${
+        esc(message.origin)}</span></div>
+      ${promptBody(step, message, index)}</div>${valuePanel(step, message, index)}`;
+  }).join("");
+  const nothingToRead = !messages.length;
+  const source = filled
+    ? `filled from run <b>${esc(filled.run)}</b>${filled.when ? ", " + esc(filled.when) : ""}${
+        filled.rollout ? `, a rollout of ${esc(filled.rollout)}` : ""}`
+    : step.planned ? "read from the code; this step is not built yet"
+    : "read from the code";
+  return `<section class="pstep ${open ? "" : "shut"}" id="p-${esc(key)}">
+    <div class="shead">
+      <button class="id" data-popen="${esc(key)}"><span class="tw">${open ? "▾" : "▸"}</span>${
+        esc(step.short)}</button>
+      <span class="kind">${esc(step.kind_words)} · ${esc(step.pipeline)}${
+        filled && filled.model ? " · " + esc(filled.model) : ""}</span>${badges}
+    </div>
+    ${rule}
+    ${open ? "" : `<p class="pshut">${[
+      warn.length ? cap(esc(warn.join(", "))) + "." : "",
+      filled && filled.items && filled.one_text
+        ? `All ${fmt(filled.items)} items used the same text.` : "",
+      "Open to read it.",
+    ].filter(Boolean).join(" ")}</p>`}
+    <div class="pnotes">${step.notes.map(n =>
+      `<p class="pnote ${n.kind === "varies" || n.kind === "changed" ? "plain" : ""}">${
+        esc(n.says)}</p>`).join("")}</div>
+    <div class="pmsgs">${body}
+      <div class="pacts wide">
+        <span class="ppicker">${source}</span>
+        <button class="btn" data-pcomment="${esc(step.at)}"
+          data-plabel="${esc(step.kind_words)} in ${esc(step.pipeline)}">Comment on this ${
+          nothingToRead ? "step" : "prompt"}</button>
+        ${nothingToRead ? "" :
+          `<button class="btn" data-pselect="${esc(key)}">Select words to comment on them</button>`}
+      </div>
+    </div>
+    ${promptTurnsBlock(step)}
+    ${promptThreads(step)}</section>`;
+}
+
+/* Every thread filed on this prompt, on one of its values, or on words in it. */
+function promptThreads(step) {
+  const held = (DATA.comments || []).filter(
+    c => c.at === step.at || c.at.startsWith(step.at + "#"));
+  if (!held.length) return "";
+  return `<div class="pmsgs">${held.map(c => `<div class="pacts wide">${renderThread(c)}</div>`).join("")}</div>`;
+}
+
+function promptsPage() {
+  const held = DATA.prompts || {pipelines: [], counts: {}};
+  const counts = held.counts || {};
+  if (!counts.prompts) return "";
+  const steps = promptSteps();
+  const many = steps.length > 10;
+  const shown = steps.filter(promptKept);
+  const badges = [
+    counts.unagreed ? `<span class="badge warn">${fmt(counts.unagreed)} with no agreed rule</span>` : "",
+    counts.cut ? `<span class="badge warn">${fmt(counts.cut)} with a value cut short</span>` : "",
+    counts.varies ? `<span class="badge warn">${fmt(counts.varies)} whose words come from the run</span>` : "",
+    counts.changed ? `<span class="badge warn">${fmt(counts.changed)} edited since the run shown</span>` : "",
+  ].join("");
+  const pipelines = held.pipelines || [];
+  const runsLeft = pipelines.reduce((a, p) => a + (p.runs_left || 0), 0);
+  return `<div data-section="prompts">
+    <div class="phead"><h2>Prompts</h2>${badges}
+      <span class="count">${fmt(counts.prompts)} prompt${counts.prompts === 1 ? "" : "s"} · ${
+        fmt(counts.pipelines)} pipeline${counts.pipelines === 1 ? "" : "s"}</span></div>
+    <p class="plede">Every instruction this project sends to a model. Each step shows the text
+    as it was written and the values that filled it on one real run, and every message says
+    where its words came from. Select any of it to comment, and your coding agent answers in
+    the thread.</p>
+    <div class="pcontrols">
+      <span class="pseg" role="group" aria-label="How the prompt is shown">
+        <button data-pshow="sent" aria-pressed="${promptShow === "sent"}">As sent</button>
+        <button data-pshow="written" aria-pressed="${promptShow === "written"}">As written</button>
+      </span>
+      ${counts.unfilled ? `<span class="ppicker">${fmt(counts.unfilled)} of them read from the
+        code${runsLeft ? `, with ${fmt(runsLeft)} older run${runsLeft === 1 ? "" : "s"}
+        still to look in` : ""}</span>` : ""}
+      ${pipelines.some(p => p.runs_carry_nothing)
+        ? `<span class="ppicker">the runs on record were made before the project kept what it
+          sends, so the words below are the code's</span>` : ""}
+      ${counts.unfilled && runsLeft && live()
+        ? `<button class="btn" id="p-everyrun">Look in every run</button>` : ""}
+    </div>
+    <div class="pcols">${promptTree()}
+      <div class="pstack">${shown.map(s => promptStep(s, many)).join("")
+        || `<p class="pageempty">No prompt matches this filter.</p>`}</div></div>
+  </div>`;
+}
+
+function wirePrompts(holder) {
+  const q = sel => [...holder.querySelectorAll(sel)];
+  q("[data-pshow]").forEach(b => b.onclick = () => { promptShow = b.dataset.pshow; renderSections(); });
+  q("[data-pfilter]").forEach(b => b.onclick = () => {
+    promptFilter = promptFilter === b.dataset.pfilter ? null : b.dataset.pfilter;
+    renderSections();
+  });
+  q("[data-popen]").forEach(b => b.onclick = () => {
+    const key = b.dataset.popen;
+    if (promptShut.has(key)) { promptShut.delete(key); promptOpen.add(key); }
+    else { promptShut.add(key); promptOpen.delete(key); }
+    renderSections();
+  });
+  const goTo = key => {
+    promptHere = key; promptShut.delete(key); promptOpen.add(key);
+    renderSections();
+    const step = document.getElementById("p-" + key);
+    if (step) step.scrollIntoView({behavior: reduced ? "auto" : "smooth", block: "start"});
+  };
+  q("[data-pstep]").forEach(a => {
+    a.onclick = () => goTo(a.dataset.pstep);
+    a.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goTo(a.dataset.pstep); } };
+  });
+  q("[data-ppipe]").forEach(b => b.onclick = () => {
+    /* Held in state rather than on the element: the next control redraws the path, and a
+       collapse written onto the DOM would spring open again. */
+    const name = b.dataset.ppipe;
+    if (promptShutPipes.has(name)) promptShutPipes.delete(name); else promptShutPipes.add(name);
+    renderSections();
+  });
+  q("[data-pvalue]").forEach(v => {
+    const show = () => {
+      const key = v.dataset.pvalue.split("#")[0];
+      promptValue[key] = promptValue[key] === v.dataset.pvalue ? null : v.dataset.pvalue;
+      renderSections();
+    };
+    v.onclick = show;
+    v.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(); } };
+  });
+  q("[data-pturns]").forEach(b => b.onclick = () => {
+    const key = b.dataset.pturns;
+    if (promptTurns.has(key)) promptTurns.delete(key); else promptTurns.add(key);
+    renderSections();
+  });
+  q("[data-pcomment]").forEach(b => b.onclick = () => {
+    select(b.dataset.pcomment, b.dataset.plabel || addressName(b.dataset.pcomment), "comment");
+    putTheComposerWhereTheWordsAre(holder);
+    focusComposer();
+  });
+  q("[data-pask]").forEach(b => b.onclick = () => oneClick(SAY.showRule(b.dataset.pask)));
+  q("[data-pselect]").forEach(b => {
+    const label = b.textContent;
+    b.onclick = () => {
+      const words = String(window.getSelection());
+      if (!words.trim()) {
+        /* The hint replaces the label, and the label comes back: nothing else redraws this
+           button, so a builder who pressed it once would keep the hint. */
+        b.textContent = "Drag across the words first, then press this";
+        setTimeout(() => { b.textContent = label; }, 4000);
+        return;
+      }
+      selectWords(b.dataset.pselect, words, true);
+    };
+  });
+  q(".pbody").forEach(body => body.onmouseup = () => {
+    const words = String(window.getSelection());
+    if (words.trim().length > 1) selectWords(body.dataset.pmsg.split("#")[0], words, false);
+  });
+  putTheComposerWhereTheWordsAre(holder);
+  q("[data-pwhole]").forEach(b => b.onclick = () => {
+    const where = b.dataset.pwhole;
+    const into = holder.querySelector(`[data-pwholerec="${cssId(where)}"]`);
+    if (!into) return;
+    if (!into.hidden) { into.hidden = true; return; }
+    b.textContent = "Reading…";
+    fetch(`/record/${encodeURIComponent(where.slice(0, where.lastIndexOf("/")))}/${
+      where.slice(where.lastIndexOf("/") + 1)}`)
+      .then(r => { if (!r.ok) throw new Error("gone"); return r.text(); })
+      .then(text => {
+        let shown = text;
+        if (text.length < 2_000_000) {
+          try { shown = JSON.stringify(JSON.parse(text), null, 1); } catch (e) { /* raw */ }
+        }
+        into.textContent = shown.length > 200_000
+          ? shown.slice(0, 200_000) + `\n… ${fmt(shown.length - 200_000)} more characters`
+          : shown;
+        into.hidden = false;
+        b.textContent = "Read the whole record it came from";
+      })
+      .catch(() => { b.textContent = "Could not be read"; });
+  });
+  const every = holder.querySelector("#p-everyrun");
+  if (every) every.onclick = async () => {
+    every.textContent = "reading…";
+    try {
+      const answer = await fetch("/prompts/every-run");
+      DATA.prompts = await answer.json();
+      renderSections();
+    } catch (e) { every.textContent = "could not read them"; }
+  };
+}
+
+/* The writing panel follows the prompt being spoken about.
+
+   This page is long, and its whole point is saying something about words in the middle of
+   it. The panel is one element on the page, so it is moved to the step rather than copied,
+   and it goes back to the rail when the selection leaves this page. */
+let composerHome = null;
+let composerPanel = null;
+function putTheComposerWhereTheWordsAre(holder) {
+  /* Held by reference rather than looked up: the panel is moved into a step, and the next
+     redraw of the sections detaches it from the document, where an id lookup would find
+     nothing and the writing panel would vanish. */
+  const panel = composerPanel || document.getElementById("composerwrap");
+  if (!panel) return;
+  composerPanel = panel;
+  composerHome = composerHome || panel.parentElement;
+  const held = selected && promptParts(selected.address);
+  const at = held ? holder.querySelector(`#p-${cssId(held.where)}`) : null;
+  if (at) { at.appendChild(panel); } else if (composerHome) { composerHome.appendChild(panel); }
+}
+/* An id written into a selector, with the characters a selector reads escaped. */
+function cssId(key) {
+  return window.CSS && CSS.escape ? CSS.escape(key) : key.replace(/[^\w-]/g, "\\$&");
+}
+
+/* Words the builder dragged across. The thread is filed under a digest of the words, so
+   selecting them again lands in the thread that is already open on them, and it keeps the
+   words, the run and the instruction's digest so it still reads after the text is rewritten. */
+function selectWords(key, words, scroll) {
+  const step = promptSteps().find(s => promptKey(s) === key);
+  if (!step) return;
+  const said = words.replace(/\s+/g, " ").trim();
+  promptSelection = {
+    quoted: said,
+    run: step.filled ? step.filled.run : null,
+    instruction: step.filled ? step.filled.instruction : null,
+  };
+  select(`${step.at}#words-${digestOf(said)}`, `the words “${clipWords(said)}”`, "comment");
+  /* The panel is moved rather than the page redrawn: a redraw here would take away the
+     highlight the reader just made. */
+  putTheComposerWhereTheWordsAre(document.getElementById("sections"));
+  if (scroll) focusComposer();
+}
+const clipWords = s => s.length > 60 ? s.slice(0, 60) + "…" : s;
+/* An id for one selection, from the words themselves, so selecting them again lands in the
+   thread already open on them. FNV-1a twice over the text, which is what a page with no
+   crypto in it can compute. It is this page's own id and not the record's `sha256:` digest
+   of a piece of fixed text, which is a different function over a different thing. */
+function digestOf(text) {
+  const one = fnv(text, 0x811c9dc5), two = fnv(text, 0x01000193);
+  return (one >>> 0).toString(16).padStart(8, "0") + (two >>> 0).toString(16).padStart(8, "0").slice(0, 4);
+}
+function fnv(text, seed) {
+  let hash = seed;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash;
+}
+
 function renderSections() {
   /* Every section has a home page. What the sitting ruled by name is filed there; the
      elicitation record follows its stages (a question and its answer file under the stage
@@ -5797,6 +6413,7 @@ function renderSections() {
   put("brainstorm", brainHeld);
   put("research", researchHeld);
   put(OPERATE, operateHeld);
+  put(PROMPTS, [promptsPage()].filter(Boolean));
   put("shape", shapeHeld);
   put("build", buildHeld);
   put("measure", measureHeld);
@@ -5814,6 +6431,7 @@ function renderSections() {
     measure: "what the evaluation measured; the project has not measured anything yet",
     ship: "the run record, the conversation, and the checks",
     operate: "what the live runs are doing, and what they have done since",
+    prompts: "every prompt the project sends",
   };
   const ORDER = {
     brainstorm: ["idea", "questions", "staging", "ideafile", "answers", "decisions"],
@@ -5827,6 +6445,7 @@ function renderSections() {
     ship: ["checks", "product", "retention", "claims", "conversation", "asked", "history",
            "workspace", "notes", "problems", "questions", "decisions", "answers"],
     operate: ["now", "daily", "stuck", "conversations", "ran"],
+    prompts: ["prompts"],
   };
   const order = ORDER[shownStage] || [];
   const rank = html => {
@@ -5859,6 +6478,7 @@ function renderSections() {
       shownWhole.has(id) ? "Show less" : "Show all of it"}</button>`);
   });
   wireThreads(holder);
+  wirePrompts(holder);
   wireWalk(holder); wireWalk(lead);
   const m = DATA.measured || {};
   qsa("[data-outcome]").forEach(b => b.onclick = () =>
@@ -5946,6 +6566,7 @@ function renderSections() {
     oneClick(SAY.agreeNumber(b.dataset.agreenum, held ? held.value : undefined));
   });
   qsa("[data-agreeprompt]").forEach(b => b.onclick = () => oneClick(SAY.showRule(b.dataset.agreeprompt)));
+  qsa("[data-goprompts]").forEach(b => b.onclick = () => showPage(PROMPTS));
   qsa("[data-answerwrong]").forEach(b => b.onclick = () => {
     const c = (DATA.claims || []).find(x => x.entry === b.dataset.answerwrong);
     if (c) oneClick(SAY.answerWrong(c));
@@ -6106,7 +6727,8 @@ function renderAll() {
   if (boardless) {
     /* No drawing on this page, so no step card either: the rail is the writing surface,
        addressed to the project unless something on this page was selected. */
-    if (!selected || selected.address.includes("/")) {
+    /* A prompt's address holds a step in it and is read on this page, so it stays. */
+    if (!selected || (selected.address.includes("/") && !selected.address.startsWith("prompt:"))) {
       selected = {address: "project", label: "the whole project", kind: "comment"};
     }
     document.getElementById("stepcard").innerHTML = "";

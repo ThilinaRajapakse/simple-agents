@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "updated",
+  "reason": "the prompts page: one region added to the findings, and two units decomposed",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -62,10 +62,6 @@
     },
     "src/simple_agents/builtins/websearch.py::function::web_search": {
       "function lines": 74
-    },
-    "src/simple_agents/cli/main.py::function::_comments": {
-      "function branches": 15,
-      "function lines": 53
     },
     "src/simple_agents/cli/main.py::function::_parser": {
       "function lines": 111
@@ -181,9 +177,6 @@
     },
     "src/simple_agents/evaluation/progress.py::function::progress_of": {
       "function branches": 17
-    },
-    "src/simple_agents/evaluation/prompts_sent.py::function::_first_calls": {
-      "function branches": 13
     },
     "src/simple_agents/evaluation/results.py::class::EvalResults": {
       "class lines": 433
@@ -376,13 +369,13 @@
     },
     "src/simple_agents/records/comments.py::function::_one": {
       "function branches": 15,
-      "function lines": 59
+      "function lines": 57
     },
     "src/simple_agents/records/conversation.py::class::Thread": {
       "class lines": 214
     },
     "src/simple_agents/records/manifest.py::class::Manifest": {
-      "class lines": 446
+      "class lines": 443
     },
     "src/simple_agents/records/manifest.py::function::Manifest.restore": {
       "function branches": 37,
@@ -457,7 +450,7 @@
       "function branches": 14
     },
     "src/simple_agents/view/findings.py::module": {
-      "module lines": 896
+      "module lines": 902
     },
     "src/simple_agents/view/operating.py::function::read_operating": {
       "function lines": 53
@@ -473,7 +466,7 @@
       "function lines": 52
     },
     "src/simple_agents/view/serve.py::function::_snapshot": {
-      "function branches": 18
+      "function branches": 13
     }
   },
   "reasons": {
@@ -494,7 +487,6 @@
     "src/simple_agents/builtins/memory.py::function::memory_search": "One shipped tool; the branches are the query shapes it accepts.",
     "src/simple_agents/builtins/search.py::class::DocumentIndex": "One index: build, grow, search, snippet. The file format left it at P3-73. What holds the rest together is one lock over the documents, the postings and the store: a save excludes an add, and an add releases it across the embedding call. Splitting the lexical half out puts that lock across two objects, which plan.md 2.2 carries.",
     "src/simple_agents/builtins/websearch.py::function::web_search": "One shipped tool; the length is its provider handling.",
-    "src/simple_agents/cli/main.py::function::_comments": "One subcommand's rendering; each branch is one field's presence rule.",
     "src/simple_agents/cli/main.py::function::_parser": "The command tree declared once; the length is the commands'.",
     "src/simple_agents/cli/reporting.py::class::RunsReport": "One report over a directory of runs: the figures, and the lines that say what was read and what was left out.",
     "src/simple_agents/cli/reporting.py::function::_tool_reach": "One reading; each branch is one place a tool can be declared.",
@@ -532,7 +524,6 @@
     "src/simple_agents/evaluation/per_node.py::function::node_scores": "The three per-node score readings in one lookup, shared by the rates and the comparison.",
     "src/simple_agents/evaluation/per_node.py::module": "Metrics per node, over a trajectory and over a directory of them. Two over the threshold, from the scripted filter joining role and live in node_metrics.",
     "src/simple_agents/evaluation/progress.py::function::progress_of": "A report constructor; each branch is one field's absence rule.",
-    "src/simple_agents/evaluation/prompts_sent.py::function::_first_calls": "One pass over one rollout's records. The branches are the record types it skips and the two ways a call can be unreadable; each is a line, and pulling them out would leave a loop that says less than the branch names do.",
     "src/simple_agents/evaluation/results.py::class::EvalResults": "One results file as an object: the record, its readers, and its report's sections.",
     "src/simple_agents/evaluation/results.py::function::EvalResults._node_lines": "One table row per node; each branch is one optional figure line.",
     "src/simple_agents/evaluation/results.py::function::EvalResults.read": "The file rebuilt field by field; the branches are per-field defaults.",
@@ -618,7 +609,7 @@
     "src/simple_agents/view/discovery.py::function::load_project": "One project loaded in sequence; each branch is one artifact's absence rule.",
     "src/simple_agents/view/evaluation.py::function::read_evaluation": "One page's reader; the length is the page's regions.",
     "src/simple_agents/view/findings.py::function::_arms_never_taken": "One reading over recorded routes; the branches are the arm shapes.",
-    "src/simple_agents/view/findings.py::module": "One page's readers and drawings; the length is the page's regions (built and read as a builder 2026-08-29).",
+    "src/simple_agents/view/findings.py::module": "One page's readers and drawings; the length is the page's regions (built and read as a builder 2026-08-29, and the prompts page's threads named 2026-09-04).",
     "src/simple_agents/view/operating.py::function::read_operating": "One page's reader; the length is the page's regions.",
     "src/simple_agents/view/product.py::function::_one_surface": "One surface's card; each branch is one optional field.",
     "src/simple_agents/view/research.py::function::read_research": "One page's reader; the branches are the record shapes a research stage leaves.",

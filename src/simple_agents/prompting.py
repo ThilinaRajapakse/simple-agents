@@ -489,6 +489,81 @@ def text_globals(fn: Any) -> dict[str, str]:
     return found
 
 
+def text_written(fn: Any) -> list[dict[str, Any]]:
+    """The messages a prompt function writes, read from its source rather than from a run.
+
+    A step the runs have not reached yet still has its words in the code, and this is how the
+    page shows them before anything has run::
+
+        text_written(build_prompt)
+        # [{'role': 'user', 'template': 'Plan {days} days in {city}.', 'how': 'written'}]
+
+    ``template`` is the fixed text where the function passes a literal, a constant, or two of
+    those added together, and ``None`` otherwise. ``how`` says which case a message is:
+    ``written`` for text that can be read here, ``interpolated`` where a value is formatted
+    into the text (FT-46), ``run_time`` where the text is chosen or fetched while the run
+    happens, ``carried`` for messages `Prompt.turns` brings in, and ``blocks`` for content
+    that is not text.
+
+    Only `Prompt.system`, `Prompt.user`, `Prompt.assistant`, `Prompt.turns` and
+    `Prompt.blocks` calls in the function's own source are read, in the order they are
+    written. A function that returns one prompt down one branch and another down a second
+    lists the texts of both, since which one a call takes is decided by the data. A run's own
+    record says what was sent; this says what the code holds. ``[]`` where the source cannot
+    be read, which is a function defined in a REPL.
+    """
+    try:
+        tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
+    except (OSError, TypeError, SyntaxError, IndentationError):
+        return []
+    held = getattr(fn, "__globals__", {}) or {}
+    calls = sorted(
+        (node for node in ast.walk(tree) if isinstance(node, ast.Call)),
+        key=lambda node: (getattr(node, "lineno", 0), getattr(node, "col_offset", 0)),
+    )
+    return [found for node in calls if (found := _message_written(node, held)) is not None]
+
+
+def _message_written(node: ast.Call, held: Mapping[str, Any]) -> dict[str, Any] | None:
+    """One `Prompt` call as the page reads it, or ``None`` where the call builds no message."""
+    func = node.func
+    if not isinstance(func, ast.Attribute) or _named(func.value) != "Prompt":
+        return None
+    if func.attr == "turns":
+        return {"role": None, "template": None, "how": "carried"}
+    if func.attr == "blocks":
+        first = node.args[0] if node.args else None
+        role = first.value if isinstance(first, ast.Constant) else None
+        return {"role": role if isinstance(role, str) else None, "template": None, "how": "blocks"}
+    if func.attr not in ROLES:
+        return None
+    where = node.args[0] if node.args else None
+    if where is None:
+        return {"role": func.attr, "template": None, "how": "run_time"}
+    if _is_interpolated(where):
+        return {"role": func.attr, "template": None, "how": "interpolated"}
+    text = _text_of(where, held)
+    return {
+        "role": func.attr,
+        "template": text,
+        "how": "written" if text is not None else "run_time",
+    }
+
+
+def _text_of(node: ast.AST, held: Mapping[str, Any]) -> str | None:
+    """The fixed text one expression carries, or ``None`` where the run decides it."""
+    if isinstance(node, ast.Constant):
+        return node.value if isinstance(node.value, str) else None
+    if isinstance(node, ast.Name):
+        found = held.get(node.id)
+        return found if isinstance(found, str) else None
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = _text_of(node.left, held)
+        right = _text_of(node.right, held)
+        return None if left is None or right is None else left + right
+    return None
+
+
 def text_shape(fn: Any) -> str:
     """Whether a prompt function's fixed text is written or built by interpolation.
 

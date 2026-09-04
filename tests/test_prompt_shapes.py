@@ -827,6 +827,71 @@ class TestTheStaticReads:
         )
         assert text_shape(module.build) == "written"
 
+    def test_the_text_a_step_holds_is_read_before_anything_has_run(self, tmp_path):
+        """`P3-79`: the prompt page shows a step's words before a run has filled them."""
+        from simple_agents.prompting import text_written
+
+        module = self._module(
+            tmp_path,
+            'TONE = "Answer in two sentences."\n'
+            "def build(inputs, ctx):\n"
+            "    return Prompt.system(TONE) + Prompt.user(\n"
+            '        "Plan {days} days in {city}.", days=inputs["d"], city=inputs["c"]\n'
+            "    )\n",
+        )
+        assert text_written(module.build) == [
+            {"role": "system", "template": "Answer in two sentences.", "how": "written"},
+            {"role": "user", "template": "Plan {days} days in {city}.", "how": "written"},
+        ]
+
+    def test_a_constant_added_to_a_literal_reads_as_the_whole_text(self, tmp_path):
+        """A prompt's words often live in a constant beside the function."""
+        from simple_agents.prompting import text_written
+
+        module = self._module(
+            tmp_path,
+            'TONE = "Answer in two sentences."\n'
+            "def build(inputs, ctx):\n"
+            '    return Prompt.user(TONE + " {q}", q=inputs["q"])\n',
+        )
+        assert text_written(module.build) == [
+            {"role": "user", "template": "Answer in two sentences. {q}", "how": "written"}
+        ]
+
+    def test_each_text_a_branching_prompt_can_send_is_listed(self, tmp_path):
+        """Which branch a call takes is decided by the data, so both texts are read."""
+        from simple_agents.prompting import text_written
+
+        module = self._module(
+            tmp_path,
+            "def build(inputs, ctx):\n"
+            '    if inputs["short"]:\n'
+            '        return Prompt.user("Short answer to {q}", q=inputs["q"])\n'
+            '    return Prompt.user("Long answer to {q}", q=inputs["q"])\n',
+        )
+        assert [one["template"] for one in text_written(module.build)] == [
+            "Short answer to {q}",
+            "Long answer to {q}",
+        ]
+
+    def test_text_the_run_decides_and_text_it_bakes_in_are_told_apart(self, tmp_path):
+        from simple_agents.prompting import text_written
+
+        module = self._module(
+            tmp_path,
+            "def build(inputs, ctx):\n"
+            '    return Prompt.user(inputs["template"], q=inputs["q"])\n'
+            "def baked(inputs, ctx):\n"
+            "    return Prompt.user(f\"Answer {inputs['q']}\")\n"
+            "def chat(inputs, ctx):\n"
+            '    return Prompt.system("{v}", v=inputs["v"]) + Prompt.turns(inputs["thread"])\n',
+        )
+        assert text_written(module.build) == [{"role": "user", "template": None, "how": "run_time"}]
+        assert text_written(module.baked) == [
+            {"role": "user", "template": None, "how": "interpolated"}
+        ]
+        assert [one["how"] for one in text_written(module.chat)] == ["written", "carried"]
+
     def test_a_prompt_whose_source_cannot_be_read_says_so(self):
         from simple_agents.prompting import text_shape
 

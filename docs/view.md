@@ -9,7 +9,9 @@ from the project the way prose does.
 
 **A seventh page appears once the project has live runs.** "Operate" is not a stage: the ship
 gate never closes, and a project with real traffic has a page about what that traffic is doing
-(§6.8).
+(§6.8). **"Prompts" is not a stage either**, and appears once a step calls a model: every
+instruction the project sends, as written and as sent, with a comment on any part of it
+(§6.10).
 
 **The one file holds a page per stage, and it opens on the project's own.** A strip under the
 header names the stages the project's tier has, marks where the project is, and switches
@@ -209,6 +211,21 @@ said = "It should not. Capping the pool before ranking; the change lands today."
 when = "2026-08-27T06:31:44.002Z"
 ```
 
+A prompt has three addresses of its own, for a whole prompt, one value in it, and words
+selected in it (§6.10):
+
+```
+prompt:recommend/judge_books                  the whole prompt
+prompt:recommend/judge_books#catalogue        the value called catalogue
+prompt:recommend/judge_books#words-3f9a1c2d5e70   words the builder selected
+```
+
+A selection is keyed by a digest of the words, so selecting them again lands in the thread
+already open on them, and the thread carries `quoted`, `run` and `instruction`: the words
+verbatim, the run whose prompt they were read in, and the digest the fixed text had at the
+time. A quotation longer than 2,000 characters is cut there, with `quoted_chars` giving the
+length it had.
+
 `kind` says what the builder was doing: a plain `comment`; an `answer`, given inline on an
 open question; or an `amendment`, given on an answer or a decision already recorded. The
 page shows every thread on the element it is about and all of them together in one
@@ -217,7 +234,8 @@ agent's in another. The writing panel itself is on every page: on a page with a 
 speaks to the selected element, and on one without it speaks to the project.
 
 **How the coding agent sees and answers.** `simple-agents comments` prints the open threads
-with their whole exchange (`--json` for reading programmatically), the serving terminal
+with their whole exchange, and prints beside a thread about a prompt the words it quotes and
+the run they were read in. `--json` reads the same programmatically. The serving terminal
 prints each arrival, and FT-39 reports open threads at every gate. The coding agent does
 what a thread asks or takes it back to the builder, replies in the thread
 (`append_reply(path, id, by="coding_agent", said=...)`), and closes it
@@ -245,7 +263,8 @@ seams and the shared state on `shape` (§6.5), progress, the constants, the depa
 last run, the change ledger and the data path on `build` (§6.6), the evaluation and its
 examples on `measure`, the checks, the product, retention and the conversation on `ship`
 (§6.7), and what the live runs are doing on `operate` (§6.8). `brainstorm` and `research` draw
-the idea and the survey (§6.9). The header sentence, the findings and the stage strip are on
+the idea and the survey (§6.9), and `prompts` holds every instruction the project sends
+(§6.10). The header sentence, the findings and the stage strip are on
 every page.
 
 - **Where the project stands**, in one sentence at the top: the stage, what is built, what
@@ -475,7 +494,8 @@ not found: it reports where a name is written and never that it is unused.
 
 **Prompt rules** is the same for what the prompts tell the model. Each prompt the runs
 recorded, with the `prompt_rule` decision that names its step, or **unconfirmed**. A step's
-name opens the code that builds its prompt.
+name opens the code that builds its prompt, and the region links to the prompts page, where
+the words themselves are (§6.10).
 
 Both are gathered across the project's own runs, newest value first, rather than off the newest
 one: a project with more than one pipeline runs whichever it was asked for, so the newest run
@@ -595,6 +615,63 @@ decision under it.
 candidates it weighed. Matched on the words the decision uses, so a candidate described in
 other words is not joined. **What the builder said about it** is that section quoted at the
 foot.
+
+### 6.10 The prompts page, region by region
+
+The prompts page is every instruction the project sends to a model, on a page of its own in
+the stage strip. It appears once a step calls a model. The build page's prompt rules region
+links into it, and each step there opens the code that builds its prompt.
+
+**The page opens as sent**, filled from one real run, with **As written** one click away on
+every step. A cut sentence or a mangled list shows itself in the filled text and not in the
+template. Both readings come from the same record: a run keeps the fixed text and each
+value's length apart, so the page marks which words the project wrote and which arrived at
+run time (`docs/prompts.md` §6).
+
+**The path down the left lists the steps that call a model**, grouped by pipeline. A step
+that makes no model call is left out, and one italic line says how many sit between two
+prompts, so a value handed on through three fixed steps is not read as going straight out.
+Two filters narrow it: **Only unagreed**, the built steps no `prompt_rule` decision names, and
+**Only changed**, the steps whose text has been edited since the runs recorded it. A fan-out
+is one entry rather than one per item, with how many items ran on its card and whether they
+all sent the same text.
+
+**Every message says where its text came from**, in words: written in the project's code, set
+outside the code with the origin the value declared (`docs/prompts.md` §2), or carried from
+the conversation. A message that is one value and no words of the project's own, with no
+origin declared on it, says that instead. Colour follows the words rather than carrying the
+meaning alone.
+
+**A value is a chip in the filled text**, named, and opening one says how long it is, where
+it came from, what a `cap` cut, and how many parts a joined section had. A value the step's
+own code cut is marked, and the page says how much never reached the model; what a `cap` cut
+is not in the record either, since the model was never sent it. A value that filled its gap
+with nothing shows as the gap's name. A value longer than 1,000 characters is carried that
+far, and on the served page a button reads the whole call it came from (§6.3).
+
+**Each step says which run filled it.** A run that took one branch made no call at the steps
+down the others, so the page reads back through the newest 20 runs of each pipeline until
+every step has one, and an evaluation's rollout fills a step the project's own runs never
+reached. A step still unfilled shows the text read out of its source, marked as read from the
+code; a step whose source cannot be read either, which is a prompt defined in a REPL, carries
+its name and takes a comment with no text under it. Where every run on record was made before
+the library kept what it sent, the page says so and reads every prompt from the code. On the
+served page, **Look in every run** reads the whole run record rather than the newest few.
+
+**Under every prompt is what came back**: what the model answered, which tools it called,
+what they returned, and what the call cost. A step that decides for itself carries its later
+turns the same way, with the tail grouped so a fifty-turn loop stays one line until it is
+opened. A call replayed from a cassette reports what the recording measured, since replaying
+one takes no time.
+
+**What the page says about a prompt in words** sits under its rule: a value cut short, an
+instruction that changes from run to run, text with a value formatted into it (FT-46), a run
+that kept no payloads, and words edited since the run shown.
+
+**Three things take a comment** (§5): the whole prompt, one named value, and any words
+selected in the text. A selection keeps the words, the run they were read in and the digest
+the fixed text had, so the thread still reads after the wording is rewritten. The writing
+panel moves to the prompt being spoken about, and every thread on a prompt is shown under it.
 
 ## 7. What was said, against what the code does
 
@@ -781,3 +858,8 @@ rather than what each carried, and the edge card says so.
 **A store's history is what was recorded.** A step that reaches a resource in its own code and
 records nothing leaves the card with the declaration and no accesses, which the card reports
 rather than filling in.
+
+**A prompt is read on the page and edited in the code.** The prompts page (§6.10) shows what
+one run sent and takes a comment on any part of it; the coding agent makes the change. Where a
+message's values cannot be told apart from the text around them, which happens when the run's
+redaction replaced text, the message is shown whole and says so.

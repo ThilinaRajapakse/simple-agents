@@ -115,6 +115,10 @@ amends recorded answers in place, each landing as a thread in `comments.toml`. R
 with `simple-agents comments` before each session and at every gate, do what each asks, reply in the thread,
 and record an `answer` or `amendment` into the brief before addressing it (FT-39).
 
+**The builder reads the prompts on the view's own page** (`docs/view.md` §6.10): every
+instruction the project sends, as written and as one run sent it, taking a comment on a whole
+prompt, one value, or words selected in it.
+
 **A decision the builder settled with one click carries the click alone.**
 `simple-agents record decision <name> --kind <kind> --from-comment <id>` copies what they said
 into `considered` and agrees it. Leave `because` unset: the click is the reason.

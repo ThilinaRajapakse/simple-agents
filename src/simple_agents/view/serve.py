@@ -114,25 +114,49 @@ def _snapshot(data: dict[str, Any], address: str) -> dict[str, str | None]:
         about = f"the {name} decision" + (f": {_clip(held['chose'], 120)}" if held else "")
     elif address.startswith("resource:"):
         about = f"the {address.removeprefix('resource:')} resource"
+    elif address.startswith("prompt:"):
+        return _about_a_prompt(data, address)
     else:
-        pipe_name = address.split("/")[0]
-        pipeline = next((p for p in data.get("pipelines", []) if p.get("name") == pipe_name), None)
-        if pipeline:
-            shape = pipeline.get("fingerprint")
-            if "/" in address:
-                step_id = address.split("/", 1)[1]
-                if "->" in step_id:
-                    about = f"the edge {step_id} in {pipe_name}"
-                else:
-                    node = next((n for n in pipeline["nodes"] if n["id"] == step_id), None)
-                    about = (
-                        f"{step_id}, a {node['kind_noun']} in {pipe_name}"
-                        if node
-                        else f"{step_id} in {pipe_name}"
-                    )
-            else:
-                about = f"the {pipe_name} pipeline, {len(pipeline.get('nodes', []))} steps"
+        about, shape = _about_a_pipeline(data, address)
     return {"about": about, "stage": data.get("stage"), "shape": shape}
+
+
+def _about_a_pipeline(data: dict[str, Any], address: str) -> tuple[str | None, str | None]:
+    """What a pipeline, one of its steps, or one of its edges resolves to, and its shape."""
+    pipe_name = address.split("/")[0]
+    pipeline = next((p for p in data.get("pipelines", []) if p.get("name") == pipe_name), None)
+    if not pipeline:
+        return None, None
+    shape = pipeline.get("fingerprint")
+    if "/" not in address:
+        return f"the {pipe_name} pipeline, {len(pipeline.get('nodes', []))} steps", shape
+    step_id = address.split("/", 1)[1]
+    if "->" in step_id:
+        return f"the edge {step_id} in {pipe_name}", shape
+    node = next((n for n in pipeline["nodes"] if n["id"] == step_id), None)
+    named = (
+        f"{step_id}, a {node['kind_noun']} in {pipe_name}" if node else f"{step_id} in {pipe_name}"
+    )
+    return named, shape
+
+
+def _about_a_prompt(data: dict[str, Any], address: str) -> dict[str, str | None]:
+    """What a thread on a prompt, a value in one, or words selected in one is about.
+
+    Three shapes, all under one prefix: ``prompt:<pipeline>/<step>`` is the whole prompt,
+    ``prompt:<pipeline>/<step>#<value>`` is one value, and ``prompt:<pipeline>/<step>#words-``
+    with a digest of the words is a selection (`docs/view.md` §6.10).
+    """
+    from ..records.comments import names_a_prompt, prompt_address
+
+    pipe_name, node_id, part = prompt_address(address) or ("", "", "")
+    named, shape = _about_a_pipeline(data, f"{pipe_name}/{node_id}")
+    named = named or f"{node_id} in {pipe_name}"
+    return {
+        "about": names_a_prompt(part, named),
+        "stage": data.get("stage"),
+        "shape": shape,
+    }
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -219,6 +243,9 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path.startswith("/run/"):
             self._one_run(self.path.removeprefix("/run/"))
             return
+        if self.path == "/prompts/every-run":
+            self._every_run_for_prompts()
+            return
         self._send(HTTPStatus.NOT_FOUND, b"not found", "text/plain")
 
     def _one_run(self, name: str) -> None:
@@ -237,6 +264,20 @@ class _Handler(BaseHTTPRequestHandler):
             self._send(HTTPStatus.NOT_FOUND, b"no such run", "text/plain")
             return
         self._json(held)
+
+    def _every_run_for_prompts(self) -> None:
+        """The prompt page read over every run rather than the newest few.
+
+        The page reads back through a bounded number of runs, which leaves a step no recent
+        run reached without a filled prompt. This is the button beside it: read the lot.
+        """
+        from .assemble import _brief_data
+        from .prompts import read_prompts
+
+        data = self._fresh()
+        declared = [p for p in data.get("pipelines", []) if p.get("origin") == "declared"]
+        brief = _brief_data(self.root, [])
+        self._json(read_prompts(self.root, declared, brief, most_runs=1_000_000))
 
     def _a_run_called(self, name: str) -> Path | None:
         return run_called(self.root, name)
@@ -267,6 +308,9 @@ class _Handler(BaseHTTPRequestHandler):
             said=said,
             kind=str(body.get("kind") or "comment"),
             by="builder",
+            quoted=_words(body.get("quoted")),
+            run=_words(body.get("run")),
+            instruction=_words(body.get("instruction")),
             **held,
         )
         print(f"view: {thread.kind} {thread.id} on {thread.at}: {thread.said[:80]!r}", flush=True)
@@ -323,6 +367,11 @@ class _Handler(BaseHTTPRequestHandler):
             self._refuse(str(error))
             return
         self._send(HTTPStatus.NOT_FOUND, b"not found", "text/plain")
+
+
+def _words(value: Any) -> str | None:
+    """One field of a thread's snapshot as the page sent it, or ``None`` where it sent none."""
+    return str(value) if isinstance(value, str) and value else None
 
 
 def run_called(root: Path, name: str) -> Path | None:

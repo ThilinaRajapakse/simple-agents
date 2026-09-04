@@ -155,6 +155,94 @@ def _measured() -> dict:
     return assemble(FIXTURES / "measured")["measured"]
 
 
+class TestTheFixturesRunsWereMadeByTheCodeTheyHold:
+    """A fixture whose runs were recorded against different code is stale in a way the format
+    checks above cannot see.
+
+    Found 2026-09-04: a one-line docstring added to `prompted`'s `shortlist` moved that
+    prompt's recorded version, and every format check stayed green. What caught it was the
+    prompts page saying the step had been edited since its run.
+
+    `many-pipelines` is exempt: its staleness is the property under test.
+    """
+
+    # The one fixture whose run was made by code that is gone, which is what it is kept for.
+    STALE_BY_DESIGN = "many-pipelines"
+
+    @pytest.mark.parametrize(
+        "name",
+        sorted(
+            p.name
+            for p in FIXTURES.iterdir()
+            if p.is_dir() and (p / "runs").is_dir() and not p.name.startswith("_")
+        ),
+    )
+    def test_every_recorded_prompt_is_the_version_the_code_has(self, name: str) -> None:
+        from simple_agents.view.assemble import assemble
+
+        if name == self.STALE_BY_DESIGN:
+            pytest.skip("its stale run is the property this fixture is kept for")
+        held = assemble(FIXTURES / name)["prompts"]
+        moved = [
+            f"{s['node_id']}: the code has {s['version']}, the run recorded {s['ran_as']}"
+            for one in held["pipelines"]
+            for s in one["steps"]
+            if s["changed"]
+        ]
+        assert not moved, (
+            f"{name}'s runs were recorded against different code:\n  "
+            + "\n  ".join(moved)
+            + "\nrun `uv run python scripts/build_view_fixtures.py --record`"
+        )
+
+
+class TestThePromptedFixtureHoldsEveryPromptShape:
+    """`prompted` is the project the prompts page was designed against: one of each shape a
+    prompt can take. A shape that leaves this fixture leaves the page's rendering of it
+    untested, so each is named here rather than left to be noticed missing.
+    """
+
+    @pytest.fixture(scope="class")
+    def steps(self) -> dict:
+        from simple_agents.view.assemble import assemble
+
+        held = assemble(FIXTURES / "prompted")["prompts"]
+        return {s["node_id"]: s for one in held["pipelines"] for s in one["steps"]}
+
+    def _pieces(self, step) -> list:
+        return [p for m in step["filled"]["messages"] for p in m["pieces"]]
+
+    def test_a_value_with_an_origin_that_the_step_cut(self, steps):
+        held = [p for p in self._pieces(steps["read_request"]) if p.get("capped_from")]
+        assert len(held) == 1 and held[0]["origin"] == "the traveller_files store"
+
+    def test_a_fan_out_sending_one_text_per_item(self, steps):
+        assert steps["shortlist"]["filled"]["items"] == 2
+
+    def test_a_loop_with_tools_that_took_more_than_one_turn(self, steps):
+        held = steps["plan_days"]["filled"]
+        assert steps["plan_days"]["kind"] == "agent" and held["total"] >= 1
+        assert any(turn["called"] for turn in [held["answered"], *held["turns"]])
+
+    def test_a_section_and_a_list_of_sections(self, steps):
+        pieces = self._pieces(steps["plan_days"])
+        assert any(p.get("section") for p in pieces), "no section"
+        assert any(p.get("parts") for p in pieces), "no joined section"
+
+    def test_a_system_message_an_end_user_wrote_and_a_conversation_carried_in(self, steps):
+        origins = [m["origin"] for m in steps["reply_in_voice"]["filled"]["messages"]]
+        assert origins[0].startswith("set outside the code:")
+        assert origins.count("carried from the conversation") == 2
+
+    def test_a_step_whose_instruction_arrives_as_data(self, steps):
+        assert steps["house_style"]["distinct"] == 2
+
+    def test_a_prompt_with_a_rule_and_one_without(self, steps):
+        agreed = [k for k, s in steps.items() if s["decision"]]
+        assert agreed == ["read_request", "plan_days"]
+        assert any(s["decision"] is None for s in steps.values())
+
+
 class TestTheMeasuredFixtureHoldsEverySurface:
     """`measured` is the project the measure page was designed against: thirty held-out
     examples, a key with parts, two labelled steps, a paid tool, a sweep of two variants,

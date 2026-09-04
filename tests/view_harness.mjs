@@ -47,6 +47,35 @@ globalThis.__page = {
     drawGraph(); renderSections();
   },
   post: (path, payload) => post(path, payload),
+  /* The prompts page: what it shows, what it filters to, and what a selection files under. */
+  prompts: {
+    show: how => { promptShow = how; renderSections(); },
+    only: what => { promptFilter = what; renderSections(); },
+    open: key => { promptHere = key; promptShut.delete(key); promptOpen.add(key); renderSections(); },
+    shut: key => { promptShut.add(key); promptOpen.delete(key); renderSections(); },
+    value: (key, name, message, piece) => {
+      promptValue[key] = key + "#" + name + "#" + message + "#" + piece; renderSections();
+    },
+    turns: key => { promptTurns.add(key); renderSections(); },
+    collapse: name => {
+      if (promptShutPipes.has(name)) promptShutPipes.delete(name); else promptShutPipes.add(name);
+      renderSections();
+    },
+    words: (key, said) => { selectWords(key, said); return {...selected, ...promptSelection}; },
+    /* Each step, and where its first value sits, so the panel can be opened on a real one
+       rather than on whichever piece happens to be second. */
+    steps: () => promptSteps().map(s => {
+      const messages = (s.filled && s.filled.messages) || [];
+      let value = null;
+      messages.forEach((m, i) => (m.pieces || []).forEach((p, j) => {
+        if (!value && p.kind === "value") value = {name: p.name, message: i, piece: j};
+      }));
+      return {key: promptKey(s), node_id: s.node_id, pipeline: s.pipeline,
+              filled: !!s.filled, value};
+    }),
+  },
+  selected: () => selected,
+  addressParts: address => promptParts(address),
   walkTo: run => { walking = run; walkOpen = null; showPage(pageFor('build')); },
   data: () => DATA,
   pipelines: () => DECLARED,
@@ -252,10 +281,65 @@ if (process.argv[1] && process.argv[1].endsWith("view_harness.mjs")) {
     }
     page.renderSections();
 
+    /* The prompts page's own controls, on a project that has one: every step opened, every
+       value panel, the loop's turns, both texts, both filters, and a selection filed. */
+    const prompts = {};
+    if (page.stages().includes("prompts")) {
+      page.showPage("prompts");
+      prompts.steps = page.prompts.steps();
+      prompts.as_sent = look().sections;
+      page.prompts.show("written");
+      prompts.as_written = look().sections;
+      page.prompts.show("sent");
+      for (const step of prompts.steps) {
+        page.prompts.open(step.key);
+        page.prompts.turns(step.key);
+        page.prompts.shut(step.key);
+        page.prompts.open(step.key);
+      }
+      prompts.opened = look().sections;
+      /* One value panel, opened on a value the record actually holds. */
+      const withValue = prompts.steps.find(s => s.value);
+      if (withValue) {
+        page.prompts.value(withValue.key, withValue.value.name, withValue.value.message,
+                           withValue.value.piece);
+        prompts.value_open = look().sections;
+        prompts.value_on = withValue.value.name;
+      }
+      /* One step shut, which is what a project with more prompts than fit opens as. */
+      const fanned = prompts.steps.find(s => /shortlist|read_source/.test(s.node_id));
+      if (fanned) {
+        page.prompts.shut(fanned.key);
+        prompts.shut = look().sections;
+        page.prompts.open(fanned.key);
+      }
+      const pipe = prompts.steps.length ? prompts.steps[0].pipeline : null;
+      if (pipe) {
+        page.prompts.collapse(pipe);
+        prompts.collapsed = look().sections;
+        page.prompts.collapse(pipe);
+      }
+      for (const only of ["unagreed", "changed", null]) {
+        page.prompts.only(only);
+        prompts["only_" + only] = look().sections;
+      }
+      if (prompts.steps.length) {
+        prompts.selection = page.prompts.words(prompts.steps[0].key, "some words in the prompt");
+      }
+      prompts.parsed = {
+        whole: page.addressParts("prompt:trip/plan"),
+        value: page.addressParts("prompt:trip/plan#notes"),
+        stepless: page.addressParts("prompt:trip"),
+        other: page.addressParts("trip/plan"),
+      };
+      page.showPage(first.opened_on);
+    }
+
     console.log(JSON.stringify({
       ...first,
       pipelines_selected: visited,
       resources_opened: page.resources().map(r => r.name),
+      prompts,
       after_every_control: look(),
     }));
   } catch (error) {

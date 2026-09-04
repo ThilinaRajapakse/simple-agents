@@ -215,6 +215,11 @@ is written in the project's code records one, however many sections it is built 
 whose instruction arrives as data records as many as it saw, capped at twenty entries with
 `distinct` carrying the true count.
 
+**On the page.** `simple-agents view` has a prompts page built from all of this: every step's
+text as written and as one run sent it, each value named with where it came from and what a
+`cap` cut, and a comment on the whole prompt, on one value, or on words selected in it
+(`docs/view.md` §6.10).
+
 **In the version.** A prompt's recorded version covers the prompt function's source, what it
 closed over, and the module-level strings it passes as fixed text:
 

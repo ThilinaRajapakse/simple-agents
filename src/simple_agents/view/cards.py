@@ -144,6 +144,21 @@ def _intent_of(node: Any) -> str | None:
     return getattr(marker, "does", None)
 
 
+def _written_prompt(node: Any) -> list[dict[str, Any]]:
+    """The messages this step's prompt function writes, read from its source.
+
+    What a run recorded is what was sent; this is what the code holds, and it is what the
+    prompt page shows for a step the runs have not reached. ``[]`` for a step that calls no
+    model, one not built yet, and one whose source cannot be read.
+    """
+    from ..prompting import text_written
+
+    if node.node_kind not in ("llm", "agent") or getattr(node, "planned", False):
+        return []
+    prompt = getattr(node, "prompt", None)
+    return text_written(prompt) if prompt is not None else []
+
+
 def _node_code(node: Any, scrub: Any) -> dict[str, Any] | None:
     """The function this step runs, as the code says it. ``None`` for a step not built yet."""
     if getattr(node, "planned", False):
@@ -161,6 +176,8 @@ def _node_card(node_id: str, node: Any, graph: Any, scrub: Any = None) -> dict[s
     tools = getattr(node, "tools", []) or []
     return {
         "code": _node_code(node, scrub),
+        "written_prompt": _written_prompt(node),
+        "prompt_entry": dict(getattr(node, "prompt_entry", None) or {}) or None,
         "id": node_id,
         "prefix": prefix,
         "kind": node.node_kind,

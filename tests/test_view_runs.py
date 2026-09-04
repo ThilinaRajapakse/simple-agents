@@ -38,6 +38,7 @@ SHAPES = (
     "many-pipelines",
     "batch",
     "branching",
+    "prompted",
     "shipped",
     "brainstorming",
 )
@@ -86,6 +87,91 @@ class TestEveryShapeRuns:
         assert pages[name]["standing"].strip()
 
 
+class TestThePromptsPage:
+    """`P3-79`: every instruction the project sends, drawn from what the runs recorded.
+
+    The reader is tested in `tests/test_prompt_page.py`; what is held here is that the page
+    draws it, that both readings of a prompt come out of the same record, and that a
+    selection files under a digest of the words with the run and the instruction beside it.
+    """
+
+    def test_the_page_appears_only_where_a_step_calls_a_model(self, pages) -> None:
+        assert "prompts" in pages["prompted"]["stage_pages"]
+        assert "prompts" not in pages["day-zero"]["stage_pages"]
+
+    def test_every_prompt_the_project_sends_is_on_it(self, pages) -> None:
+        held = pages["prompted"]["prompts"]
+        assert [one["node_id"] for one in held["steps"]] == [
+            "read_request",
+            "shortlist",
+            "plan_days",
+            "reply_in_voice",
+            "house_style",
+        ]
+        assert all(one["filled"] for one in held["steps"])
+
+    def test_it_opens_as_sent_and_the_written_text_is_one_click_away(self, pages) -> None:
+        """A cut sentence shows itself in the filled text, so that is what opens."""
+        held = pages["prompted"]["prompts"]
+        assert "Two days in Lyon in June" in held["as_sent"]
+        assert "{message}" not in held["as_sent"]
+        assert "{message}" in held["as_written"]
+        assert "Two days in Lyon in June" not in held["as_written"]
+
+    def test_a_value_the_step_cut_says_what_never_reached_the_model(self, pages) -> None:
+        assert "never reached it" in pages["prompted"]["prompts"]["as_sent"]
+
+    def test_a_message_an_end_user_wrote_is_labelled_on_the_page(self, pages) -> None:
+        held = pages["prompted"]["prompts"]["opened"]
+        assert "set outside the code: the app's settings screen" in held
+        assert "carried from the conversation" in held
+
+    def test_a_filter_narrows_the_path_and_the_prompts_together(self, pages) -> None:
+        held = pages["prompted"]["prompts"]
+        assert "house_style" in held["only_unagreed"]
+        assert "read_request" not in held["only_unagreed"], "an agreed rule survived the filter"
+        assert "No prompt matches this filter" in held["only_changed"]
+
+    def test_opening_a_value_says_how_long_it_is_and_where_it_came_from(self, pages) -> None:
+        """The panel is where a value's origin and its cut are read."""
+        held = pages["prompted"]["prompts"]
+        assert held["value_on"] == "message"
+        panel = held["value_open"]
+        assert "the traveller's own words, as the app took them" in panel
+        assert "characters" in panel
+        assert "Comment on this value" in panel
+
+    def test_a_shut_fan_out_says_whether_its_items_sent_one_text(self, pages) -> None:
+        """A fan-out is one entry, so what its items had in common belongs on that entry."""
+        held = pages["prompted"]["prompts"]["shut"]
+        assert "No agreed rule. All 2 items used the same text. Open to read it." in held
+
+    def test_collapsing_a_pipeline_in_the_path_survives_the_redraw(self, pages) -> None:
+        """The path is redrawn by every control, so a collapse written onto the DOM alone
+        sprang open again. The mark is what the state draws."""
+        held = pages["prompted"]["prompts"]
+        assert "▾ trip" in held["opened"], "an open pipeline is not marked open"
+        assert "▸ trip" in held["collapsed"], "the collapse did not survive the redraw"
+
+    def test_the_page_splits_an_address_the_way_the_record_does(self, pages) -> None:
+        """Three places on the page read a prompt address; one function does the reading."""
+        held = pages["prompted"]["prompts"]["parsed"]
+        assert held["whole"] == {
+            "pipeline": "trip",
+            "step": "plan",
+            "where": "trip/plan",
+            "part": "",
+        }
+        assert held["value"]["part"] == "notes"
+        assert held["stepless"] is None and held["other"] is None
+
+    def test_a_selection_files_under_the_words_it_quotes(self, pages) -> None:
+        held = pages["prompted"]["prompts"]["selection"]
+        assert held["address"].startswith("prompt:trip/read_request#words-")
+        assert held["quoted"] == "some words in the prompt"
+        assert held["run"].startswith("run_") and held["instruction"].startswith("sha256:")
+
+
 class TestTheStagePages:
     """The shell: a page per stage, the homepage anchored to the project's own stage."""
 
@@ -102,6 +188,8 @@ class TestTheStagePages:
             "research",
             "shape",
             "build",
+            # Not a stage: a page of the words the project sends, beside where they are written.
+            "prompts",
             "measure",
             "ship",
         ]
@@ -113,6 +201,7 @@ class TestTheStagePages:
             "research": False,
             "shape": True,
             "build": True,
+            "prompts": False,
             "measure": True,
             "ship": False,
         }

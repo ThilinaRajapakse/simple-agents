@@ -94,6 +94,57 @@ class TestTheCommentLoop:
 
 
 @pytest.fixture()
+def with_prompts(tmp_path):
+    """The prompted fixture, served: five prompts, filled from two runs."""
+    root = tmp_path / "project"
+    shutil.copytree(FIXTURES / "prompted", root, ignore=shutil.ignore_patterns("__pycache__"))
+    server = build_server(root, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield root, f"http://127.0.0.1:{server.server_address[1]}"
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+class TestWordsSelectedInAPrompt:
+    """`P3-79`: a thread on words the builder dragged across keeps what it needs to survive.
+
+    The address is a digest of the words, so selecting them again lands in the thread already
+    open on them. Beside it the thread keeps the words verbatim, the run whose prompt they
+    were read in, and the digest the fixed text had, which is what says the wording has moved
+    since it was said.
+    """
+
+    WORDS = "Read the traveller's message"
+
+    def test_a_selection_lands_with_the_words_the_run_and_the_instruction(self, with_prompts):
+        node = node_or_skip()
+        root, base = with_prompts
+        held = drive(node, base, "select-words", self.WORDS)
+
+        mine = read_comments(root / "comments.toml").all
+        assert len(mine) == 1
+        thread = mine[0]
+        assert thread.at.startswith("prompt:trip/read_request#words-")
+        assert thread.quoted == self.WORDS
+        assert thread.run and thread.run.startswith("run_")
+        assert thread.instruction and thread.instruction.startswith("sha256:")
+        assert thread.about == "words in the prompt for read_request, a model call in trip"
+        assert any(t["at"] == thread.at for t in held["threads"])
+
+    def test_the_same_words_twice_are_one_address(self, with_prompts):
+        node = node_or_skip()
+        _root, base = with_prompts
+        first = drive(node, base, "select-words", self.WORDS)
+        second = drive(node, base, "select-words", self.WORDS)
+        addresses = {t["at"] for t in second["threads"]}
+        assert len(addresses) == 1, "the same words filed under two addresses"
+        assert first["threads"][0]["at"] in addresses
+
+
+@pytest.fixture()
 def at_shape(tmp_path):
     """The skeleton, served: an unconfirmed design and one proposed decision."""
     root = tmp_path / "project"
