@@ -34,8 +34,11 @@ REPO = Path(__file__).resolve().parent.parent
 
 SUBJECT_CEILING = 72
 BODY_CEILING = 72
-# A body longer than this is a build log. The build log is where that belongs.
-BODY_LINE_CEILING = 15
+# One short paragraph. A body says what the subject cannot carry, which is a breaking change
+# and what to do about it, or a reason the diff does not show. Anything longer is a build log,
+# and the build log is where it belongs. Lowered from 15 on 2026-09-04: a compliant body of
+# several paragraphs passed every other rule and was still the wrong shape to read.
+BODY_LINE_CEILING = 5
 
 # An id, a queue position or a run number means nothing to a reader outside this repository.
 INTERNAL_ID = re.compile(r"\b(?:P3-\d+|dogfood[ -]#?\d+|item \d+[a-z]?)\b", re.I)
@@ -99,8 +102,9 @@ GUIDANCE = {
     "no_blank_line": "line 2 must be blank, so the subject stays a subject.",
     "body_length": ("body line is {actual} characters and the ceiling is {ceiling}. Wrap it."),
     "body_lines": (
-        "body runs to {actual} lines and the ceiling is {ceiling}. A body says what a subject "
-        "cannot: a breaking change and what to do about it, or a reason that is not obvious."
+        "body runs to {actual} lines and the ceiling is {ceiling}, which is one short "
+        "paragraph. A body says what the subject cannot: a breaking change and what to do "
+        "about it, or a reason the diff does not show. Everything else goes in the build log."
     ),
 }
 
@@ -244,6 +248,13 @@ SELF_TESTS: list[tuple[str, str, str]] = [
         "a subject of clauses joined by and",
         "Add the store and record it and refuse an old one and warn once",
         "chain of clauses",
+    ),
+    (
+        "a body of more than one paragraph",
+        "Add the numpy vector store\n\n"
+        + "It is exact and fast, and the fallback stays.\n" * 4
+        + "\nThe store is on the manifest, so a stored result says which one made it.\n",
+        "6 lines",
     ),
     (
         "a subject carrying a colon and a clause",
