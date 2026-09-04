@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.31",
   "eval_id": "eval_fd56c1f0d78e",
-  "created_at": "2026-09-03T23:13:06.603Z",
+  "created_at": "2026-09-04T08:24:57.284Z",
   "config": {
     "split": "held_out",
     "k": 2,
@@ -424,7 +424,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:6a1dc63f35f4": 1
+          "sha256:f3f1a6133463": 1
         },
         "distinct": 1
       },
@@ -433,7 +433,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:29f7f5f982d0": 2
+          "sha256:183f35ad5db0": 2
         },
         "distinct": 1
       },
@@ -442,7 +442,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:e42adbf50719": 1
+          "sha256:e27ce6be57ee": 1
         },
         "distinct": 1
       },
@@ -451,7 +451,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:e232dfead79a": 1
+          "sha256:ab6537059996": 1
         },
         "distinct": 1
       },
@@ -815,7 +815,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 0,
+      "wall_clock_ms": 1,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -915,7 +915,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 7755,
+      "wall_clock_ms": 8413,
       "absent_outputs": 3,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -996,7 +996,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3,
+      "wall_clock_ms": 2,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1069,7 +1069,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 6343,
+      "wall_clock_ms": 6858,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1150,7 +1150,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 4462,
+      "wall_clock_ms": 4252,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1233,7 +1233,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3944,
+      "wall_clock_ms": 5160,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1320,7 +1320,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 3645,
+      "wall_clock_ms": 3589,
       "absent_outputs": 0,
       "unfinished_executions": 1,
       "unfinished_items": 0,

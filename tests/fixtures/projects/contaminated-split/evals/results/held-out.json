@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.31",
   "eval_id": "eval_35d2aa5b5931",
-  "created_at": "2026-09-03T23:07:46.101Z",
+  "created_at": "2026-09-04T08:29:14.869Z",
   "config": {
     "split": "held_out",
     "k": 3,
@@ -142,7 +142,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:d954bf38a1cc": 1
+          "sha256:8b88acd3486c": 1
         },
         "distinct": 1
       },
@@ -151,7 +151,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:9946ff7a5dcc": 1
+          "sha256:46ff683c540e": 1
         },
         "distinct": 1
       }

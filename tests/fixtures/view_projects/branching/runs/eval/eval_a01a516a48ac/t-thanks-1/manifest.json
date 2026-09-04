@@ -17,8 +17,8 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-03T23:13:23.308Z",
-  "ended_at": "2026-09-03T23:13:23.371Z",
+  "started_at": "2026-09-04T08:25:13.762Z",
+  "ended_at": "2026-09-04T08:25:13.822Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1856975660,
@@ -60,7 +60,7 @@
       "source": "derived",
       "text": "written",
       "observed": {
-        "sha256:6a1dc63f35f4": 1
+        "sha256:f3f1a6133463": 1
       },
       "distinct": 1
     },
@@ -84,7 +84,7 @@
       "source": "derived",
       "text": "written",
       "observed": {
-        "sha256:148386f63e1c": 1
+        "sha256:5ab552777e14": 1
       },
       "distinct": 1
     }
@@ -793,15 +793,15 @@
         "type": "unknown",
         "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
       },
-      "output": 377
+      "output": 311
     },
     "cost": {
-      "value": 0.00046830000000000005,
+      "value": 0.00044190000000000006,
       "currency": "USD",
       "basis": "price",
       "is_upper_bound": false,
       "reason": null,
-      "measured": 0.00046830000000000005,
+      "measured": 0.00044190000000000006,
       "priced_calls": 5,
       "unpriced_calls": 0
     },
@@ -811,7 +811,7 @@
       "calls": 0,
       "source": null
     },
-    "charged_cost": 0.00046830000000000005,
+    "charged_cost": 0.00044190000000000006,
     "held_back_ms": 0
   }
 }

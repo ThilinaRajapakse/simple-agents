@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.31",
   "eval_id": "eval_8d2053a4764c",
-  "created_at": "2026-09-03T23:15:47.279Z",
+  "created_at": "2026-09-04T08:27:31.823Z",
   "config": {
     "split": "held_out",
     "k": 1,
@@ -445,7 +445,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:22f4ab97d77f": 1
+          "sha256:25087a252552": 1
         },
         "distinct": 1
       },
@@ -454,7 +454,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:c22db4a143f3": 1
+          "sha256:00fb8ae735d2": 1
         },
         "distinct": 1
       },
@@ -463,7 +463,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:14a1952e906f": 1
+          "sha256:94dc5e959743": 1
         },
         "distinct": 1
       },
@@ -1385,7 +1385,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 28177,
+      "wall_clock_ms": 28427,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1566,7 +1566,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 25360,
+      "wall_clock_ms": 28931,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1647,7 +1647,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 27121,
+      "wall_clock_ms": 29295,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1730,7 +1730,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 1,
+      "wall_clock_ms": 3,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1807,7 +1807,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 24473,
+      "wall_clock_ms": 26458,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1968,7 +1968,7 @@
       },
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 8,
+      "wall_clock_ms": 3,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,

@@ -17,8 +17,8 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-03T23:13:17.652Z",
-  "ended_at": "2026-09-03T23:13:18.693Z",
+  "started_at": "2026-09-04T08:25:08.623Z",
+  "ended_at": "2026-09-04T08:25:09.722Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1121378251,
@@ -60,7 +60,7 @@
       "source": "derived",
       "text": "written",
       "observed": {
-        "sha256:6a1dc63f35f4": 1
+        "sha256:f3f1a6133463": 1
       },
       "distinct": 1
     },
@@ -624,7 +624,7 @@
     "dropped": null,
     "hits": 0,
     "misses": 0,
-    "recorded": 2,
+    "recorded": 1,
     "diverged": 0
   },
   "memory": null,

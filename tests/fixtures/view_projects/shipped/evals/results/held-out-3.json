@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.31",
   "eval_id": "eval_523f76ad526a",
-  "created_at": "2026-09-03T23:14:48.770Z",
+  "created_at": "2026-09-04T08:26:33.124Z",
   "config": {
     "split": "held_out",
     "k": 1,
@@ -444,7 +444,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:22f4ab97d77f": 1
+          "sha256:25087a252552": 1
         },
         "distinct": 1
       },
@@ -453,7 +453,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:c22db4a143f3": 1
+          "sha256:00fb8ae735d2": 1
         },
         "distinct": 1
       },
@@ -462,7 +462,7 @@
         "source": "derived",
         "text": "written",
         "observed": {
-          "sha256:14a1952e906f": 1
+          "sha256:94dc5e959743": 1
         },
         "distinct": 1
       },
@@ -1330,7 +1330,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 19,
+      "wall_clock_ms": 5,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1459,7 +1459,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 33493,
+      "wall_clock_ms": 28811,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1540,7 +1540,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 17,
+      "wall_clock_ms": 9,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1640,7 +1640,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 27822,
+      "wall_clock_ms": 25793,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1721,7 +1721,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 32582,
+      "wall_clock_ms": 26902,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1804,7 +1804,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 0,
+      "wall_clock_ms": 1,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1881,7 +1881,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 28212,
+      "wall_clock_ms": 24916,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -1965,7 +1965,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 0,
+      "wall_clock_ms": 1,
       "absent_outputs": 0,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -2042,7 +2042,7 @@
       },
       "delegations": 0,
       "replayed_calls": 0,
-      "wall_clock_ms": 9,
+      "wall_clock_ms": 7,
       "absent_outputs": 24,
       "unfinished_executions": 0,
       "unfinished_items": 0,
