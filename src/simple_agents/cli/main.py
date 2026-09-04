@@ -216,37 +216,58 @@ def _view(args: argparse.Namespace) -> int:
     return 0
 
 
+def _thread_json(thread: Any) -> dict[str, Any]:
+    """One comment thread as `simple-agents comments --json` prints it."""
+    return {
+        "id": thread.id,
+        "at": thread.at,
+        "by": thread.by,
+        "kind": thread.kind,
+        "said": thread.said,
+        "about": thread.about,
+        "stage": thread.stage,
+        "shape": thread.shape,
+        "quoted": thread.quoted,
+        "quoted_chars": thread.quoted_chars,
+        "run": thread.run,
+        "instruction": thread.instruction,
+        "when": thread.when,
+        "status": thread.status,
+        "addressed_by": thread.addressed_by,
+        "addressed_when": thread.addressed_when,
+        "replies": [{"by": r.by, "said": r.said, "when": r.when} for r in thread.replies],
+    }
+
+
+def _print_thread(thread: Any) -> None:
+    """One thread as the coding agent reads it: where it is, what it quotes, and every turn."""
+    marker = {"open": "OPEN", "addressed": "done", "withdrawn": "gone"}[thread.status]
+    kind = f" [{thread.kind}]" if thread.kind != "comment" else ""
+    print(f"{marker:>4}  {thread.id}  {thread.at}{kind}")
+    if thread.about:
+        print(f"      about: {thread.about}")
+    if thread.quoted:
+        # The words a thread is about are what has to be found and changed, so they are
+        # printed rather than left in the file for the reader to go and open.
+        cut = f" (of {thread.quoted_chars:,} characters)" if thread.quoted_chars else ""
+        print(f'      words: "{thread.quoted}"{cut}')
+        if thread.run:
+            print(f"      read in: {thread.run}")
+    print(f"      {thread.by}: {thread.said}")
+    for reply in thread.replies:
+        print(f"      {reply.by}: {reply.said}")
+    if thread.status == "addressed" and thread.addressed_by:
+        print(f"      addressed by {thread.addressed_by}")
+    print()
+
+
 def _comments(args: argparse.Namespace) -> int:
     """Print the threads for the coding agent: open first, each with its whole exchange."""
     from ..records.comments import DEFAULT_COMMENTS, read_comments
 
     held = read_comments(Path(args.path) / DEFAULT_COMMENTS)
     if args.json:
-        print(
-            json.dumps(
-                [
-                    {
-                        "id": c.id,
-                        "at": c.at,
-                        "by": c.by,
-                        "kind": c.kind,
-                        "said": c.said,
-                        "about": c.about,
-                        "stage": c.stage,
-                        "shape": c.shape,
-                        "when": c.when,
-                        "status": c.status,
-                        "addressed_by": c.addressed_by,
-                        "addressed_when": c.addressed_when,
-                        "replies": [
-                            {"by": r.by, "said": r.said, "when": r.when} for r in c.replies
-                        ],
-                    }
-                    for c in held.all
-                ],
-                indent=2,
-            )
-        )
+        print(json.dumps([_thread_json(c) for c in held.all], indent=2))
         return 0
     if not held.all:
         print("no comments; the builder has not said anything through the view yet")
@@ -254,17 +275,7 @@ def _comments(args: argparse.Namespace) -> int:
     shown = held.all if args.all else held.open
     closed = len(held.all) - len(held.open)
     for thread in shown:
-        marker = {"open": "OPEN", "addressed": "done", "withdrawn": "gone"}[thread.status]
-        kind = f" [{thread.kind}]" if thread.kind != "comment" else ""
-        print(f"{marker:>4}  {thread.id}  {thread.at}{kind}")
-        if thread.about:
-            print(f"      about: {thread.about}")
-        print(f"      {thread.by}: {thread.said}")
-        for reply in thread.replies:
-            print(f"      {reply.by}: {reply.said}")
-        if thread.status == "addressed" and thread.addressed_by:
-            print(f"      addressed by {thread.addressed_by}")
-        print()
+        _print_thread(thread)
     if not args.all and closed:
         print(f"and {closed} addressed or withdrawn; --all shows them")
     if not shown and not closed:

@@ -77,6 +77,40 @@ said = "still waiting"
             read_comments(target)
 
 
+class TestThePromptAddresses:
+    """`P3-79`: three shapes under one prefix, read by the page, the record and the gates."""
+
+    def test_the_address_splits_the_same_way_everywhere(self):
+        from simple_agents.records.comments import prompt_address
+
+        assert prompt_address("prompt:trip/research.read#notes") == (
+            "trip",
+            "research.read",
+            "notes",
+        )
+        assert prompt_address("prompt:trip/plan") == ("trip", "plan", "")
+        assert prompt_address("trip/plan") is None
+
+    def test_an_address_naming_no_step_is_not_one(self):
+        """Nothing writes these; a hand-edited file can hold one, and it names no step."""
+        from simple_agents.records.comments import prompt_address
+
+        assert prompt_address("prompt:") is None
+        assert prompt_address("prompt:trip") is None
+        assert prompt_address("prompt:/plan") is None
+
+    def test_each_shape_says_what_it_is_about(self):
+        from simple_agents.records.comments import names_a_prompt, names_a_thread
+
+        assert names_a_prompt("", "plan") == "the prompt for plan"
+        assert names_a_prompt("notes", "plan") == "the notes value in the prompt for plan"
+        assert names_a_prompt("words-3f9a", "plan") == "words in the prompt for plan"
+        assert names_a_thread("prompt:trip/plan#notes") == (
+            "the notes value in the prompt for plan"
+        )
+        assert names_a_thread("trip/plan") is None
+
+
 class TestWriting:
     def test_a_thread_round_trips_with_its_snapshot(self, tmp_path) -> None:
         target = tmp_path / "comments.toml"
@@ -94,6 +128,57 @@ class TestWriting:
         assert held.about == "judge, a model call in recommend"
         assert (held.stage, held.shape) == ("build", "sha256:abc123def456")
         assert held.when and held.by == "builder"
+
+    def test_a_thread_on_words_in_a_prompt_keeps_what_it_needs(self, tmp_path) -> None:
+        """`P3-79`: a selection has to read after the words it quotes have been rewritten."""
+        target = tmp_path / "comments.toml"
+        thread = append_comment(
+            target,
+            at="trip/plan#words-3f9a1c2d5e70",
+            said="120 words is too short once there are four days.",
+            about="words in the prompt for plan, a model call in trip",
+            quoted="Answer in at most 120 words",
+            run="run_20260903T140233Z_9c1f0a2b",
+            instruction="sha256:aa4d52b117e0",
+        )
+        held = read_comments(target).thread(thread.id)
+        assert held.quoted == "Answer in at most 120 words"
+        assert held.run == "run_20260903T140233Z_9c1f0a2b"
+        assert held.instruction == "sha256:aa4d52b117e0"
+        assert held.quoted_chars is None
+
+    def test_a_long_selection_is_cut_and_says_how_long_it_was(self, tmp_path) -> None:
+        target = tmp_path / "comments.toml"
+        thread = append_comment(
+            target, at="trip/plan#words-aaaaaaaaaaaa", said="too much", quoted="x" * 2_500
+        )
+        held = read_comments(target).thread(thread.id)
+        assert len(held.quoted) == 2_000
+        assert held.quoted_chars == 2_500
+        assert thread.quoted_chars == 2_500
+
+    def test_a_file_written_before_the_snapshot_grew_still_reads(self, tmp_path) -> None:
+        """Every field a selection carries is optional, so a `1` file reads as it always did."""
+        target = tmp_path / "comments.toml"
+        target.write_text(
+            'version = "1"\n\n[[comment]]\nid = "c1"\nat = "a/b"\nsaid = "older"\n',
+            encoding="utf-8",
+        )
+        held = read_comments(target)
+        assert held.version == "1"
+        assert held.all[0].said == "older"
+        assert (held.all[0].quoted, held.all[0].run, held.all[0].instruction) == (None,) * 3
+
+    def test_a_length_that_is_not_a_number_is_read_as_none(self, tmp_path) -> None:
+        """The file is hand-editable, and one bad value should not stop the rest reading."""
+        target = tmp_path / "comments.toml"
+        target.write_text(
+            'version = "2"\n\n[[comment]]\nid = "c1"\nat = "a/b"\nsaid = "x"\n'
+            'quoted = "some words"\nquoted_chars = "lots"\n',
+            encoding="utf-8",
+        )
+        held = read_comments(target).all[0]
+        assert held.quoted == "some words" and held.quoted_chars is None
 
     def test_replies_accumulate_in_order(self, tmp_path) -> None:
         target = tmp_path / "comments.toml"
@@ -146,6 +231,29 @@ class TestWriting:
         held = json.loads(capsys.readouterr().out)
         assert held[0]["about"] == "judge, a model call in recommend"
 
+    def test_the_cli_prints_the_words_a_thread_is_about(self, tmp_path, capsys) -> None:
+        """The coding agent has to find those words in the source to change them."""
+        from simple_agents.cli import main
+
+        target = tmp_path / "comments.toml"
+        append_comment(
+            target,
+            at="trip/plan#words-3f9a1c2d5e70",
+            said="Too short once there are four days.",
+            about="words in the prompt for plan, a model call in trip",
+            quoted="Answer in at most 120 words",
+            run="run_20260903T140233Z_9c1f0a2b",
+            instruction="sha256:aa4d52b117e0",
+        )
+        main(["comments", str(tmp_path)])
+        out = capsys.readouterr().out
+        assert 'words: "Answer in at most 120 words"' in out
+        assert "read in: run_20260903T140233Z_9c1f0a2b" in out
+        main(["comments", str(tmp_path), "--json"])
+        held = json.loads(capsys.readouterr().out)
+        assert held[0]["quoted"] == "Answer in at most 120 words"
+        assert held[0]["instruction"] == "sha256:aa4d52b117e0"
+
 
 class TestTheGate:
     """FT-39 over real check runs, driven through fixture copies."""
@@ -174,6 +282,37 @@ class TestTheGate:
 
         report = run_checks(root)
         return next(c for c in report.checks if c.entry_id == "FT-39")
+
+    def test_a_thread_on_a_prompt_is_named_in_words_not_as_an_address(self, tmp_path) -> None:
+        """A gate message is read by the builder, and a digest of the words says nothing."""
+        root = self.project(
+            tmp_path,
+            comments=(
+                'version = "2"\n\n[[comment]]\nid = "c1"\n'
+                'at = "prompt:trip/plan#words-3f9a1c2d5e70"\n'
+                'said = "120 words is too short."\nquoted = "Answer in at most 120 words"\n'
+            ),
+            blocking=False,
+        )
+        result = self.ft_39(root)
+        assert "words in the prompt for plan" in result.detail
+        assert "words-3f9a1c2d5e70" not in result.detail
+
+    def test_the_gate_note_names_it_the_same_way(self, tmp_path) -> None:
+        from simple_agents.conformance import run_checks
+
+        root = self.project(
+            tmp_path,
+            comments=(
+                'version = "2"\n\n[[comment]]\nid = "c1"\n'
+                'at = "prompt:trip/plan#words-3f9a1c2d5e70"\n'
+                'said = "120 words is too short."\n'
+            ),
+            blocking=False,
+        )
+        notes = " ".join(run_checks(root).notes or [])
+        assert "words in the prompt for plan" in notes
+        assert "words-3f9a1c2d5e70" not in notes
 
     def test_no_file_passes_and_says_why(self, tmp_path) -> None:
         result = self.ft_39(self.project(tmp_path, comments=None, blocking=False))

@@ -63,10 +63,12 @@ def _address_name(data: dict[str, Any], address: str) -> str:
     """One comment's address named for a reader, which for a brief key is the question."""
     from .claims import title_of
 
+    from ..records.comments import names_a_thread
+
     for prefix in ("question:", "decision:"):
         if address.startswith(prefix):
             return title_of(address[len(prefix) :])
-    return address
+    return names_a_thread(address) or address
 
 
 def _last_word(comment: dict[str, Any]) -> str:
@@ -78,6 +80,10 @@ def _last_word(comment: dict[str, Any]) -> str:
 def _thread_target(comment: dict[str, Any]) -> dict[str, Any]:
     """Where a thread is read: the step it is on where it is on one, else the conversation."""
     at = str(comment.get("at") or "")
+    # A prompt is read on its own page rather than on the drawing, and the step is in the
+    # address alongside a value or a digest of the words, which is no node id.
+    if at.startswith("prompt:"):
+        return {"section": "prompts"}
     if "/" in at and not at.startswith(("question:", "decision:", "resource:")):
         pipeline, _, node = at.partition("/")
         if "->" not in node:

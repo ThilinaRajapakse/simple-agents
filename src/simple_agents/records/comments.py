@@ -32,6 +32,20 @@ in words, the stage the project was at, and the addressed pipeline's structural 
 An address rots when a step is renamed; the snapshot keeps the thread interpretable after
 the thing it pointed at moved.
 
+**A prompt has three addresses of its own**, for a whole prompt, one value in it, and words
+selected in it (`docs/view.md` §6.10):
+
+    prompt:recommend/judge_candidates                 the whole prompt
+    prompt:recommend/judge_candidates#catalogue       the value called catalogue
+    prompt:recommend/judge_candidates#words-3f9a1c2d5e70   words the builder selected
+
+A selection is keyed by a digest of the words, so selecting the same words again lands in the
+thread that is already there. Three more snapshot fields carry what a selection thread needs
+once the text has been rewritten: ``quoted`` is the words verbatim, ``run`` is the run the
+filled prompt came from, and ``instruction`` is the digest the prompt's fixed text had at the
+time, which is what says the wording has moved since. ``quoted`` is cut at 2,000 characters
+with ``quoted_chars`` giving the length before the cut.
+
 ``kind`` says what the thread is doing: a plain ``comment``, an ``answer`` to an open
 question, or an ``amendment`` to something already answered or agreed. An ``answer`` or an
 ``amendment`` is not written into the brief by anything here: the coding agent reads it,
@@ -66,10 +80,13 @@ __all__ = [
     "set_status",
     "DEFAULT_COMMENTS",
     "COMMENTS_FORMAT_VERSION",
+    "prompt_address",
+    "names_a_prompt",
+    "names_a_thread",
 ]
 
 DEFAULT_COMMENTS = "comments.toml"
-COMMENTS_FORMAT_VERSION = "1"
+COMMENTS_FORMAT_VERSION = "2"
 
 _STATUSES = ("open", "addressed", "withdrawn")
 _KINDS = ("comment", "answer", "amendment")
@@ -81,6 +98,54 @@ _HEADER = (
     "# docs/view.md#5 is the shape.\n"
     f'version = "{COMMENTS_FORMAT_VERSION}"\n'
 )
+
+
+def prompt_address(address: str) -> tuple[str, str, str] | None:
+    """The pipeline, the step and the part one ``prompt:`` address names, or ``None``.
+
+    ::
+
+        prompt_address("prompt:trip/plan#notes")     # ('trip', 'plan', 'notes')
+        prompt_address("trip/plan")                  # None
+
+    The part is ``""`` for the whole prompt, a value's name, or ``words-`` and a digest of the
+    words a builder selected (`docs/view.md` §5). ``None`` for any other address, and for a
+    ``prompt:`` address naming no step, which the page never writes.
+    """
+    if not address.startswith("prompt:"):
+        return None
+    where, _, part = address.removeprefix("prompt:").partition("#")
+    pipeline, _, node_id = where.partition("/")
+    return (pipeline, node_id, part) if pipeline and node_id else None
+
+
+def names_a_thread(address: str) -> str | None:
+    """One ``prompt:`` address in words, named by the step alone, or ``None``.
+
+    ::
+
+        names_a_thread("prompt:trip/plan#notes")   # 'the notes value in the prompt for plan'
+
+    What a page or a gate message shows beside a thread. A thread's own ``about`` names the
+    step more fully, with the kind of step it is and the pipeline it is in, because the view
+    had the drawing in hand when it wrote it.
+    """
+    held = prompt_address(address)
+    return None if held is None else names_a_prompt(held[2], held[1])
+
+
+def names_a_prompt(part: str, named: str) -> str:
+    """What a thread at a prompt address is about, in words.
+
+    ``named`` is the step, already named for whoever is reading::
+
+        names_a_prompt("notes", "plan")   # 'the notes value in the prompt for plan'
+    """
+    if not part:
+        return f"the prompt for {named}"
+    if part.startswith("words-"):
+        return f"words in the prompt for {named}"
+    return f"the {part} value in the prompt for {named}"
 
 
 def _now() -> str:
@@ -103,8 +168,11 @@ class Comment:
     """One thread: what was said at an address, its snapshot, and every reply under it.
 
     ``kind`` is ``"comment"``, ``"answer"`` or ``"amendment"``. ``about``, ``stage`` and
-    ``shape`` snapshot what the writer was looking at. ``addressed_by`` and
-    ``addressed_when`` are only meaningful once ``status`` is ``"addressed"``.
+    ``shape`` snapshot what the writer was looking at, and ``quoted``, ``run`` and
+    ``instruction`` snapshot the rest of it on a thread about words in a prompt: the words
+    themselves, the run whose prompt they were read in, and the digest the fixed text had
+    then. ``quoted_chars`` is the length before a long selection was cut. ``addressed_by``
+    and ``addressed_when`` are only meaningful once ``status`` is ``"addressed"``.
     """
 
     at: str
@@ -115,6 +183,10 @@ class Comment:
     about: str | None = None
     stage: str | None = None
     shape: str | None = None
+    quoted: str | None = None
+    quoted_chars: int | None = None
+    run: str | None = None
+    instruction: str | None = None
     when: str | None = None
     status: str = "open"
     addressed_by: str | None = None
@@ -173,8 +245,9 @@ def read_comments(path: str | Path) -> Comments:
         raise ConfigurationError(
             f"{target} could not be parsed as TOML: {error}. Each thread is one "
             f"[[comment]] table with `at`, `said`, and optionally `id`, `by`, `kind`, "
-            f"`about`, `stage`, `shape`, `when`, `status`, `addressed_by`, "
-            f"`addressed_when` and [[comment.replies]] entries."
+            f"`about`, `stage`, `shape`, `quoted`, `quoted_chars`, `run`, `instruction`, "
+            f"`when`, `status`, `addressed_by`, `addressed_when` and [[comment.replies]] "
+            f"entries."
         ) from error
 
     entries = raw.get("comment")
@@ -197,6 +270,11 @@ def read_comments(path: str | Path) -> Comments:
 def _text(entry: dict, key: str) -> str | None:
     value = entry.get(key)
     return str(value) if value not in (None, "") else None
+
+
+def _a_count(value: object) -> int | None:
+    """One recorded count, and ``None`` for anything that is not one."""
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 def _one(target: Path, index: int, entry: dict) -> Comment:
@@ -249,18 +327,44 @@ def _one(target: Path, index: int, entry: dict) -> Comment:
         id=str(entry.get("id") or f"c{index + 1}"),
         by=by,
         kind=kind,
-        about=_text(entry, "about"),
-        stage=_text(entry, "stage"),
-        shape=_text(entry, "shape"),
         when=_text(entry, "when") or _text(entry, "date"),
         status=status,
         addressed_by=_text(entry, "addressed_by"),
         addressed_when=_text(entry, "addressed_when"),
         replies=tuple(replies),
+        **_snapshot_in(entry),
     )
 
 
+def _snapshot_in(entry: dict) -> dict:
+    """What the writer was looking at, as the file recorded it.
+
+    ``about``, ``stage`` and ``shape`` on any thread; ``quoted``, ``quoted_chars``, ``run``
+    and ``instruction`` on one about words in a prompt.
+    """
+    return {
+        "about": _text(entry, "about"),
+        "stage": _text(entry, "stage"),
+        "shape": _text(entry, "shape"),
+        "quoted": _text(entry, "quoted"),
+        "quoted_chars": _a_count(entry.get("quoted_chars")),
+        "run": _text(entry, "run"),
+        "instruction": _text(entry, "instruction"),
+    }
+
+
 # -- writing ----------------------------------------------------------------------------------
+
+
+QUOTE_LIMIT = 2_000
+"""How much of a selection a thread keeps. Longer than this and `quoted_chars` says so."""
+
+
+def _cut(quoted: str | None) -> tuple[str | None, int | None]:
+    """The words a thread keeps, and the length they had where they were cut."""
+    if quoted is None:
+        return None, None
+    return (quoted[:QUOTE_LIMIT], len(quoted)) if len(quoted) > QUOTE_LIMIT else (quoted, None)
 
 
 def append_comment(
@@ -273,6 +377,9 @@ def append_comment(
     about: str | None = None,
     stage: str | None = None,
     shape: str | None = None,
+    quoted: str | None = None,
+    run: str | None = None,
+    instruction: str | None = None,
     when: str | None = None,
 ) -> Comment:
     """Start a thread and return it, with the id the file now holds.
@@ -282,9 +389,48 @@ def append_comment(
         append_comment("comments.toml", at="recommend/judge", said="Why the whole pool?",
                        about="judge, a model call in recommend", stage="build")
 
-    ``when`` defaults to now, UTC. The served view calls this when the builder submits;
-    the coding agent may open threads the same way. Creates the file when there is none.
+    A thread about words the builder selected in a prompt passes them as ``quoted``, with
+    ``run`` naming the run the prompt was read in and ``instruction`` the digest of its
+    fixed text::
+
+        append_comment("comments.toml", at="trip/plan#words-3f9a1c2d5e70",
+                       said="120 words is too short once there are four days.",
+                       quoted="Answer in at most 120 words", run="run_20260903T140233Z_9c1f",
+                       instruction="sha256:aa4d52b117e0")
+
+    A selection longer than 2,000 characters is cut there and ``quoted_chars`` records the
+    length it had. ``when`` defaults to now, UTC. The served view calls this when the builder
+    submits; the coding agent may open threads the same way. Creates the file when there is
+    none.
     """
+    _refuse_a_bad_thread(kind, by, at, said)
+    held = read_comments(path)
+    taken = {c.id for c in held.all}
+    number = len(held.all) + 1
+    while f"c{number}" in taken:
+        number += 1
+    kept, full = _cut(quoted)
+    thread = Comment(
+        at=at.strip(),
+        said=said.strip(),
+        id=f"c{number}",
+        by=by,
+        kind=kind,
+        about=about,
+        stage=stage,
+        shape=shape,
+        quoted=kept,
+        quoted_chars=full,
+        run=run,
+        instruction=instruction,
+        when=when or _now(),
+    )
+    _write(path, (*held.all, thread))
+    return thread
+
+
+def _refuse_a_bad_thread(kind: str, by: str, at: str, said: str) -> None:
+    """What `append_comment` will not write, and what to pass instead."""
     if kind not in _KINDS:
         raise ConfigurationError(
             f"append_comment was given kind={kind!r}, and the three are 'comment', "
@@ -298,24 +444,6 @@ def append_comment(
         raise ConfigurationError(
             "append_comment needs both at= (the element's address) and said= (the words)."
         )
-    held = read_comments(path)
-    taken = {c.id for c in held.all}
-    number = len(held.all) + 1
-    while f"c{number}" in taken:
-        number += 1
-    thread = Comment(
-        at=at.strip(),
-        said=said.strip(),
-        id=f"c{number}",
-        by=by,
-        kind=kind,
-        about=about,
-        stage=stage,
-        shape=shape,
-        when=when or _now(),
-    )
-    _write(path, (*held.all, thread))
-    return thread
 
 
 def append_reply(
@@ -412,10 +540,12 @@ def _write(path: str | Path, threads: tuple[Comment, ...]) -> None:
         if thread.kind != "comment":
             lines.append(f"kind = {json.dumps(thread.kind)}")
         lines.append(f"said = {json.dumps(thread.said)}")
-        for key in ("about", "stage", "shape", "when"):
+        for key in ("about", "stage", "shape", "quoted", "run", "instruction", "when"):
             value = getattr(thread, key)
             if value:
                 lines.append(f"{key} = {json.dumps(value)}")
+        if thread.quoted_chars:
+            lines.append(f"quoted_chars = {thread.quoted_chars}")
         lines.append(f"status = {json.dumps(thread.status)}")
         if thread.addressed_by:
             lines.append(f"addressed_by = {json.dumps(thread.addressed_by)}")

@@ -185,7 +185,7 @@ def _comments_awaiting(found: Artifacts, brief: Brief) -> str | None:
     if comments.path is None or not comments.open:
         return None
     held = comments.open
-    named = ", ".join(f"{c.at}: {c.said[:60]!r}" for c in held[:3])
+    named = ", ".join(f"{_where(c)}: {c.said[:60]!r}" for c in held[:3])
     more = f", and {len(held) - 3} more" if len(held) > 3 else ""
     return (
         f"{len(held)} comment thread(s) from the builder are open: {named}{more}. Each is "
@@ -194,6 +194,13 @@ def _comments_awaiting(found: Artifacts, brief: Brief) -> str | None:
         f'set status = "addressed" with addressed_by naming what answered it. '
         f"comments_block_gates = true in the brief makes an open thread refuse the gate."
     )
+
+
+def _where(comment: Any) -> str:
+    """Where a thread is, for a reader: a prompt address says what it is about in words."""
+    from ..records.comments import names_a_thread
+
+    return names_a_thread(comment.at) or comment.at
 
 
 def _what_the_live_runs_did(found: Artifacts, stage: str) -> str | None:

@@ -1978,7 +1978,7 @@ def _blocked_on_results(ctx: Context, entry_id: str) -> CheckResult:
 
 def ft_39(ctx: Context) -> CheckResult:
     """Open comments are reported at every gate, and refuse it where the brief says so."""
-    from ..records.comments import DEFAULT_COMMENTS, read_comments
+    from ..records.comments import DEFAULT_COMMENTS, names_a_thread, read_comments
     from ..errors import ConfigurationError
 
     path = ctx.artifacts.root / DEFAULT_COMMENTS
@@ -2004,7 +2004,7 @@ def ft_39(ctx: Context) -> CheckResult:
             read=read,
             detail=f"Every one of the {len(comments.all)} comment(s) is addressed.",
         )
-    named = ", ".join(f"{c.at!r}: {c.said[:60]!r}" for c in held[:4]) + (
+    named = ", ".join(f"{names_a_thread(c.at) or c.at}: {c.said[:60]!r}" for c in held[:4]) + (
         f", and {len(held) - 4} more" if len(held) > 4 else ""
     )
     if ctx.brief.comments_block_gates:
