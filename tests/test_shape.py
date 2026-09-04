@@ -130,6 +130,39 @@ class TestTheThresholdsFire:
         assert unit.over() == {}
 
 
+class TestNothingIsDefinedTwice:
+    """A module-level name bound twice is the second one, silently.
+
+    Found 2026-09-04: a block of four constants was pasted into `view/prompts.py` twice while
+    moving code, and the file imported, linted and passed 4,546 tests. `ruff` reports a
+    redefined function and not a redefined constant.
+    """
+
+    def test_no_module_level_name_is_bound_twice(self) -> None:
+        import ast
+
+        root = Path(__file__).resolve().parent.parent
+        bad = []
+        for path in sorted((root / "src" / "simple_agents").rglob("*.py")):
+            seen: dict[str, int] = {}
+            for node in ast.parse(path.read_text(encoding="utf-8")).body:
+                names: list[str] = []
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    names = [node.name]
+                elif isinstance(node, ast.Assign):
+                    names = [t.id for t in node.targets if isinstance(t, ast.Name)]
+                elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                    names = [node.target.id]
+                for name in names:
+                    if name in seen:
+                        bad.append(
+                            f"{path.relative_to(root)}:{node.lineno}: {name} was already "
+                            f"defined at line {seen[name]}"
+                        )
+                    seen[name] = node.lineno
+        assert not bad, "\n".join(bad)
+
+
 class TestTheRatchet:
     def _over(self, key: str, **measures: int) -> Unit:
         return Unit(key=key, path="sample.py", line=1, label="grew", measures=measures)
