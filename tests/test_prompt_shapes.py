@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import random
+from pathlib import Path
 
 import pytest
 
@@ -708,3 +709,323 @@ class TestWhatIsRefused:
         """A list is what an f-string would have written, brackets and all."""
         held = Prompt.user("Sources: {sources}", sources=["a", "b"]).to_messages()
         assert held[0]["content"] == "Sources: ['a', 'b']"
+
+    def test_a_value_of_none_says_so_rather_than_vanishing(self):
+        """An f-string writes `None`, and a value that quietly emptied would hide a defect."""
+        held = Prompt.user("Answer for {who}.", who=None).to_messages()
+        assert held[0]["content"] == "Answer for None."
+
+    def test_a_number_reaches_the_model_as_python_writes_it(self):
+        held = Prompt.user("{n} of {total}", n=3, total=12.5).to_messages()
+        assert held[0]["content"] == "3 of 12.5"
+
+
+class TestWhatTheRecordHolds:
+    """The record every run writes, which the page and the checks read."""
+
+    def test_a_carried_message_goes_on_the_wire_as_the_object_it_arrived_as(self):
+        """The conversation matches what a node sent by identity before content."""
+        held = [{"role": "user", "content": "hello"}]
+        sent = Prompt.turns(held).to_messages()
+        assert sent[0] is held[0]
+
+    def test_a_carried_message_is_marked_as_carried(self):
+        record = Prompt.turns([{"role": "user", "content": "hello"}]).to_record()
+        assert record["messages"][0] == {"role": "user", "carried": True, "chars": 5}
+
+    def test_a_repeat_records_the_text_once_and_counts_the_parts(self):
+        built = Prompt.user(
+            "{rows}",
+            rows=Section.joined("rows", [Section("row", "- {t}", t=t) for t in ("a", "b", "c")]),
+        )
+        held = built.to_record()["messages"][0]["values"][0]
+        assert held["parts"] == 3
+        assert held["each"] == "- {t}"
+
+    def test_two_examples_of_one_instruction_record_one_digest(self):
+        first = Prompt.user("Answer {q}.", q="one").to_record()["templates"]
+        second = Prompt.user("Answer {q}.", q="two").to_record()["templates"]
+        assert first == second and len(first) == 1
+
+    def test_an_edited_instruction_records_a_different_digest(self):
+        first = Prompt.user("Answer {q}.", q="one").to_record()["templates"]
+        second = Prompt.user("Answer {q} briefly.", q="one").to_record()["templates"]
+        assert first != second
+
+    def test_a_marked_message_records_which_fields_were_set(self):
+        record = Prompt.system("s").marked(cache_control={"type": "ephemeral"}).to_record()
+        assert record["messages"][0]["extra"] == ["cache_control"]
+
+    def test_blocks_record_what_each_one_is(self):
+        built = Prompt.blocks("user", [{"type": "image", "source": {}}, Section("ask", "Read it.")])
+        blocks = built.to_record()["messages"][0]["blocks"]
+        assert blocks[0] == {"kind": "image"}
+        assert blocks[1]["template"] == "Read it."
+
+
+class TestTheStaticReads:
+    """What `text_globals` and `text_shape` see, which decide a version and FT-46."""
+
+    def _module(self, tmp_path, body):
+        import sys
+
+        path = tmp_path / "probe_prompts.py"
+        path.write_text("from simple_agents import Prompt, Section\n" + body)
+        sys.path.insert(0, str(tmp_path))
+        try:
+            module = __import__("probe_prompts")
+            import importlib
+
+            return importlib.reload(module)
+        finally:
+            sys.path.remove(str(tmp_path))
+
+    def test_a_constant_passed_as_text_is_in_the_version(self, tmp_path):
+        from simple_agents.records.manifest import source_version
+
+        module = self._module(
+            tmp_path,
+            'TONE = "Answer in two sentences."\n'
+            "def build(inputs, ctx):\n"
+            '    return Prompt.user(TONE + " {q}", q=inputs["q"])\n',
+        )
+        before = source_version(module.build, text=True)
+        module.TONE = "Answer in one sentence."
+        after = source_version(module.build, text=True)
+        assert before != after
+        assert source_version(module.build) == source_version(module.build)
+
+    def test_a_prompt_reached_through_a_module_is_read(self, tmp_path):
+        from simple_agents.prompting import text_globals
+
+        module = self._module(
+            tmp_path,
+            "import simple_agents as sa\n"
+            'RULE = "Cite the source."\n'
+            "def build(inputs, ctx):\n"
+            '    return sa.Prompt.user(RULE + " {q}", q=inputs["q"])\n',
+        )
+        assert text_globals(module.build) == {"RULE": "Cite the source."}
+
+    def test_a_template_built_by_interpolation_says_so(self, tmp_path):
+        from simple_agents.prompting import text_shape
+
+        module = self._module(
+            tmp_path,
+            "def build(inputs, ctx):\n    return Prompt.user(f\"Answer {inputs['q']}\")\n",
+        )
+        assert text_shape(module.build) == "interpolated"
+
+    def test_a_template_chosen_at_run_time_is_not_interpolation(self, tmp_path):
+        from simple_agents.prompting import text_shape
+
+        module = self._module(
+            tmp_path,
+            'TEXTS = {"en": "Answer briefly. {q}"}\n'
+            "def build(inputs, ctx):\n"
+            '    return Prompt.user(TEXTS[inputs["lang"]], q=inputs["q"])\n',
+        )
+        assert text_shape(module.build) == "written"
+
+    def test_a_prompt_whose_source_cannot_be_read_says_so(self):
+        from simple_agents.prompting import text_shape
+
+        built = eval("lambda inputs, ctx: Prompt.user('x')")  # noqa: S307 - a REPL-defined prompt
+        assert text_shape(built) == "unreadable"
+
+    def test_a_prompt_of_many_sections_is_one_instruction(self):
+        """A written prompt records one instruction however many pieces it is built from."""
+        built = Prompt.system("Be brief.") + Prompt.user(
+            "{body}",
+            body=Section.joined("body", [Section("p", "- {t}", t=t) for t in ("a", "b")]),
+        )
+        assert len(built.to_record()["templates"]) == 3
+        assert built.to_record()["instruction"]
+
+    def test_the_instruction_holds_across_data_and_moves_on_an_edit(self):
+        same = [
+            Prompt.user("Answer {q}.", q=held).to_record()["instruction"] for held in ("one", "two")
+        ]
+        edited = Prompt.user("Answer {q} briefly.", q="one").to_record()["instruction"]
+        assert same[0] == same[1] != edited
+
+    def test_the_order_the_pieces_are_sent_in_is_part_of_it(self):
+        first = (Prompt.system("A") + Prompt.user("B")).to_record()["instruction"]
+        second = (Prompt.system("B") + Prompt.user("A")).to_record()["instruction"]
+        assert first != second
+
+    def test_a_chat_step_keeps_one_instruction_as_the_conversation_grows(self):
+        """A carried message is not the project's text, so a longer thread is the same step."""
+
+        def built(turns):
+            return (
+                Prompt.system("Answer as the shop's assistant.")
+                + Prompt.turns(turns)
+                + Prompt.user("{q}", q="where is my order")
+            ).to_record()["instruction"]
+
+        first = built([{"role": "user", "content": "hello"}])
+        later = built(
+            [
+                {"role": "user", "content": "hello"},
+                {"role": "assistant", "content": "hi"},
+                {"role": "user", "content": "and again"},
+            ]
+        )
+        assert first == later
+
+    def test_an_absence_dropped_into_a_prompt_says_the_word(self):
+        """`docs/pipeline.md` §4 and `Unknown.__str__` both promise this of a prompt value."""
+        from simple_agents import Unknown
+
+        held = Prompt.user("Airs: {airs}", airs=Unknown(reason="the schedule does not say"))
+        assert held.to_messages()[0]["content"] == "Airs: unknown (the schedule does not say)"
+
+
+class TestWhatARunRecords:
+    """The manifest and the trajectory a real run writes, which nothing else asserts."""
+
+    def _run(self, tmp_path, prompt, calls=1, **envelope):
+        import json
+
+        from pydantic import BaseModel
+
+        from simple_agents import (
+            Budget,
+            FakeModelClient,
+            LLMNode,
+            Maybe,
+            Pipeline,
+            RunEnvelope,
+        )
+        from simple_agents.models import fake_response
+
+        class Answer(BaseModel):
+            answer: Maybe[str]
+
+        pipeline = Pipeline(
+            [LLMNode(prompt, output_schema=Answer, node_id="ask")],
+            budget=Budget(max_steps=4, max_tokens=9_000, max_cost=None, max_wall_clock_ms=30_000),
+        )
+        client = FakeModelClient(
+            responses=[fake_response(content='{"answer": "a"}') for _ in range(calls)]
+        )
+        result = pipeline.run(
+            {"question": "q"},
+            envelope=RunEnvelope(run_dir=str(tmp_path / "runs"), **envelope),
+            model=client,
+        )
+        root = Path(result.paths.root)
+        manifest = json.loads((root / "manifest.json").read_text())
+        records = [
+            json.loads(line) for line in (root / "trajectory.jsonl").read_text().splitlines()
+        ]
+        return manifest, [r for r in records if r["record_type"] == "model_call"]
+
+    def test_the_manifest_records_one_instruction_for_a_written_prompt(self, tmp_path):
+        def prompt(inputs, ctx):
+            return Prompt.system("Be brief.") + Prompt.user(
+                "{q}\n{rows}",
+                q=inputs["question"],
+                rows=Section.joined("rows", [Section("r", "- {t}", t=t) for t in "ab"]),
+            )
+
+        manifest, _calls = self._run(tmp_path, prompt)
+        held = manifest["prompts"]["ask"]
+        assert held["text"] == "written"
+        assert held["distinct"] == 1
+        assert len(held["observed"]) == 1 and sum(held["observed"].values()) == 1
+
+    def test_the_call_records_the_fixed_text_apart_from_the_data(self, tmp_path):
+        def prompt(inputs, ctx):
+            return Prompt.user("Answer {q}.", q=inputs["question"])
+
+        _manifest, calls = self._run(tmp_path, prompt)
+        assembly = calls[0]["inputs"]["assembly"]
+        assert assembly["messages"][0]["template"] == "Answer {q}."
+        assert assembly["messages"][0]["values"] == [{"name": "q", "chars": 1}]
+        assert assembly["instruction"].startswith("sha256:")
+        assert calls[0]["inputs"]["messages"][0]["content"] == "Answer q."
+
+    def test_a_cap_reaches_the_record_of_the_run(self, tmp_path):
+        def prompt(inputs, ctx):
+            return Prompt.user("{notes}", notes=Value("x" * 90, cap=20, origin="the store"))
+
+        _manifest, calls = self._run(tmp_path, prompt)
+        value = calls[0]["inputs"]["assembly"]["messages"][0]["values"][0]
+        assert value == {"name": "notes", "chars": 20, "capped_from": 90, "origin": "the store"}
+
+    def test_an_interpolated_prompt_is_recorded_as_one(self, tmp_path):
+        def prompt(inputs, ctx):
+            return Prompt.user(f"Answer {inputs['question']}.")
+
+        manifest, _calls = self._run(tmp_path, prompt)
+        assert manifest["prompts"]["ask"]["text"] == "interpolated"
+
+    def test_redaction_reaches_inside_the_assembly(self, tmp_path):
+        """`docs/prompts.md` §6 says the assembly is a payload field, and nothing tried it."""
+        from simple_agents import Redaction
+
+        secret = "sk-live-" + "0123456789" * 2  # built, so the file holds no key
+
+        def prompt(inputs, ctx):
+            return Prompt.user("Use the key " + secret + " for {who}.", who=inputs["question"])
+
+        _manifest, calls = self._run(tmp_path, prompt, redaction=Redaction())
+        template = calls[0]["inputs"]["assembly"]["messages"][0]["template"]
+        assert secret not in template
+        assert "inputs.assembly.messages[0].template" in calls[0]["redactions"]
+
+    def test_sampling_drops_the_assembly_with_the_messages(self, tmp_path):
+        import json
+
+        from simple_agents.records.trajectory import strip_payloads
+
+        def prompt(inputs, ctx):
+            return Prompt.user("Answer {q}.", q=inputs["question"])
+
+        manifest, _calls = self._run(tmp_path, prompt)
+        path = Path(manifest["paths"]["trajectory"]) if "paths" in manifest else None
+        held = sorted((tmp_path / "runs").rglob("trajectory.jsonl"))[0] if path is None else path
+        strip_payloads(held)
+        after = [json.loads(line) for line in Path(held).read_text().splitlines()]
+        call = [r for r in after if r["record_type"] == "model_call"][0]
+        assert "assembly" not in json.dumps(call["inputs"])
+
+    def test_a_fan_out_counts_one_instruction_per_item(self, tmp_path):
+        import json
+
+        from pydantic import BaseModel
+
+        from simple_agents import (
+            Budget,
+            FakeModelClient,
+            LLMNode,
+            Maybe,
+            Pipeline,
+            RunEnvelope,
+        )
+        from simple_agents.models import fake_response
+
+        class Answer(BaseModel):
+            answer: Maybe[str]
+
+        def prompt(inputs, ctx):
+            return Prompt.user("Summarise {doc}.", doc=inputs["documents"])
+
+        pipeline = Pipeline(
+            [LLMNode(prompt, output_schema=Answer, node_id="each", over="documents")],
+            budget=Budget(max_steps=8, max_tokens=9_000, max_cost=None, max_wall_clock_ms=30_000),
+        )
+        client = FakeModelClient(
+            responses=[fake_response(content='{"answer": "a"}') for _ in range(3)]
+        )
+        result = pipeline.run(
+            {"documents": ["a", "b", "c"]},
+            envelope=RunEnvelope(run_dir=str(tmp_path / "runs")),
+            model=client,
+        )
+        manifest = json.loads((Path(result.paths.root) / "manifest.json").read_text())
+        held = manifest["prompts"]["each"]
+        assert held["distinct"] == 1
+        assert sum(held["observed"].values()) == 3

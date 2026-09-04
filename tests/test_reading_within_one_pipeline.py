@@ -41,6 +41,26 @@ def _a_rollout(root: Path) -> Path:
     return sorted((root / "runs").rglob("manifest.json"))[0].parent
 
 
+def _after_every_run(root: Path, hours: int = 1) -> str:
+    """A stamp later than every run the fixture holds.
+
+    The fixtures are rebuilt from the clock, so a date written into this file is in the future
+    when it is written and in the past the next time they are built.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    held = [
+        str(json.loads(path.read_text()).get("started_at") or "")
+        for path in (root / "runs").rglob("manifest.json")
+    ]
+    newest = max(held, default="") or "2026-01-01T00:00:00.000Z"
+    at = datetime.fromisoformat(newest.replace("Z", "+00:00")) + timedelta(hours=hours)
+    return (
+        at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.")
+        + f"{at.microsecond // 1000:03d}Z"
+    )
+
+
 def _added_run(root: Path, run_id: str, **fields) -> Path:
     """One more run under `runs/`, copied off a rollout and given the fields the test needs."""
     where = root / "runs" / "dev" / "2026-09-04" / run_id
@@ -76,7 +96,7 @@ def _background_pass(root: Path) -> Path:
         root,
         "run_freshen",
         pipeline="freshen",
-        started_at="2026-09-04T06:00:00.000Z",
+        started_at=_after_every_run(root),
         behaviour_fingerprint="sha256:aaaaaaaaaaaaaaaa",
         nodes=[{"node_id": "refresh", "node_kind": "deterministic"}],
         tools=[],
@@ -303,7 +323,7 @@ class TestAnEvaluationOverARung:
             root,
             "run_rung",
             pipeline=MEASURED,
-            started_at="2026-09-04T09:00:00.000Z",
+            started_at=_after_every_run(root),
             behaviour_fingerprint="sha256:cccccccccccccccc",
             slice={"of": "sha256:whole", "nodes": ["verify"], "dropped": ["hunt"]},
         )

@@ -17,6 +17,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   other content a backend takes in place of text. `Prompt.marked` sets what a backend reads off
   a message, such as a cache marker.
 - `Value(cap=...)` cuts a value and records what it cut, so a truncated prompt says so.
+- FT-46: a prompt that builds its fixed text by interpolation fails, since a step whose
+  instruction differs on every example has none that can be read, compared or agreed.
 - `DocumentIndex.add`, `.replace` and `.remove`: only the documents given are embedded.
 - `NumpyVectors`, the vector store an index builds where numpy is installed. `VectorScan`
   remains the fallback.
@@ -48,15 +50,17 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - **Breaking.** A prompt function returns a `Prompt`. A string or a list of message dicts is
-  refused with a `ConfigurationError` naming the call that replaces it, in a node's prompt and
-  in `ModelHandle.complete` alike. Text a project has already assembled goes through as the
-  fixed text: `Prompt.user(text)`.
+  refused with a `ConfigurationError` naming the call that replaces it: in a node's prompt, in
+  `ModelHandle.complete`, and in a consultation reader's `Reading.complete`. Text a project has
+  already assembled goes through as the fixed text, `Prompt.user(text)`; text that arrived from
+  outside the project goes in as a value, since a brace in it would read as a gap.
 - Trajectory format `0.30`. A `model_call` carries `inputs.assembly`: the fixed text of each
-  message, the values that filled it, what any of them cut, and a digest of each distinct piece
-  of text. Absent on a call whose messages are a conversation, which is every turn of an agent
+  message, the values that filled it, what any of them cut, `instruction` digesting everything
+  fixed about the prompt, and `templates` for the distinct pieces it was built from. Absent on a call whose messages are a conversation, which is every turn of an agent
   loop after the first.
-- Manifest format `0.42`. Each entry in `prompts` carries `observed`, the distinct pieces of
-  fixed text that step sent and how often, and `distinct`, how many there were. A prompt's
+- Manifest format `0.42`. Each entry in `prompts` carries `text`, which is `written` or
+  `interpolated`; `observed`, the distinct instructions that step's calls were built from and
+  how often; and `distinct`, how many there were. A prompt's
   recorded version now covers the module-level strings the prompt function passes as fixed
   text, so editing a prompt held in a constant moves the version and
   `Pipeline.behaviour_fingerprint`.

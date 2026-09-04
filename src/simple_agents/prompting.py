@@ -66,11 +66,11 @@ class Value:
 
     @property
     def written(self) -> str:
-        text = "" if self.text is None else str(self.text)
+        text = str(self.text)
         return text[: self.cap] if self.cap is not None and len(text) > self.cap else text
 
     def record(self, name: str) -> dict[str, Any]:
-        text = "" if self.text is None else str(self.text)
+        text = str(self.text)
         held: dict[str, Any] = {"name": name, "chars": len(self.written)}
         if self.cap is not None and len(text) > self.cap:
             held["capped_from"] = len(text)
@@ -283,13 +283,31 @@ class Prompt:
         """What the run records about how this prompt was built.
 
         One entry per message, each carrying the fixed text, the values that filled it, and
-        what any of them cut. `templates` is every distinct piece of fixed text, digested, which
-        is what a step's prompt is identified by across runs and examples.
+        what any of them cut. `instruction` identifies the whole prompt and `templates` the
+        distinct pieces it was built from.
         """
         return {
             "messages": [one.record() for one in self.messages],
+            "instruction": self.instruction(),
             "templates": sorted(self.template_digests()),
         }
+
+    def instruction(self) -> str:
+        """A digest of everything fixed about this prompt, in the order it is sent.
+
+        This is what identifies a step's instruction across runs and examples: two calls
+        differing only in the data that filled them digest alike, and an edit anywhere in the
+        fixed text moves it. A prompt built from sections is one instruction rather than one per
+        section, and a carried message counts for nothing, so a chat step keeps one instruction
+        however long the conversation grows.
+        """
+        pieces: list[str] = []
+        for one in self.messages:
+            if isinstance(one.content, _Carried):
+                continue
+            pieces.append(one.role)
+            _texts_of(one.content, pieces)
+        return _template_digest("\n".join(pieces))
 
     def template_digests(self) -> set[str]:
         """A digest of each distinct piece of fixed text this prompt was built from."""
@@ -326,11 +344,15 @@ def _block(one: Any) -> Any:
 
 
 def _written(one: Any) -> str:
-    """One value as text. A value writes itself the way Python writes it, so a list arrives
-    as ``['a', 'b']`` rather than joined; `Section.joined` is what joins a list."""
+    """One value as text, written the way Python writes it.
+
+    A list arrives as ``['a', 'b']`` rather than joined, and `Section.joined` is what joins one.
+    ``None`` arrives as ``None`` rather than as nothing, so a value that should have been there
+    reads as missing instead of disappearing.
+    """
     if isinstance(one, (Section, Value, _Carried)):
         return str(one.written)
-    return "" if one is None else str(one)
+    return str(one)
 
 
 def _record_of(one: Any, name: str) -> dict[str, Any]:
@@ -339,10 +361,23 @@ def _record_of(one: Any, name: str) -> dict[str, Any]:
     return {"name": name, "chars": len(_written(one))}
 
 
+def _texts_of(one: Any, into: list[str]) -> None:
+    """Every piece of fixed text in one message, in the order it is sent."""
+    if isinstance(one, Section):
+        into.append(one.template)
+        for value in one.values.values():
+            _texts_of(value, into)
+        for part in one.parts:
+            _texts_of(part, into)
+    elif isinstance(one, tuple):
+        for part in one:
+            _texts_of(part, into)
+
+
 def _digests_of(one: Any, found: set[str]) -> None:
     if isinstance(one, Section):
         if one.template:
-            found.add(digest_of(one.template))
+            found.add(_template_digest(one.template))
         for value in one.values.values():
             _digests_of(value, found)
         for part in one.parts:
@@ -352,7 +387,7 @@ def _digests_of(one: Any, found: set[str]) -> None:
             _digests_of(part, found)
 
 
-def digest_of(template: str) -> str:
+def _template_digest(template: str) -> str:
     """The identity of one piece of fixed text, which is what runs are compared on."""
     return "sha256:" + hashlib.sha256(template.encode("utf-8")).hexdigest()[:12]
 

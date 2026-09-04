@@ -237,9 +237,15 @@ other work. A one-node `Pipeline` fanning out over the candidates gives the whol
 manifest, one trajectory, one cost, a model pin and a cassette.
 
 ```python
+from simple_agents import Prompt
+
 def build_label_prompt(inputs, ctx):
     candidate = inputs["candidates"]
-    return f"Question: {candidate['question']}\n\nPassages:\n{candidate['passages']}"
+    return Prompt.user(
+        "Question: {question}\n\nPassages:\n{passages}",
+        question=candidate["question"],
+        passages=candidate["passages"],
+    )
 
 label = Pipeline(
     [LLMNode(build_label_prompt, output_schema=Verdict, node_id="label",
@@ -1869,7 +1875,7 @@ prompt_differences("runs/eval/eval_a1226bc495df")
 # {'run_dir': 'runs/eval/eval_a1226bc495df', 'against': None, 'rollouts': 96, 'compared': 33,
 #  'unreadable': 0, 'declarations': [],
 #  'differing': [{'example': 'q1', 'node': 'hunt', 'item': None, 'distinct': 2,
-#                 'across_runs': False,
+#                 'instructions_differ': False, 'across_runs': False,
 #                 'prompts': {'sha256:aa4d52b117e0': ['q1-0', 'q1-1'],
 #                             'sha256:42608933a241': ['q1-2']}}]}
 ```
@@ -1886,6 +1892,10 @@ change no declaration covers:
 ```python
 prompt_differences("runs/eval/eval_new", against="runs/eval/eval_old")
 ```
+
+`instructions_differ` says whether the fixed text differs as well as the data, which is what
+separates an edited instruction from a different example (`docs/prompts.md` §6). It is `False`
+on prompts recorded before trajectory format `0.30`, which carry no fixed text.
 
 `across_runs` says the two directories disagree rather than the rollouts inside one, and
 `declarations` names each version declared alike in both whose source hash differs. Two

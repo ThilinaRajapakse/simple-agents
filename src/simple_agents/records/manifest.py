@@ -213,7 +213,7 @@ class Manifest:
     _tool_spend: dict[str, Any] | None = field(default=None, init=False, repr=False)
     _charged_cost: float | None = field(default=None, init=False, repr=False)
     _schemas: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
-    _observed_templates: dict[str, dict[str, int]] = field(
+    _observed_instructions: dict[str, dict[str, int]] = field(
         default_factory=dict, init=False, repr=False
     )
     _cassette_counts: dict[str, int] = field(
@@ -266,38 +266,36 @@ class Manifest:
     def _prompts_record(self) -> dict[str, dict[str, Any]]:
         """Each prompt as declared, with the fixed text this run saw it send.
 
-        ``observed`` holds one entry per distinct piece of text, ``{digest: calls}``, capped at
-        `MOST_TEMPLATES` with ``distinct`` carrying the true count. A step whose instruction is
-        data can send thousands, and the manifest is not where they belong.
+        ``observed`` holds one entry per distinct instruction, ``{digest: calls}``, capped at
+        `MOST_INSTRUCTIONS` with ``distinct`` carrying the true count. A step whose instruction is
+        data can send thousands, and the manifest is not where they belong. Only a node's own
+        prompt is counted, since only a node's own prompt has an entry here.
         """
         held = {}
         for node_id, entry in self.prompts.items():
-            seen = self._observed_templates.get(node_id) or {}
+            seen = self._observed_instructions.get(node_id) or {}
             if not seen:
                 held[node_id] = entry
                 continue
             ranked = sorted(seen.items(), key=lambda kv: (-kv[1], kv[0]))
             held[node_id] = {
                 **entry,
-                "observed": dict(ranked[:MOST_TEMPLATES]),
+                "observed": dict(ranked[:MOST_INSTRUCTIONS]),
                 "distinct": len(seen),
             }
         return held
 
-    def observe_templates(self, node_id: str, digests: list[str]) -> None:
-        """Note the fixed text one call was built from, by digest.
+    def observe_instruction(self, node_id: str, digest: str) -> None:
+        """Note the instruction one call was built from, by digest.
 
-        A step whose prompt is written in the project's code sends the same text every run, so
-        this is one digest and a count. A step whose instruction arrives as data, which is a
-        persona from a store or an end user's own words, sends a different one each time, and
-        the count is what says so.
+        A step whose prompt is written in the project's code sends one instruction however many
+        sections it has, so this is one digest and a count of the calls that used it. A step
+        whose instruction arrives as data, which is a persona from a store or an end user's own
+        words, sends a different one each time, and the count is what says so.
         """
-        if not digests:
-            return
         with self._lock:
-            seen = self._observed_templates.setdefault(node_id, {})
-            for digest in digests:
-                seen[digest] = seen.get(digest, 0) + 1
+            seen = self._observed_instructions.setdefault(node_id, {})
+            seen[digest] = seen.get(digest, 0) + 1
 
     def observe_held_back(self, held_back_ms: int) -> None:
         """Add one call's waiting to the run total.
@@ -657,8 +655,8 @@ def _closed_over(fn: Callable[..., Any]) -> str:
     return "\n".join(sorted(captured))
 
 
-MOST_TEMPLATES = 20
-"""How many distinct pieces of prompt text one step carries on the manifest."""
+MOST_INSTRUCTIONS = 20
+"""How many distinct instructions one step carries on the manifest."""
 
 
 def source_version(

@@ -12,7 +12,7 @@ Once for every model call, under every node kind.
 
 | Where the call is made | What it is handed |
 |---|---|
-| `LLMNode` | the messages the prompt function returned |
+| `LLMNode` | the messages the prompt function built |
 | `LLMNode(over=...)` | that item's prompt alone, once per item |
 | `AgentNode(over=...)` | that item's own conversation, once per turn of it |
 | `AgentNode` | the conversation so far, once per turn |

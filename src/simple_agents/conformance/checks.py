@@ -452,11 +452,20 @@ def ft_46(ctx: Context) -> CheckResult:
         return _result(
             ctx, "FT-46", Outcome.PASSED, read=read, detail="This run declared no prompt."
         )
+    # A prompt declared with `NotBuilt` has no code to read, so it is not what this asks about.
     shapes = {
         node_id: (entry or {}).get("text")
         for node_id, entry in prompts.items()
-        if isinstance(entry, dict)
+        if isinstance(entry, dict) and entry.get("source") != "not_built"
     }
+    if not shapes:
+        return _result(
+            ctx,
+            "FT-46",
+            Outcome.PASSED,
+            read=read,
+            detail=f"{len(prompts)} prompt(s), each declared and not built yet.",
+        )
     if not any(shapes.values()):
         return _result(
             ctx,

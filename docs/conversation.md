@@ -31,26 +31,28 @@ The file the conversation is kept in is named by a digest of the id, so an id ho
 
 ## 2. A node takes part by reading it
 
-The prompt function splats the conversation where the history belongs:
+The prompt carries the conversation where the history belongs, with `Prompt.turns`:
 
 ```python
+from simple_agents import Prompt
+
 SYSTEM = "Answer as the bookshop's assistant."
 
 def build_prompt(inputs, ctx):
-    return [
-        {"role": "system", "content": SYSTEM},
-        *ctx.conversation,
-        {"role": "user", "content": inputs["question"]},
-    ]
+    return (
+        Prompt.system(SYSTEM)
+        + Prompt.turns(ctx.conversation)
+        + Prompt.user("{question}", question=inputs["question"])
+    )
 ```
 
-**A node takes part by continuing the conversation**, which means putting its messages into what the prompt returns. The library then writes what that node produces back. A node that never reads it takes no part, and neither does one that reads it and renders it into something else: the step that summarises a conversation reads every message and turns them into one string, and its own prompt and answer are not a turn of the chat it just summarised (§5).
+**A node takes part by continuing the conversation**, which means carrying its messages into what the prompt returns. The library then writes what that node produces back. A node that never reads it takes no part, and neither does one that reads it and renders it into something else: the step that summarises a conversation reads every message and turns them into one string, and its own prompt and answer are not a turn of the chat it just summarised (§5).
 
 **A system message is never stored.** It is the node's standing instruction, the prompt supplies it every turn, and one carrying today's date or the reader's current plan has to be able to change. Storing it would put turn 1's copy at the head of turn 40.
 
-**Splat the conversation rather than rebuilding its messages.** The library works out what a turn added by taking the conversation's own messages back out of what the prompt returned, and it matches them by identity first and by content second. A prompt that constructs new dicts with the same content still records one turn's worth; one that rewrites them records the rewritten copies as new.
+**Carry the conversation with `Prompt.turns` rather than rebuilding its messages.** The library works out what a turn added by taking the conversation's own messages back out of what the prompt returned, and it matches them by identity first and by content second. `Prompt.turns` passes each message on as the object it arrived as, so the identity match holds. A prompt that constructs new dicts with the same content still records one turn's worth; one that rewrites them records the rewritten copies as new.
 
-**A run that names no conversation gets an empty one rather than nothing**, so the same prompt function serves a chat and a one-shot request without a branch around the splat. `ctx.conversation.id` is `None` there, which is what a node reads to tell them apart.
+**A run that names no conversation gets an empty one rather than nothing**, so the same prompt function serves a chat and a one-shot request with no branch around `Prompt.turns`. `ctx.conversation.id` is `None` there, which is what a node reads to tell them apart.
 
 ## 3. What a turn is
 

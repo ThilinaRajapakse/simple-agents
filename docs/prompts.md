@@ -13,7 +13,12 @@ A prompt function returns a `Prompt`. A gap in the text is written `{name}` and 
 keyword of that name:
 
 ```python
-from simple_agents import LLMNode, Prompt
+from pydantic import BaseModel
+from simple_agents import LLMNode, Maybe, Prompt
+
+
+class Itinerary(BaseModel):
+    days: Maybe[list[str]]
 
 
 def build_prompt(inputs: dict, ctx) -> Prompt:
@@ -35,9 +40,11 @@ JSON example is written into a prompt. Substitution is one pass and a value is i
 as it is, so a value that carries braces of its own needs no escaping.
 
 ```python
+import json
+
 Prompt.user(
     'Return JSON like {{"city": "Paris"}}.\n\n{schema}',
-    schema=json.dumps(schema),
+    schema=json.dumps(Itinerary.model_json_schema()),
 )
 ```
 
@@ -45,6 +52,16 @@ Prompt.user(
 naming the call that replaces it. Text the project has already assembled is passed as the fixed
 text, `Prompt.user(text)`, which is what a template loaded from a file or chosen at run time
 looks like.
+
+**Text from outside the project goes in as a value**, not as the template: a persona a user
+chose, an instruction an end user typed, a document. A brace in it would read as a gap and raise,
+and the record should say it is data in any case.
+
+```python
+from simple_agents import Prompt, Value
+
+Prompt.system("{voice}", voice=Value(traveller.voice, origin="the app's settings screen"))
+```
 
 ---
 
@@ -180,17 +197,23 @@ def summarise(model: ModelHandle, text: str) -> str:
 ## 6. What the run records
 
 **On each model call.** `inputs.assembly` on the `model_call` record holds one entry per
-message: the fixed text, the values that filled it with their lengths, what any `cap` cut, and a
-digest of each distinct piece of fixed text (`docs/trajectory-format.md` §4.2). It is absent on
-a call whose messages are a conversation, which is every turn of an `AgentNode` loop after the
-first. `inputs.assembly` is a payload field, so a run's redaction applies to it and sampling
-drops it (`docs/run-envelope.md` §7).
+message: the fixed text, the values that filled it with their lengths, and what any `cap` cut
+(`docs/trajectory-format.md` §4.1.6).
 
-**On the manifest.** Each entry in `prompts` carries `observed`, the distinct pieces of fixed
-text that step sent and how many calls used each, and `distinct`, how many there were. A step
-whose instruction is written in the project's code records one. A step whose instruction arrives
-as data records as many as it saw, capped at twenty entries with `distinct` carrying the true
-count.
+`instruction` digests everything fixed about the prompt, so two calls differing only in their
+data record the same one, and `templates` lists the distinct pieces it was built from. A message
+carried in with `Prompt.turns` counts for neither, so a chat step keeps one instruction as its
+conversation grows.
+
+The whole of `assembly` is absent on a call built from a conversation rather than from a prompt,
+which is every turn of an `AgentNode` loop after the first. It sits inside `inputs`, a payload
+field, so a run's redaction applies to it and sampling drops it (`docs/run-envelope.md` §7).
+
+**On the manifest.** Each entry in `prompts` carries `observed`, the distinct instructions that
+step sent and how many calls used each, and `distinct`, how many there were. A step whose prompt
+is written in the project's code records one, however many sections it is built from. A step
+whose instruction arrives as data records as many as it saw, capped at twenty entries with
+`distinct` carrying the true count.
 
 **In the version.** A prompt's recorded version covers the prompt function's source, what it
 closed over, and the module-level strings it passes as fixed text:

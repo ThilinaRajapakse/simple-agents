@@ -270,7 +270,8 @@ replaces the whole of it.
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `messages` | array | ✅ | One entry per message, in order. |
-| `templates` | array | ✅ | A digest of each distinct piece of fixed text this prompt was built from, sorted. Two calls that sent the same instruction record the same digest whatever data filled it. |
+| `instruction` | string | ✅ | A digest of everything fixed about this prompt, in the order it is sent. Two calls differing only in the data that filled them record the same one, and an edit anywhere in the fixed text moves it. A prompt built from sections is one instruction rather than one per section, and a carried message counts for nothing, so a chat step keeps one instruction as its conversation grows. |
+| `templates` | array | ✅ | A digest of each distinct piece of fixed text the prompt was built from, sorted. |
 
 Each entry in `messages` carries `role`, and then either the fixed text and its values, or what
 was carried:

@@ -138,6 +138,9 @@ def _call_model(
         # BaseException rather than Exception, because a `ModelClient` may raise `Suspend`
         # and that record says what the run had already streamed when it stopped.
         except BaseException as exc:
+            # A call that raised was built from a prompt too, and a failed run is when the
+            # text it sent is most worth reading.
+            _observe_instruction(run, node_id, assembly)
             _emit_failed_call_record(
                 run=run,
                 assembly=assembly,
@@ -198,8 +201,7 @@ def _call_model(
             stream=outcome.stream.to_record() if outcome.stream is not None else None,
             item_index=item_index,
         )
-        if assembly is not None:
-            run.manifest.observe_templates(node_id, assembly.get("templates") or [])
+        _observe_instruction(run, node_id, assembly)
         run.emit(record)
 
         # What this call's prompt cost, for the next call's context builder to extrapolate from.
@@ -428,6 +430,12 @@ def _observation(call: Any, content: Any) -> dict[str, Any]:
         "name": call.name,
         "content": content if isinstance(content, str) else repr(content),
     }
+
+
+def _observe_instruction(run: RunContext, node_id: str, assembly: dict[str, Any] | None) -> None:
+    """Note on the manifest which instruction this step's call was built from."""
+    if assembly is not None and assembly.get("instruction"):
+        run.manifest.observe_instruction(node_id, assembly["instruction"])
 
 
 def _inputs(messages: list[dict[str, Any]], assembly: dict[str, Any] | None) -> dict[str, Any]:

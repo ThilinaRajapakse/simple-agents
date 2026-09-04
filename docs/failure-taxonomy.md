@@ -386,7 +386,7 @@ The same separation applies inside an answer, in both halves. An answer key that
 
 **Why it's wrong.** The same attribution failure as FT-14, from the other direction, and more common because prompt edits are casual. A regression traced to neither the model nor the code is traced to nothing.
 
-**What the library provides.** Every prompt reaches the manifest with a version: the one declared as `prompt_version=`, or a hash of the prompt function's source and of what it closed over. The same holds for a route, a `Deterministic` node's function and a tool. A declared version also records the hash beside it, so an edit made without moving the declaration is readable (`docs/run-envelope.md` §2.3).
+**What the library provides.** Every prompt reaches the manifest with a version: the one declared as `prompt_version=`, or a hash of the prompt function's source, of what it closed over, and of the module-level strings it passes as fixed text. The same holds for a route, a `Deterministic` node's function and a tool. A declared version also records the hash beside it, so an edit made without moving the declaration is readable (`docs/run-envelope.md` §2.3).
 
 **Check.** Every prompt in the manifest records a version. A prompt whose source could not be read records `unavailable` and fails.
 

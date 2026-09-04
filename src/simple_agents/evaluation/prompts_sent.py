@@ -220,7 +220,7 @@ def _first_calls(path: Path) -> tuple[dict[tuple[str, Any], tuple[str, str]], in
         assembly = (record.get("inputs") or {}).get("assembly") or {}
         found[where] = (
             f"sha256:{hashlib.sha256(material).hexdigest()[:12]}",
-            ",".join(assembly.get("templates") or []) or "unrecorded",
+            assembly.get("instruction") or "unrecorded",
         )
     return found, unreadable
 

@@ -4254,3 +4254,59 @@ class TestTheDesignAgainstTheDeclaredProduct:
             encoding="utf-8",
         )
         assert self.reason(root) == ""
+
+
+def _copy(source, tmp_path):
+    """A fixture project the test may edit, since a check reads what is on disk."""
+    import shutil
+
+    held = tmp_path / "project"
+    shutil.copytree(source, held)
+    return held
+
+
+class TestThePromptShapeCheck:
+    """FT-46 reads how each prompt was built, and a planned one has nothing to read."""
+
+    def _manifest(self, root, prompts):
+        import json
+
+        report = run_checks(root)
+        where = [c for c in report.checks if c.entry_id == "FT-46"][0].read[0]
+        path = root / where
+        held = json.loads(path.read_text())
+        held["prompts"] = prompts
+        path.write_text(json.dumps(held))
+        return run_checks(root)
+
+    def _ft_46(self, report):
+        return [c for c in report.checks if c.entry_id == "FT-46"][0]
+
+    def test_a_written_prompt_passes(self, tmp_path):
+        root = _copy(project("prototype"), tmp_path)
+        report = self._manifest(root, {"hunt": {"version": "sha256:a", "text": "written"}})
+        assert self._ft_46(report).outcome is Outcome.PASSED
+
+    def test_an_interpolated_prompt_fails_and_names_the_step(self, tmp_path):
+        root = _copy(project("prototype"), tmp_path)
+        report = self._manifest(root, {"hunt": {"version": "sha256:a", "text": "interpolated"}})
+        check = self._ft_46(report)
+        assert check.outcome is Outcome.FAILED
+        assert "hunt" in check.findings[0].message
+
+    def test_a_prompt_declared_and_not_built_is_not_what_this_asks_about(self, tmp_path):
+        """A `NotBuilt` prompt has no code to read, and reporting it as a stale manifest lied."""
+        root = _copy(project("prototype"), tmp_path)
+        report = self._manifest(
+            root, {"hunt": {"version": "sha256:a", "source": "not_built", "does": "answer"}}
+        )
+        check = self._ft_46(report)
+        assert check.outcome is Outcome.PASSED
+        assert "not built" in (check.detail or "")
+
+    def test_a_run_written_before_the_field_reports_blocked(self, tmp_path):
+        root = _copy(project("prototype"), tmp_path)
+        report = self._manifest(root, {"hunt": {"version": "sha256:a", "source": "derived"}})
+        check = self._ft_46(report)
+        assert check.outcome is Outcome.BLOCKED
+        assert "0.42" in (check.detail or "")

@@ -68,10 +68,10 @@ class Unknown(BaseModel):
     def __str__(self) -> str:
         """``unknown (reason)``, or ``unknown`` where there is none.
 
-        What a template, a log line or a prompt built with an f-string renders. The word comes
+        What a log line, a template, or a value dropped into a prompt renders. The word comes
         first and always, so a value that is an absence cannot read as an answer::
 
-            f"Airs: {finding.airs}"      # 'Airs: unknown (the schedule does not say)'
+            Prompt.user("Airs: {airs}", airs=finding.airs)   # 'Airs: unknown (the schedule …)'
 
         ``repr`` is unchanged and still shows the fields, which is what a traceback wants.
         Where the branch matters, test for it: ``isinstance(value, Unknown)``.

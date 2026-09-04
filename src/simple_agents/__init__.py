@@ -15,8 +15,8 @@ Start here::
     def load_docs(inputs: dict, ctx: NodeContext) -> str:
         return Path(inputs["corpus"]).read_text()
 
-    def ask(docs: str, ctx: NodeContext) -> str:
-        return f"Answer using only these documents:\\n{docs}"
+    def ask(docs: str, ctx: NodeContext) -> Prompt:
+        return Prompt.user("Answer using only these documents:\\n{docs}", docs=docs)
 
     pipeline = Pipeline(
         [Deterministic(load_docs), LLMNode(ask, output_schema=Answer)],

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 from simple_agents import (
-    Budget, Deterministic, LLMNode, Maybe, MistralClient, NodeContext, Pipeline,
+    Budget, Deterministic, LLMNode, Maybe, MistralClient, NodeContext, Pipeline, Prompt,
 )
 
 class Answer(BaseModel):
@@ -813,8 +813,12 @@ the sequence.** Everything else the node was given arrives unchanged, so a promp
 another key keeps working:
 
 ```python
-def summarise(inputs):
-    return f"Summarise this for {inputs['audience']}:\n\n{inputs['documents']}"
+def summarise(inputs, ctx) -> Prompt:
+    return Prompt.user(
+        "Summarise this for {audience}:\n\n{document}",
+        audience=inputs["audience"],
+        document=inputs["documents"],
+    )
 ```
 
 Here `inputs["documents"]` is one document, not the list. A function written to receive the item
@@ -1060,8 +1064,8 @@ A node named as both a successor and the `on_error` handler of one node has a si
 A node function's first parameter is what it accepts, and annotating it is how the node says so:
 
 ```python
-def verify(inputs: Notes, ctx: NodeContext) -> str:
-    return f"Check this: {inputs.notes}"
+def verify(inputs: Notes, ctx: NodeContext) -> Prompt:
+    return Prompt.user("Check this: {notes}", notes=inputs.notes)
 ```
 
 That annotation is checked against what reaches the node. A node whose predecessor produces something else is refused at construction, and a value that turns out to be something else is refused when it is handed over, naming both nodes. Nothing has to be annotated: what is written down is read, and a pipeline that annotates nothing is refused nothing.
@@ -1183,10 +1187,10 @@ chest_cm = value_or(finding.chest_cm, 0.0)
 
 Both shapes of an absence are replaced: the `Unknown` a node returned, and the `{"type": "unknown", "reason": ...}` it becomes through `model_dump()` or a stored artifact. `None`, `""` and `0` come back as they are, and so does the bare word `"unknown"`, which is a value like any other string.
 
-**An absence rendered into text says the word.** `str(Unknown(reason="the schedule does not say"))` is `unknown (the schedule does not say)`, so a template, a log line or a prompt built with an f-string cannot make an absence read as an answer:
+**An absence rendered into text says the word.** `str(Unknown(reason="the schedule does not say"))` is `unknown (the schedule does not say)`, so a log line, a template, or a value dropped into a prompt cannot make an absence read as an answer:
 
 ```python
-f"Airs: {finding.airs}"      # 'Airs: unknown (the schedule does not say)'
+Prompt.user("Airs: {airs}", airs=finding.airs)   # 'Airs: unknown (the schedule does not say)'
 ```
 
 `repr` still shows the fields, which is what a traceback wants and what a model holding this one renders its own fields with.
