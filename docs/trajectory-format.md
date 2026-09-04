@@ -577,7 +577,7 @@ On a replayed `model_call`, `started_at` and `ended_at` describe the replay, whi
 | Model cost | Derived from the record and the manifest's cost basis (`docs/run-envelope.md` §4). |
 | Total input tokens | Derived from the three input fields (§4.1.2). |
 | Duration | Derived from `started_at` and `ended_at`, except on a replayed `model_call`, which carries `recorded_duration_ms` (§5.5). |
-| Prompt text templates | Versioned separately and referenced from the manifest (FT-15). Inlining them would bloat every record with identical content. |
+| A prompt's version | The manifest's, one entry per step (FT-15). The call carries the fixed text it sent, in `inputs.assembly` (§4.1.6), and the version that text belongs to is the same for every call the step makes. |
 | Tool declarations and output schemas | Stored once in the manifest's `schemas` and referenced by `params.tools_ref` and `params.output_schema_ref` (§4.1.5). |
 | Model configuration defaults | The manifest's job. The trajectory records what varied. |
 | Anything under `unknown` reasoning | The record carries what the agent asserted, not why it asserted it. |
