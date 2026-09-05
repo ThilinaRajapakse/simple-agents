@@ -485,16 +485,15 @@ is the same question named for a builder, and `key` is what brief.toml records t
 under.
 
 How to ask a question, here and for any question composed later:
-  - Involve something of the builder's own: one of their inputs, one of their rows, one
-    run's output, written into the question.
+  - Put something of the builder's own in the question: one of their inputs, rows or run
+    outputs.
   - Any number it turns on is looked up first, and the question says where the number
     came from.
   - The options are named, with which one is recommended and why.
   - Every term the builder has not used themselves is explained, including names from the
     project's own code.
-  - Do not mix prose questions into an exchange that puts questions through the session's
-    question mechanism: only the mechanism's questions come back answered. A question that
-    got no answer stays unanswered, and is put again.
+  - Where the session has a question mechanism, put every question through it. A question
+    asked in prose comes back unanswered and has to be put again.
 
 An entry the builder has not seen records source = "coding_agent", and a required one fails \
 the gate until it is put to them (FT-24).

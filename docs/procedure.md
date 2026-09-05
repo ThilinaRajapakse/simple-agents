@@ -18,9 +18,8 @@ project has.** `how_far` is the answer that settles it.
 | `evaluated` | a measured number, with an interval | all six |
 | `trained` | the same, and training on its own runs | all six |
 
-A tier's stages are the only ones whose questions are asked and whose checks run, and each gate
-includes the stages before it. `ship` is a stage every tier has, so a project at any tier can go
-live (`docs/conformance.md` §1).
+Only a tier's stages are asked and checked, and each gate includes the stages before it
+(`docs/conformance.md` §1).
 
 `simple-agents init`, run once in the project root, registers this file as a skill and writes
 `AGENTS.md`. `docs/index.md` is the reference documents and when to open each. Every
@@ -51,45 +50,37 @@ runs/                   one directory per run, written by the run envelope
 
 Keep a `BUILD-LOG.md` alongside them, recording each exchange with the builder as it happens.
 
-**A project writes more than this, and the rest has three homes.** Code the pipeline imports
-sits beside `agent.py`, anything run once goes in `scripts/`, and anything the project reads
-goes in `data/`. A genre this does not name takes a directory of its own and the library doesn't run checks on it.
+**Everything else has three homes.** Code the pipeline imports sits beside `agent.py`, one-off
+scripts go in `scripts/`, data the project reads goes in `data/`. Anything else gets its own
+directory; the checks do not read it.
 
 ---
 
 ## What to settle first, and what to keep doing
 
-**Ask `how_far` and `involvement` first.** The first says which stage this project stops at and,
-separately, which tier it claims; the second, how much of what follows the builder is shown and
-when. Both govern every exchange after them.
+**Ask `how_far` and `involvement` first.** The first says where the project stops and which
+tier it claims; the second, how much the builder is shown and when.
 
 **How to ask a question.**
 
-- Involve something of the builder's own: one of their inputs, one of their rows, one
-  run's output, written into the question.
+- Put something of the builder's own in the question: one of their inputs, rows or run
+  outputs.
 - Look up any number the question turns on before asking, and say where the number came from.
 - Name the options, and say which one is recommended and why.
 - Explain every term the builder has not used themselves, the project's own code names included.
-- Do not mix prose questions into an exchange that puts questions through the session's
-  question mechanism: only the mechanism's questions come back answered. A question that got
-  no answer stays unanswered, and is put again.
+- Where the session has a question mechanism, put every question through it. A question
+  asked in prose comes back unanswered and has to be put again.
 
-`ask` is the question and `scaffold` is what makes it answerable. Use the `scaffold` to formulate a clear, answerable question.
+`ask` is the question; `scaffold` is how to make it answerable.
 
 **Record what the entries were read against.** `simple-agents record read-against` writes
 `confirmed_against`, the measured pipeline's newest `behaviour_fingerprint`, when its answers were last read
 against the code; `simple-agents check` names the ones due when the two differ, and FT-38 fails
-on it from stage `ship`. Those entries describe the pipeline rather than what the builder wants,
-so each is agreement to something the code may no longer do.
+on it from stage `ship`. Those entries describe the pipeline, so they go stale when it changes.
 
 **Then, at every stage, record what was decided without asking**, with
-`simple-agents record decision <name>`.
-
-```
-simple-agents questions --decisions
-```
-
-Six kinds. Each entry names what was chosen, what else was weighed and why:
+`simple-agents record decision <name>`. `simple-agents questions --decisions` lists the six
+kinds. Each entry names what was chosen, what else was weighed and why:
 
 ```toml
 [decisions.source_documents]
@@ -112,20 +103,15 @@ hold that no decision names (`docs/conformance.md` §2.2).
 **Serve the view, and read what comes back.** `simple-agents view --serve` is the live
 page (`docs/view.md`): the builder comments on any element, answers open questions and
 amends recorded answers in place, each landing as a thread in `comments.toml`. Read them
-with `simple-agents comments` before each session and at every gate, do what each asks, reply in the thread,
-and record an `answer` or `amendment` into the brief before addressing it (FT-39).
-
-**The builder reads the prompts on the view's own page** (`docs/view.md` §6.10): every
-instruction the project sends, as written and as one run sent it, taking a comment on a whole
-prompt, one value, or words selected in it.
+with `simple-agents comments` before each session and at every gate. For each: record the
+`answer` or `amendment` in the brief first (FT-39), do what it asks, and reply in the thread.
 
 **A decision the builder settled with one click carries the click alone.**
 `simple-agents record decision <name> --kind <kind> --from-comment <id>` copies what they said
 into `considered` and agrees it. Leave `because` unset: the click is the reason.
 
 **And at every stage, ask `anything_else`.** After that stage's own questions and before the
-gate. Every other question is the library's; this one is the builder's, and what comes back is
-what nothing asked about. Add it under the stage it was asked at, keep what the earlier stages
+gate. It catches what the other questions missed. Add it under the stage it was asked at, keep what the earlier stages
 recorded, and write `asked_at` naming the stage. *Nothing* is an answer, and the gate refuses
 while `asked_at` names an earlier stage than the project is at (FT-24).
 
@@ -141,21 +127,20 @@ simple-agents questions --stage brainstorm
 
 Fifteen questions, ten required.
 
-**Start with `what_it_does`.** An answer naming what the agent receives, what it produces and
-who receives it is a developed idea, and the rest of the stage records it. An answer missing any
-of the three is where the optional questions apply. Then `used_through`, the product: what
+**Start with `what_it_does`.** The answer names what the agent receives, what it produces and
+who receives it. Where any of the three is missing, the optional questions apply. Then `used_through`, the product: what
 the end user opens, and what makes a run happen (`docs/product.md`). Then `how_far` and
 `involvement`.
 
 **Answer `one_real_input` by obtaining one and reading it**, before any node is designed.
 
-Then write `idea.md`, the project's own account of itself, in five sections: what this is, who
+Then write `idea.md` in five sections: what this is, who
 it is for, what it works on, where this is going and where it is not, and what is still open.
-Run `simple-agents record confirmed idea --at brainstorm`, and again at each later
-gate after reading the file again (FT-29).
+Run `simple-agents record confirmed idea --at brainstorm`, and at each later gate after
+re-reading it (FT-29).
 
-**Gate.** Ask `anything_else` and record it. `simple-agents check` passes every check this
-stage runs. `simple-agents record set stage research` and go to stage 2.
+**Gate.** Ask `anything_else` and record it. `simple-agents check` passes.
+`simple-agents record set stage research` and go to stage 2.
 
 ---
 
@@ -170,11 +155,9 @@ simple-agents questions --stage research
 Twenty questions, fifteen required: this stage's five, and every one before them.
 
 **Break the system into parts first.** `parts` is the decomposition, answered before anything is
-looked up. A part is a problem the system has to solve, so it is neither the pipeline nor a node
-list. The other four questions are asked against each part in turn.
+looked up. A part is a problem the system has to solve, not a node or the pipeline. The other four questions are asked against each part in turn.
 
-**Then go and look, part by part.** `approaches` is what already does it and how it is built when
-it is built; `available_material` is what it could draw on; `what_goes_wrong` is the failure modes
+**Then go and look, part by part.** `approaches` is what already does it and how; `available_material` is what it could draw on; `what_goes_wrong` is the failure modes
 people report. Fetch a real response from a source before recording it as reachable. Answer
 `what_this_turns_on` last, from what was found.
 
@@ -188,8 +171,8 @@ at each later gate after re-reading.
 A `dependency` decision at any later stage names the research it rests on:
 `from = ["approaches", "available_material"]`.
 
-**Gate.** Ask `anything_else` and record it. `simple-agents check` passes every check this
-stage runs. `simple-agents record set stage shape` and go to stage 3.
+**Gate.** Ask `anything_else` and record it. `simple-agents check` passes.
+`simple-agents record set stage shape` and go to stage 3.
 
 ---
 
@@ -201,9 +184,8 @@ Settle what the agent is for before writing a node.
 simple-agents questions --stage shape
 ```
 
-Put each to the builder in the terms of their own work, follow the scaffold where it asks for
-more than one exchange, and never answer one for them (FT-24). Record it
-with `simple-agents record answer <key>`, stamped from the clock, as `answered`,
+Put each to the builder, follow the scaffold where it asks for more than one exchange, and
+never answer one for them (FT-24). Record it with `simple-agents record answer <key>` as `answered`,
 `deferred` naming the stage it moves to, or `unanswered`, which the gate refuses.
 
 **An answer naming a figure goes stale when the code needs a different one.** The new figure
@@ -212,8 +194,7 @@ goes to the builder. **`answer_form` decides what an example's `expected` holds 
 
 **An evaluation puts no question to a person.** A rollout is refused over a channel that
 reaches one, so its consultations are answered by a stand-in or by `Unavailable`
-(`docs/evaluation.md` §5.4). Stage 5 is the only repeated execution this procedure asks for,
-and every run in it is unattended. Settle `consultation` against a run somebody is in, and
+(`docs/evaluation.md` §5.4). Settle `consultation` against a run somebody is in, and
 exercise it at stage 4.
 
 Write the pipeline as a skeleton as soon as the steps have names, with
@@ -230,25 +211,21 @@ they agree** (FT-34). `simple-agents record confirmed design --at shape` and `re
 (`docs/conformance.md` §3), re-set at each later gate. A
 `shape` or `presentation` decision names the answers it rests on: `from = ["finished_version"]`.
 
-Declare the tier `how_far` settled. Declaring a lower one is the only way to turn a gate off
-(`docs/conformance.md` §1).
+Declare the tier `how_far` settled (`docs/conformance.md` §1).
 
-**Gate.** Ask `anything_else` and record it. Every check this stage runs passes; those
-reading a run cannot yet. Set
-`simple-agents record set stage build` and continue to stage 4.
+**Gate.** Ask `anything_else` and record it. `simple-agents check` passes; the checks that
+read a run cannot yet. `simple-agents record set stage build` and go to stage 4.
 
 ---
 
 ## Stage 4: `build`
 
-**Agree how it will be built before writing it.** Stage 2 agreed what the agent does; this,
-how. Take the nodes, which decide for themselves, which model each uses, and every number and
-prompt rule changing what the agent does, to the builder as `shape`, `constant` and
-`prompt_rule` decisions. A rule invented while testing reads as the builder's own once it is
-in a file, and `check` lists the numbers no decision names.
+**Agree how it will be built before writing it.** Stage 3 agreed what the agent does; this,
+how. Take to the builder, as `shape`, `constant` and `prompt_rule` decisions: which nodes
+decide for themselves, which model each uses, and every number and prompt rule that changes
+what the agent does. `check` lists the numbers no decision names.
 
-**Put a `prompt_rule` decision with the prompt, not a summary.** One project's summary was
-agreed and the eighteen places its prompts cut a value short were in none of it. Send the
+**Put a `prompt_rule` decision with the prompt itself.** Send the
 builder to the prompts page, which shows each prompt as written and as sent and marks every
 value the step's code cut (`docs/view.md` §6.10). Name the steps it reaches under `produces`.
 
@@ -265,28 +242,25 @@ simple-agents questions --stage build
 Read `docs/pipeline.md` first. The node kind follows from `agency_boundary`: only a step
 that decides what happens next from what the last one returned is an `AgentNode` (FT-11). One
 that calls a tool but chooses nothing is `Deterministic(fn, tools=[...])`.
-Read `docs/tools.md` §4 before writing a tool: fourteen tools come with it, §7 an MCP
-server's. `docs/model-clients.md` covers backends, `docs/retrieval.md` search by meaning.
-Before designing any capability, check the feature index at the end of this file: what it
-names, the library ships.
+Before designing any capability, check the feature index at the end of this file.
 
 **A pass the project runs for itself declares its own role.** A corpus build, labelling pass,
-judge or one-off probe writes into `runs/` beside the agent's runs, and every check that reads
-a run reads a run whose role is `agent`. `RunEnvelope(role="corpus")` keeps it out
-(`docs/run-envelope.md` §2.1). The report's `reading` line names the pipeline the checks read.
+judge or probe writes into `runs/` beside the agent's runs. Give it `RunEnvelope(role="corpus")`
+(`docs/run-envelope.md` §2.1); the checks read `agent` runs alone. The report's `reading` line
+names the pipeline the checks read.
 
 **Import the module that builds the pipeline before the gate**, which fires the library's
-construction refusals (FT-09, FT-18), each naming its fix. Answer `budget` from what one
+construction refusals (FT-09, FT-18). Answer `budget` from what one
 example consumed.
 
 **Run against `FakeModelClient` before paying for a backend** (`docs/pipeline.md` §6), then once
 on real input inside the envelope. Every prompt and response is recorded, and `keep_payloads`
-is what the builder says no to that with.
+is where the builder turns that off.
 
 **Then run the consultation for real, once.** Register the channel the builder answers
 through and declare who that is, `consult(ask, answered_by="builder")`, and make one run
-reach it. A blocking channel such as `ask_on_stdin` prints the question and waits, so the
-run never stops and one exercises the whole path.
+reach it. A blocking channel such as `ask_on_stdin` prints the question and waits, so one
+run exercises the whole path without stopping.
 
 **Resuming a run that stopped to ask.** A channel that raises
 `Suspend` ends the run with its state on disk, and `Pipeline.resume` picks it up
@@ -302,14 +276,13 @@ except RunSuspended as stopped:
     result = pipeline.resume(stopped.run_id, envelope=env, model=client, answer=answer)
 ```
 
-The coding agent is that `ask_the_builder` while the project is built: it carries the answer
-in, and the builder is who gave it. Building the stopping half alone leaves a run on disk that
-nothing continues, and an answer that reaches nothing. FT-41 reads that.
+While the project is built, the coding agent is `ask_the_builder`: it carries the builder's
+answer in. A run that stops and is never resumed fails FT-41.
 
-**Continuing a dead run.** `resume` continues a run that stopped itself to wait. A run whose
-process was killed is `Pipeline.rerun`, which runs it again from what it was given and serves
-the calls it already made from its own cassette (`docs/pipeline.md` §1.13). Use it where the builder
-asks for long runs to survive a reboot; a checkpoint table is that rebuilt by hand.
+**Continuing a dead run.** `resume` is for a run that stopped to wait. A run whose process was
+killed is `Pipeline.rerun`: it runs again from what it was given and serves the calls it
+already made from its cassette (`docs/pipeline.md` §1.13). Use it where runs must survive a
+reboot.
 
 **Gate.**
 
@@ -318,16 +291,15 @@ python -c "import agent; agent.build_pipeline()"     # or however the project bu
 simple-agents check
 ```
 
-Ask `anything_else` and record it. Every check this tier runs before `ship` passes. Set
-`simple-agents record set stage measure` and continue to stage 5, or go to stage 6 at a tier with no `measure`.
-
-**A green suite here says only that the run was recorded.**
+Ask `anything_else` and record it. `simple-agents check` passes, every check this tier runs
+before `ship`. `simple-agents record set stage measure` and go to stage 5, or to stage 6 at a
+tier with no `measure`.
 
 ---
 
 ## Stage 5: `measure`
 
-A project claiming tier `evaluated` reports a number, and this stage is what produces it.
+This stage produces the number a tier `evaluated` project reports.
 
 ```
 simple-agents questions --stage measure
@@ -337,8 +309,8 @@ simple-agents questions --stage measure
 builder as a `measurement` decision: what counts as a correct answer, where the split falls
 (FT-02), how similar is too similar (FT-03), and how many rollouts (FT-05). Ask what an agent
 that did nothing would score, and choose a measure that separates the agent from that baseline. Include examples
-whose correct answer is absence, and where the answer never is, declare that on the node
-producing it with `allow_unknown=False` rather than inventing them (FT-04).
+whose correct answer is absence; where the answer is never absent, declare `allow_unknown=False`
+on the node that produces it (FT-04).
 
 **Assign whole sources to a split**: two questions from one document go on one side (FT-03).
 
@@ -348,17 +320,16 @@ producing it with `allow_unknown=False` rather than inventing them (FT-04).
 **Report a figure per step as well as end to end** (FT-08): a labelled step (`node_matches`), a
 figure declared for one (`node_metrics`), or the step evaluated on its own. **Evaluate a step on
 its own where the pipeline scores badly and every step looks fine**: per-node accuracy scores
-each on the inputs it got, which is the thing under suspicion. `pipeline.slice(start=...)` is the
-last step as a pipeline, then the last two (`docs/evaluation.md` §5.6). `simple-agents check`
-reports a project whose every figure is end to end.
+each step on the inputs it got, so a bad input scores as a good step. `pipeline.slice(start=...)`
+is the last step as a pipeline, then the last two (`docs/evaluation.md` §5.6).
 
 **Read what the runs spent and what they produced**, with `simple-agents report runs/` and
 `print(results.report())`. A node can spend its whole allowance and return nothing, which no
-rate reports; the gate fails one that never called a tool (FT-35). **The gate reads less than
-the report**: it covers the runs one pipeline made, and its pass line says what that left out.
+rate reports; the gate fails one that never called a tool (FT-35). The gate reads one
+pipeline's runs and says what it left out.
 
-**Gate.** Ask `anything_else` and record it. `simple-agents check` reports every check this
-tier runs passing, and exits 0. `simple-agents record set stage ship` if anyone else is going to use it, and continue to stage 6.
+**Gate.** Ask `anything_else` and record it. `simple-agents check` passes.
+`simple-agents record set stage ship` if anyone else is going to use it, and go to stage 6.
 
 ---
 
@@ -377,11 +348,11 @@ infers it (`docs/shipping.md` §1, §2).
 `canned` or `builder` is a stand-in used while building, and FT-31 fails a shipped project on
 each. Where the run is meant to be unattended, `unattended()` says so and passes.
 
-**Settle what a live run keeps** before one is made, since the rate is decided as each run
-starts and the material is now the end user's.
+**Settle what a live run keeps** before the first one: retention is fixed when a run starts,
+and the material is the end user's.
 
-**Agree the surface's design before more of it is built.** Stage 4 built the product; what
-somebody else is about to use is usually more. Put the design to the builder,
+**Agree the surface's design before more of it is built.** Stage 4 built the product; shipping
+usually adds to it. Put the design to the builder,
 write it into `design.md`'s product section, and declare a `Product` naming each surface
 and job (`docs/product.md` §2.1, §6). FT-34 fails a project here whose code declares none.
 
@@ -389,17 +360,16 @@ and job (`docs/product.md` §2.1, §6). FT-34 fails a project here whose code de
 stored result carries `pipeline.behaviour_fingerprint(model=client)` and something re-runs
 what an older pipeline wrote.
 
-**Gate.** Ask `anything_else` and record it. `simple-agents check` reports FT-31 passing
-alongside the rest, and exits 0.
+**Gate.** Ask `anything_else` and record it. `simple-agents check` passes, FT-31 included.
 
-**This gate does not close.** `stage = "ship"` stays in the brief, so what it adds runs every
-later time the suite does. FT-37 fails once the pipeline behind the reported number is gone and
-FT-38 once the entries describing it were read against something else, both reading a change
-rather than an arrival. A project keeps building here, and re-running the check covers it.
+**This gate stays open.** `stage = "ship"` stays in the brief, so its checks run every later
+time. FT-37 fails once the pipeline behind the reported number has changed, FT-38 once the
+brief's entries were read against a different one. Keep running the check as the project
+changes.
 
-**What the library cannot see.** The surface around the agent, a web app, a queue worker, a
-scheduled job, produces no artifact it reads, and the runs a person makes through it are
-reported rather than certified.
+**What the library cannot see.** The surface around the agent (a web app, a queue worker, a
+scheduled job) leaves no artifact the checks read. The runs made through it are reported; the
+surface is not certified.
 
 ---
 

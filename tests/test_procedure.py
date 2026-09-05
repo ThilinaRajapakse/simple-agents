@@ -86,10 +86,7 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # `ship`, for the second project running that built it after the last gate. The paragraph
 # restating `involvement`'s own scaffold was written and then cut, which is what the budget is
 # against.
-WORD_BUDGET = 4190
-# Raised from 4177 at P3-77, 2026-09-05: the `ship` step declares a job beside a surface and the
-# feature index names `Job` and `trigger=`, thirteen words across two sentences, against a page
-# that stood at 4175.
+WORD_BUDGET = 4177
 # Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
 # three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
 # `simple-agents record` command, seven words over the ceiling across eight sentences.
@@ -261,7 +258,7 @@ class TestTheQuestions:
             assert "where the number came from" in place
             assert "recommended" in place
             assert "the project's own code" in place
-            assert "Do not mix prose questions" in place
+            assert "question mechanism" in place
 
     def test_the_five_rewritten_asks_name_what_goes_in_front_of_the_builder(self) -> None:
         """Each of the five offered a choice, or asked for a value, with no instance in it."""
@@ -810,7 +807,7 @@ class TestWhatHoldsTheSkill:
             "thirteen": 13,
             "fourteen": 14,
         }
-        named = re.search(r"(\w+) tools\s+come with it", self.text)
+        named = re.search(r"the (\w+) built-ins", self.text)
 
         assert named, "the skill no longer says how many tools ship"
         assert spelled[named.group(1)] == len(_tool_factories())
