@@ -121,12 +121,14 @@ def spin(
     basis=PRICES,
     role: str = "agent",
     live: bool = False,
+    trigger: str | None = None,
 ) -> None:
     """Runs of one pipeline, under one directory, written the way a project writes them."""
     for _ in range(times):
         (built or pipeline()).run(
             {},
             envelope=RunEnvelope(run_dir=run_dir, cost_basis=basis, role=role, live=live),
+            trigger=trigger,
             model=FakeModelClient(answer=answer, scripted=False),
         )
 
@@ -195,6 +197,16 @@ class TestWhatTheReportSays:
         assert (report.read, report.found) == (2, 3)
         assert "2 of 3 run(s)" in report.text()
         assert "last 2" in report.text()
+
+    def test_a_report_over_one_jobs_runs_names_the_trigger(self, tmp_path) -> None:
+        """What a timer spent, apart from what people asked for."""
+        spin(tmp_path, times=2, trigger="nightly digest")
+        spin(tmp_path, times=1)
+
+        report = report_over_runs(tmp_path, trigger="nightly digest")
+
+        assert (report.read, report.found) == (2, 3)
+        assert "trigger nightly digest" in report.text()
 
     def test_the_node_that_produced_nothing_carries_what_it_spent(self, tmp_path) -> None:
         spin(tmp_path, times=2)

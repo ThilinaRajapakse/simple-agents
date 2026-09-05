@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "what the procedure reaches: FT-30 reads a not_applicable stage, FT-42 refuses a decision naming nothing, FT-34 requires a Product at ship, the adopted-facility note is a new module, and the report carries what the run walk found so the view reads it once",
+  "reason": "a declared schedule: trigger joins the run arguments, the manifest, runs() and the report, so each recorded unit on that path grew by the one field",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -73,7 +73,8 @@
       "function branches": 14
     },
     "src/simple_agents/cli/reporting.py::function::report_over_runs": {
-      "function branches": 13
+      "function branches": 13,
+      "function lines": 58
     },
     "src/simple_agents/conformance/checks.py::function::_research_reason": {
       "function branches": 13
@@ -91,7 +92,7 @@
       "function lines": 68
     },
     "src/simple_agents/conformance/checks.py::module": {
-      "module lines": 2137
+      "module lines": 2154
     },
     "src/simple_agents/conformance/elicitation.py::module": {
       "module lines": 975
@@ -129,6 +130,9 @@
     },
     "src/simple_agents/cost.py::function::basis_from_manifest": {
       "function branches": 21
+    },
+    "src/simple_agents/envelope.py::function::narrowed": {
+      "function branches": 14
     },
     "src/simple_agents/evaluation/compare.py::function::Comparison.report": {
       "function branches": 13
@@ -309,7 +313,7 @@
       "function lines": 62
     },
     "src/simple_agents/pipeline/core.py::class::Pipeline": {
-      "class lines": 1522
+      "class lines": 1526
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline._attempt": {
       "function branches": 19,
@@ -322,7 +326,7 @@
       "function lines": 63
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline._start_run": {
-      "function lines": 68
+      "function lines": 70
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline._verify_against": {
       "function branches": 33,
@@ -339,10 +343,10 @@
       "function lines": 78
     },
     "src/simple_agents/pipeline/core.py::function::Pipeline.run": {
-      "function lines": 69
+      "function lines": 71
     },
     "src/simple_agents/pipeline/core.py::module": {
-      "module lines": 1786
+      "module lines": 1790
     },
     "src/simple_agents/pipeline/preflight.py::function::_refuse_a_bad_slice": {
       "function branches": 15
@@ -361,7 +365,7 @@
       "function lines": 66
     },
     "src/simple_agents/pipeline/recording.py::function::_new_manifest": {
-      "function lines": 59
+      "function lines": 61
     },
     "src/simple_agents/pipeline/recording.py::function::_node_entries": {
       "function branches": 18,
@@ -375,14 +379,14 @@
       "class lines": 214
     },
     "src/simple_agents/records/manifest.py::class::Manifest": {
-      "class lines": 443
+      "class lines": 450
     },
     "src/simple_agents/records/manifest.py::function::Manifest.restore": {
       "function branches": 37,
-      "function lines": 66
+      "function lines": 67
     },
     "src/simple_agents/records/manifest.py::function::Manifest.to_json": {
-      "function lines": 74
+      "function lines": 75
     },
     "src/simple_agents/records/suspension.py::function::ValueCodec.decode": {
       "function branches": 14,
@@ -453,7 +457,7 @@
       "module lines": 902
     },
     "src/simple_agents/view/operating.py::function::read_operating": {
-      "function lines": 53
+      "function lines": 54
     },
     "src/simple_agents/view/product.py::function::_one_surface": {
       "function branches": 15
@@ -505,6 +509,7 @@
     "src/simple_agents/context.py::module": "RunContext and the call plumbing it guards.",
     "src/simple_agents/cost.py::function::_price": "One derivation over the five token classes, keeping an unmeasured class unmeasured.",
     "src/simple_agents/cost.py::function::basis_from_manifest": "One record rebuilt; each branch is one basis kind's field set.",
+    "src/simple_agents/envelope.py::function::narrowed": "One pass over the handles; each branch is one filter runs() takes, applied where set.",
     "src/simple_agents/evaluation/compare.py::function::Comparison.report": "One renderer; the branches are per-line formatting rules.",
     "src/simple_agents/evaluation/compare.py::function::_change": "One figure's change built once: the no-pair exit, the pairing, the interval, the noise.",
     "src/simple_agents/evaluation/compare.py::function::_nodes": "One loop pairing each node's three kinds of figure; the kwargs are bound once.",

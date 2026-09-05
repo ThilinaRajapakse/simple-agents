@@ -305,6 +305,19 @@ class RunHandle:
         return str(recorded) if recorded else None
 
     @property
+    def trigger(self) -> str | None:
+        """Which declared job started this run, or ``None`` where somebody asked for it.
+
+        The name the project's scheduler passed as ``Pipeline.run(trigger=...)``, which is a
+        ``Job`` of its ``Product``. ``None`` on a request, on a run the builder made by hand,
+        and on a run written before the manifest carried the field::
+
+            nightly = [run for run in runs("runs/") if run.trigger == "nightly digest"]
+        """
+        recorded = self.manifest.get("trigger")
+        return str(recorded) if recorded else None
+
+    @property
     def scripted(self) -> bool:
         """Whether every model this run called answered from a script rather than a backend.
 
@@ -503,6 +516,7 @@ def runs(
     role: str | None = None,
     live: bool | None = None,
     pipeline: str | None = None,
+    trigger: str | None = None,
     scripted: bool | None = False,
     since: str | None = None,
     last: int | None = None,
@@ -527,13 +541,15 @@ def runs(
 
     ``role`` separates the project's own agent from work it did for itself, ``live`` the runs
     an end user made from the runs made building it (``docs/shipping.md`` §2), ``pipeline`` the
-    runs of one registered pipeline (``docs/pipeline.md`` §1.15), ``since`` the runs that
-    started at or after an ISO timestamp, matched as text, and ``last`` the newest that many of
-    what the others left::
+    runs of one registered pipeline (``docs/pipeline.md`` §1.15), ``trigger`` the runs one
+    declared job started (``docs/product.md`` §6), ``since`` the runs that started at or after
+    an ISO timestamp, matched as text, and ``last`` the newest that many of what the others
+    left::
 
         agent_runs = runs("runs/", role="agent")
         real = runs("runs/", live=True)
         mornings = runs("runs/", pipeline="freshen")
+        nightly = runs("runs/", trigger="nightly digest")
         recent = runs("runs/", nested=True, since="2026-08-14", last=500)
 
     A run written before the manifest carried those fields counts as ``agent``, as not live and
@@ -554,6 +570,7 @@ def runs(
         role=role,
         live=live,
         pipeline=pipeline,
+        trigger=trigger,
         scripted=scripted,
         since=since,
         last=last,
@@ -690,6 +707,7 @@ def narrowed(
     role: str | None = None,
     live: bool | None = None,
     pipeline: str | None = None,
+    trigger: str | None = None,
     scripted: bool | None = False,
     since: str | None = None,
     last: int | None = None,
@@ -714,6 +732,8 @@ def narrowed(
         kept = [handle for handle in kept if handle.live is live]
     if pipeline is not None:
         kept = [handle for handle in kept if handle.pipeline == pipeline]
+    if trigger is not None:
+        kept = [handle for handle in kept if handle.trigger == trigger]
     if scripted is not None:
         kept = [handle for handle in kept if handle.scripted is scripted]
     if since is not None:

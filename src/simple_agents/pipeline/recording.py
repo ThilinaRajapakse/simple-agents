@@ -658,6 +658,7 @@ def _new_manifest(
     concurrency: int = 1,
     conversation: Any = None,
     memory: Any = None,
+    trigger: str | None = None,
 ) -> Manifest:
     from .. import __version__
 
@@ -688,6 +689,7 @@ def _new_manifest(
             if conversation is not None and envelope.conversations is not None
             else None
         ),
+        trigger=trigger,
         trajectory_path=str(paths.trajectory),
         workspace_path=str(paths.workspace),
         cost_basis=basis_to_manifest(envelope.cost_basis),

@@ -67,7 +67,7 @@ An evaluation reuses one envelope across every rollout and varies the seed, whic
 
 The manifest is written when the run starts and rewritten when it ends. A run that crashed still has one, carrying `outcome: "error"` and the records that were written before the failure.
 
-**Current version: `0.42`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
+**Current version: `0.43`**, in the `format_version` field. `CHANGELOG.md` records what changed between versions.
 
 ### 2.1 Fields
 
@@ -84,6 +84,7 @@ The manifest is written when the run starts and rewritten when it ends. A run th
 | `end_user` | object \| null | `answered_by` for the channel this run was given through `RunEnvelope(end_user=...)`, and `null` where the run used the one the pipeline registered. A run given one channel per answerer carries `reaches` instead, an `answered_by` per name, with `answered_by` itself `null`. The `tools` entries carry the registered declaration; this carries the run's. |
 | `evaluation` | object \| null | Which rollout of which evaluation this run is: `eval_id`, `example`, `rollout` and `turn`. `turn` is which turn of the rollout's conversation this run was, and 1 for a rollout that is one run. `null` on a run of the agent. A rollout says what it is here, so a reader tells one from a run of the agent without knowing where the directory sits (§1.1). |
 | `conversation` | object \| null | The conversation this run is a turn of, from `Pipeline.run(conversation_id=...)`: the store's `directory`, the `id` as the project gave it, the `turn` this run was, `carried_in` (how many earlier messages a node read) and the `node_id` that read them. `null` on a run that is not part of one. `carried_in` of zero past the first turn is a conversation being written and not read (`docs/conversation.md` §6). |
+| `trigger` | string \| null | Which declared job started this run, from `Pipeline.run(trigger=...)`: the name of a `Job` in the project's `Product` (`docs/product.md` §6). `null` on a run somebody asked for, a request or the builder by hand. `runs("runs/", trigger="nightly digest")` reads one job's runs back, and the view's operate page joins them to the declaration. |
 | `started_at` / `ended_at` | string \| null | ISO 8601, UTC, millisecond precision. `ended_at` is `null` in the manifest written at the start of the run. |
 | `outcome` | enum | `completed` / `suspended` / `stopped_early` / `error`. |
 | `stopped_early` | string \| null | The budget axis that ended the run, `left_the_slice` where the run reached the boundary of a slice, or `null`. |
@@ -769,6 +770,7 @@ for run in runs("runs/"):
 | `role` | What the run was for (§2.1), `agent` on a run whose manifest does not say |
 | `live` | Whether an end user was on the other end (§2.1), false on a run whose manifest does not say |
 | `pipeline` | Which registered pipeline the run is (§2.1), `None` on a run whose manifest does not say |
+| `trigger` | Which declared job started the run (§2.1), `None` on a run somebody asked for and on one whose manifest does not say |
 | `scripted` | Whether its model answered from a script (§2.1), false on a run whose manifest does not say |
 | `node_ids` | Every node that executed, in the order each first ran |
 | `outputs_of(node_id)` | What that node produced, on its last execution |
@@ -804,6 +806,14 @@ was asked for, and this is how a reader asks about one of them (`docs/pipeline.m
 
 ```python
 mornings = runs("runs/", pipeline="freshen")
+```
+
+**`trigger=` reads back the runs one declared job started.** The project's scheduler passes
+the job's name to `Pipeline.run(trigger=...)`, and this is how a reader separates what a timer
+did from what people asked for (`docs/product.md` §6):
+
+```python
+nightly = runs("runs/", trigger="nightly digest")
 ```
 
 **A run whose model answered from a script is left out**, since it spent nothing and its
@@ -919,8 +929,8 @@ disappearing.
 results file.** A results file prints the evaluation's own report instead
 (`docs/evaluation.md` §8.1). A directory holding no run and no `runs/` exits 2.
 
-`--json` prints the same as data, `--role`, `--live`, `--since` and `--last` narrow which runs
-are read, and the first line names how many were read of how many are there: a figure over a
+`--json` prints the same as data, `--role`, `--live`, `--pipeline`, `--trigger`, `--since` and
+`--last` narrow which runs are read, and the first line names how many were read of how many are there: a figure over a
 scoped set of runs says what it covered.
 
 **Every role is read unless one is named**, so a project's labelling pass and its judge are in

@@ -506,6 +506,7 @@ class Pipeline:
         run_id: str | None = None,
         conversation_id: str | None = None,
         memory_scope: str | None = None,
+        trigger: str | None = None,
         on_progress: Callable[[NodeEvent], None] | None = None,
         on_token: Callable[[TokenEvent], None] | None = None,
         on_reasoning: Callable[[TokenEvent], None] | None = None,
@@ -529,8 +530,8 @@ class Pipeline:
 
             pipeline.run(inputs, envelope=env, model=client, concurrency=8)
 
-        ``conversation_id`` names the conversation this run is a turn of, which a node takes
-        part in by reading ``ctx.conversation`` in its prompt (``docs/conversation.md``)::
+        ``conversation_id`` names the conversation this run is a turn of, which a node reads
+        as ``ctx.conversation`` (``docs/conversation.md``)::
 
             pipeline.run(question, envelope=env, model=client,
                          conversation_id=f"chat-{chat_id}")
@@ -540,6 +541,12 @@ class Pipeline:
             pipeline.run(question, envelope=env, model=client,
                          memory_scope=f"user-{user_id}")
 
+        ``trigger`` names the declared ``Job`` that started this run, recorded on the manifest
+        (``docs/product.md`` §6); a run a person asked for passes nothing::
+
+            pipeline.run({"since": today}, envelope=env, model=client,
+                         trigger="nightly digest")
+
         ``stop_when`` is checked before each node and stops the run where it returns true,
         which parks the work for a process about to be replaced. The run is resumable::
 
@@ -547,16 +554,11 @@ class Pipeline:
             pipeline.run(inputs, envelope=env, model=client, stop_when=paused.is_set)
 
         ``on_token`` receives a :class:`~simple_agents.TokenEvent` for each piece of content a
-        node declaring ``stream=True`` produces, and passing it is what turns streaming on::
+        node declaring ``stream=True`` produces, and passing it is what turns streaming on.
+        ``on_reasoning`` takes the same events for a chain of thought reported separately::
 
             pipeline.run(inputs, envelope=env, model=client,
-                         on_token=lambda e: sys.stdout.write(e.text))
-
-        ``on_reasoning`` takes the same events for a chain of thought reported separately, and
-        is independent of ``on_token``. A reasoning model can send thousands of tokens before
-        its first word of answer, so a display showing progress reads this one::
-
-            pipeline.run(inputs, envelope=env, model=client, on_token=render,
+                         on_token=lambda e: sys.stdout.write(e.text),
                          on_reasoning=lambda e: status.update(e.text))
 
         Raises :class:`ConfigurationError` where no node declares ``stream=True``, the client
@@ -586,6 +588,7 @@ class Pipeline:
             on_progress=on_progress,
             conversation_id=conversation_id,
             memory_scope=memory_scope,
+            trigger=trigger,
         )
         run, envelope, paths, writer, manifest, defaulted_cassette = started
 
@@ -1135,6 +1138,7 @@ class Pipeline:
         on_progress: Any = None,
         conversation_id: str | None = None,
         memory_scope: str | None = None,
+        trigger: str | None = None,
     ) -> tuple[RunContext, RunEnvelope, Any, TrajectoryWriter, Manifest, bool]:
         """Everything a run needs before its first node: its id, its files and its context.
 
@@ -1166,6 +1170,7 @@ class Pipeline:
             concurrency=concurrency,
             conversation=conversation,
             memory=memory,
+            trigger=trigger,
         )
         manifest.mcp = mcp
         manifest.write(paths.manifest)

@@ -244,7 +244,7 @@ simple-agents check --brief config/brief.toml
 simple-agents check --since 2026-08-14 --last 500     # narrows what FT-35 reads
 ```
 
-`--since`, `--last`, `--role`, `--live`, `--pipeline` and `--scripted` narrow the runs FT-35 reads and reach no other check. `--run` names the run the other checks read and does not narrow FT-35.
+`--since`, `--last`, `--role`, `--live`, `--pipeline`, `--trigger` and `--scripted` narrow the runs FT-35 reads and reach no other check. `--run` names the run the other checks read and does not narrow FT-35.
 
 **The run and the results file are found separately, and nothing requires them to be the same measurement.** FT-13 and FT-14 read a run; FT-01 through FT-07 read a results file. A project that measured, changed the pipeline, and measured again can have the run checks describing one evaluation and the results checks describing another, especially where the brief's `results` key names a file and stays pointing at it. The report says so when it happens, as a note under the checks:
 
@@ -300,7 +300,7 @@ Recall over a split where every answer is absent has no denominator. The library
 
 **The counts come from each run's manifest**, under `unfinished` (`docs/run-envelope.md` §2.8), so the check opens no trajectory and its cost grows with the number of runs rather than with their size. A run whose manifest is older than those counts is reported as unread rather than counted as clean, and a project upgrading to this version has them once it has run the agent again.
 
-**What was read is named**, on the report and in the failure message: how many runs of how many, each reason above with its count, and what `--since`, `--last`, `--role`, `--live`, `--pipeline` or `--scripted` left out.
+**What was read is named**, on the report and in the failure message: how many runs of how many, each reason above with its count, and what `--since`, `--last`, `--role`, `--live`, `--pipeline`, `--trigger` or `--scripted` left out.
 
 ```
      pass  FT-35  Steps spent without a tool call                          runs/, 195 manifest(s)

@@ -38,7 +38,7 @@ _FIGURES = (
 class Scope:
     """Which of a project's runs a check reads, as the command line narrows it.
 
-    ``role``, ``live``, ``pipeline`` and ``scripted`` filter the way
+    ``role``, ``live``, ``pipeline``, ``trigger`` and ``scripted`` filter the way
     :func:`~simple_agents.runs` does, ``since`` takes runs that started at or after an ISO
     timestamp, and ``last`` keeps the newest that many::
 
@@ -52,6 +52,7 @@ class Scope:
     role: str | None = None
     live: bool | None = None
     pipeline: str | None = None
+    trigger: str | None = None
     scripted: bool | None = False
     since: str | None = None
     last: int | None = None
@@ -65,6 +66,7 @@ class Scope:
         return {
             "live": self.live,
             "pipeline": self.pipeline,
+            "trigger": self.trigger,
             "scripted": self.scripted,
             "since": self.since,
             "last": self.last,
@@ -76,6 +78,7 @@ class Scope:
             "role": self.role,
             "live": self.live,
             "pipeline": self.pipeline,
+            "trigger": self.trigger,
             # Leaving scripted runs out is the default, so naming it would be on every report.
             "scripted": self.scripted if self.scripted is not False else None,
             "since": self.since,

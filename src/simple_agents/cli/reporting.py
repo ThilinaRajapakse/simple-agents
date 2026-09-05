@@ -299,6 +299,7 @@ def report_over_runs(
     role: str | None = None,
     live: bool | None = None,
     pipeline: str | None = None,
+    trigger: str | None = None,
     scripted: bool | None = False,
     since: str | None = None,
     last: int | None = None,
@@ -312,8 +313,8 @@ def report_over_runs(
         print(report_over_runs("runs/", role="agent").text())
 
     Reads runs at any depth, so a directory holding evaluations is read as the rollouts inside
-    them. ``role``, ``live``, ``pipeline``, ``scripted``, ``since`` and ``last`` narrow it the
-    way :func:`~simple_agents.runs` does, and the report names what they left out. A run whose
+    them. ``role``, ``live``, ``pipeline``, ``trigger``, ``scripted``, ``since`` and ``last``
+    narrow it the way :func:`~simple_agents.runs` does, and the report names what they left out. A run whose
     model answered from a script is left out unless ``scripted`` says otherwise, and the
     report says how many those were.
 
@@ -325,7 +326,14 @@ def report_over_runs(
     # counted before they are left out. `narrowed` is what applies the filters.
     found = runs_under(root, nested=True, scripted=None)
     selected = narrowed(
-        found, role=role, live=live, pipeline=pipeline, scripted=scripted, since=since, last=last
+        found,
+        role=role,
+        live=live,
+        pipeline=pipeline,
+        trigger=trigger,
+        scripted=scripted,
+        since=since,
+        last=last,
     )
     # Every figure below is over the runs this could read, so a run whose trajectory is
     # unreadable is in none of them rather than in some, and the basis is the one those runs
@@ -342,7 +350,7 @@ def report_over_runs(
         root=str(root),
         read=len(readable),
         found=len(found),
-        narrowed_by=_what_narrowed_it(role, live, pipeline, scripted, since, last),
+        narrowed_by=_what_narrowed_it(role, live, pipeline, trigger, scripted, since, last),
         started=(started[0], started[-1]) if started else None,
         outcomes=_counted(_ended(handle) for handle in readable),
         roles=_counted(handle.role for handle in readable),
@@ -475,6 +483,7 @@ def _what_narrowed_it(
     role: str | None,
     live: bool | None,
     pipeline: str | None,
+    trigger: str | None,
     scripted: bool | None,
     since: str | None,
     last: int | None,
@@ -489,6 +498,7 @@ def _what_narrowed_it(
         role=role,
         live=live,
         pipeline=pipeline,
+        trigger=trigger,
         scripted=scripted if scripted is not False else None,
         since=since,
         last=last,

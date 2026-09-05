@@ -32,7 +32,7 @@ from .trajectory import FORMAT_VERSION as TRAJECTORY_FORMAT_VERSION
 
 __all__ = ["MANIFEST_FORMAT_VERSION", "Manifest", "source_version"]
 
-MANIFEST_FORMAT_VERSION = "0.42"
+MANIFEST_FORMAT_VERSION = "0.43"
 
 DEFAULT_ROLE = "agent"
 
@@ -100,6 +100,11 @@ class Manifest:
     project gave it, the ``turn`` this run was, and ``carried_in``, how many earlier messages
     a node actually read. ``carried_in`` of zero on a turn past the first is a conversation
     that is being written and not read."""
+    trigger: str | None = None
+    """Which declared job started this run, from ``Pipeline.run(trigger=...)``, and ``null``
+    where the run was asked for: a request, or the builder by hand. The value is the name of
+    a ``Job`` in the project's ``Product``, which is how the view joins a run back to the
+    schedule the builder agreed to."""
     evaluation: dict[str, Any] | None = None
     """Which rollout of which evaluation this run is, from ``RunEnvelope.evaluation``, and
     ``null`` for a run of the agent. Carries ``eval_id``, ``example`` and ``rollout``, so a
@@ -416,6 +421,7 @@ class Manifest:
             "end_user": self.end_user,
             "evaluation": self.evaluation,
             "conversation": self.conversation,
+            "trigger": self.trigger,
             "started_at": self.started_at,
             "ended_at": self.ended_at,
             "outcome": self.outcome,
@@ -541,6 +547,7 @@ class Manifest:
             end_user=raw.get("end_user"),
             evaluation=raw.get("evaluation"),
             conversation=raw.get("conversation"),
+            trigger=raw.get("trigger"),
             memory=raw.get("memory"),
             retrieval=raw.get("retrieval") or [],
             mcp=list(raw.get("mcp") or []),

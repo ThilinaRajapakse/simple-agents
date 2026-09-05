@@ -172,6 +172,7 @@ def _check(args: argparse.Namespace) -> int:
             role=args.role,
             live=args.live,
             pipeline=args.pipeline,
+            trigger=args.trigger,
             scripted=None if args.scripted else False,
             since=args.since,
             last=args.last,
@@ -319,6 +320,7 @@ def _report(args: argparse.Namespace) -> int:
         role=args.role,
         live=args.live,
         pipeline=args.pipeline,
+        trigger=args.trigger,
         scripted=None if args.scripted else False,
         since=args.since,
         last=args.last,
@@ -828,7 +830,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _scoping(command: argparse.ArgumentParser, *, reads: str) -> None:
-    """The four filters that narrow which runs are read, on the commands that read many.
+    """The filters that narrow which runs are read, on the commands that read many.
 
     A figure over fewer runs is a figure over fewer runs, so what these left out is named in
     the output rather than left for a reader to know.
@@ -848,6 +850,11 @@ def _scoping(command: argparse.ArgumentParser, *, reads: str) -> None:
         "--pipeline",
         default=None,
         help="one registered pipeline, by the name it is registered under",
+    )
+    command.add_argument(
+        "--trigger",
+        default=None,
+        help="runs one declared job started, by the name the scheduler passed as trigger=",
     )
     command.add_argument(
         "--scripted",

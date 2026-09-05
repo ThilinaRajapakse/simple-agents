@@ -413,6 +413,22 @@ def test_role_narrows_what_is_listed(tmp_path: Path) -> None:
     assert {run.run_id for run in runs(tmp_path)} == {agent_run, label_run}
 
 
+def test_trigger_records_which_job_started_a_run_and_narrows_what_is_listed(
+    tmp_path: Path,
+) -> None:
+    """`Pipeline.run(trigger=)` is the declared job's name; a run somebody asked for has none."""
+    pipeline = Pipeline([Deterministic(lambda inputs, ctx: inputs, node_id="echo")])
+    envelope = RunEnvelope(run_dir=tmp_path)
+
+    nightly = pipeline.run({}, envelope=envelope, trigger="nightly digest")
+    asked = pipeline.run({}, envelope=envelope)
+
+    assert json.loads(nightly.paths.manifest.read_text())["trigger"] == "nightly digest"
+    assert json.loads(asked.paths.manifest.read_text())["trigger"] is None
+    assert [run.run_id for run in runs(tmp_path, trigger="nightly digest")] == [nightly.run_id]
+    assert {run.trigger for run in runs(tmp_path)} == {"nightly digest", None}
+
+
 def test_with_role_keeps_everything_else_the_envelope_was_configured_with() -> None:
     envelope = RunEnvelope(run_dir="runs/", redaction=Redaction(secret_env=["MISTRAL_API_KEY"]))
 
