@@ -119,6 +119,10 @@ class Problem:
         return f"{self.where}: {self.detail}"
 
 
+AUTOSQUASH = ("fixup! ", "squash! ", "amend! ")
+"""Subjects `git commit --fixup`, `--squash` and `--fixup=amend` write, which autosquash eats."""
+
+
 def check(message: str, where: str = "commit-msg") -> list[Problem]:
     """Every rule, over one commit message. Reports what a reader outside this repo would hit."""
     lines = [line.rstrip() for line in message.split("\n")]
@@ -142,6 +146,13 @@ def check(message: str, where: str = "commit-msg") -> list[Problem]:
 
     if not kept:
         add("subject_empty")
+        return found
+
+    # `git commit --fixup` and `--squash` write the subject themselves, and `rebase
+    # --autosquash` folds each into the commit it names before anything public sees one. The
+    # rules here are about what a reader outside this repository meets, so these are left
+    # alone; the commit they fold into is checked when it is written.
+    if kept[0].startswith(AUTOSQUASH):
         return found
 
     subject = kept[0]
@@ -236,11 +247,12 @@ def install_hook() -> int:
 # One deliberate defect per rule, and the message it has to produce. A rule with no fixture
 # here has no coverage, so this list is the coverage map as well as the suite. They run on
 # every invocation, including the hook's; `--self-test` runs them alone, for working on a rule.
-SELF_TESTS: list[tuple[str, str, str]] = [
+SELF_TESTS: list[tuple[str, str, str | None]] = [
     ("a subject over the ceiling", "Add " + "a thing " * 12, "72"),
     ("an empty message", "\n\n#comment\n", "no subject line"),
     ("a subject ending in a full stop", "Add the numpy store.", "full stop"),
     ("a lower-case subject", "add the numpy store", "lower case"),
+    ("a fixup subject, which git wrote", "fixup! Add the numpy store", None),
     ("a subject opening with an article", "The brief has one writer", "`The`"),
     ("a subject in the past tense", "Added the numpy store", "`Added`"),
     ("a subject in the gerund", "Adding the numpy store", "`Adding`"),
