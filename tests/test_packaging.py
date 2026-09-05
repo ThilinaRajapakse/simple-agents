@@ -289,3 +289,19 @@ class TestTheIndexListsWhatShips:
         [named] = re.findall(r"These (\w+) documents", self.index())
 
         assert named == words[len(self.shipped())]
+
+
+def test_the_release_workflow_reads_the_heading_the_release_script_writes() -> None:
+    """The workflow grepped for `## x.y.z (` after the changelog had moved to Keep a Changelog
+    form, and the first tag after the move passed CI and refused to publish."""
+    import re
+
+    workflow = (REPO / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    pattern = re.search(r'grep -q "(\^## [^"]+)" CHANGELOG.md', workflow)
+    assert pattern, "release.yml no longer greps the changelog for the version"
+    shell = pattern.group(1).replace("$tag", re.escape(simple_agents.__version__))
+    changelog = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert re.search(shell, changelog, re.M), (
+        f"the workflow's check {pattern.group(1)!r} does not match the heading "
+        f"CHANGELOG.md carries for {simple_agents.__version__}"
+    )
