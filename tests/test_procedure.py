@@ -86,7 +86,10 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # `ship`, for the second project running that built it after the last gate. The paragraph
 # restating `involvement`'s own scaffold was written and then cut, which is what the budget is
 # against.
-WORD_BUDGET = 4177
+WORD_BUDGET = 3800
+# Set to 3800 on 2026-09-05, Thilina's call, after a pass cut the page to 3765: raising this is
+# his decision at a sitting, never a side effect of an edit that ran over. An instruction the
+# page needs is paid for by cutting one it does not.
 # Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
 # three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
 # `simple-agents record` command, seven words over the ceiling across eight sentences.
