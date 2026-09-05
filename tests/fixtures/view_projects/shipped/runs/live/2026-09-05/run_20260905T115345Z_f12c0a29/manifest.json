@@ -1,0 +1,244 @@
+{
+  "format_version": "0.43",
+  "trajectory_format_version": "0.30",
+  "library_version": "0.1.2",
+  "run_id": "run_20260905T115345Z_f12c0a29",
+  "pipeline": "reconcile",
+  "role": "agent",
+  "scripted": false,
+  "live": true,
+  "end_user": null,
+  "evaluation": null,
+  "conversation": null,
+  "trigger": "nightly reconcile",
+  "started_at": "2026-09-05T11:53:45.067Z",
+  "ended_at": "2026-09-05T11:53:45.089Z",
+  "outcome": "error",
+  "stopped_early": null,
+  "seed": 963265229,
+  "concurrency": 1,
+  "budget": {
+    "max_steps": 4,
+    "max_tokens": null,
+    "max_cost": null,
+    "max_wall_clock_ms": 600000
+  },
+  "cost_basis": null,
+  "models": {
+    "configured": null,
+    "observed": []
+  },
+  "prompts": {},
+  "slice": null,
+  "nodes": [
+    {
+      "node_id": "pick_up",
+      "node_kind": "deterministic",
+      "successors": [
+        "settle"
+      ],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:600cf620d4fc8f67",
+      "tools": [
+        "ledger_rows"
+      ],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:705e8d354aea",
+        "source": "derived"
+      }
+    },
+    {
+      "node_id": "settle",
+      "node_kind": "deterministic",
+      "successors": [],
+      "route": null,
+      "consultation_route": null,
+      "loop": null,
+      "on_error": null,
+      "retry": null,
+      "schema": null,
+      "accepts": "sha256:600cf620d4fc8f67",
+      "tools": [
+        "consult",
+        "registry_health"
+      ],
+      "planned": false,
+      "touches": [],
+      "fn": {
+        "version": "sha256:b983bd350c74",
+        "source": "derived"
+      }
+    }
+  ],
+  "containers": [],
+  "tools": [
+    {
+      "name": "ledger_rows",
+      "version": "sha256:f01fc5cbe5fa",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [
+        "ledger"
+      ],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null,
+      "retrieval": null
+    },
+    {
+      "name": "registry_health",
+      "version": "sha256:abaaad1f5be0",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [
+        "supplier_registry"
+      ],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": null,
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null,
+      "retrieval": null
+    },
+    {
+      "name": "consult",
+      "version": "sha256:0a5301b9d2fe",
+      "derived": "sha256:e2f0fd4d4610",
+      "side_effect_class": "read_only",
+      "declared_cost": null,
+      "touches": [],
+      "re_executed": false,
+      "offered": true,
+      "answered_by": "end_user",
+      "reaches": null,
+      "permission": null,
+      "reader": null,
+      "mcp": null,
+      "retrieval": null
+    }
+  ],
+  "constants": [
+    {
+      "module": "reconcile",
+      "name": "RECONCILE_BATCH",
+      "value": 40
+    }
+  ],
+  "redaction": {
+    "enabled": true,
+    "builtin": true,
+    "at_boundary": [
+      "secret_env",
+      "sensitive_keys",
+      "builtin"
+    ],
+    "builtin_rules": [
+      "aws_access_key_id",
+      "bearer_token",
+      "github_token",
+      "google_api_key",
+      "huggingface_token",
+      "jwt",
+      "private_key_block",
+      "sk_prefixed_key",
+      "slack_token"
+    ],
+    "declared_rules": [],
+    "sensitive_keys": [
+      "access_token",
+      "api_key",
+      "apikey",
+      "auth_token",
+      "authorization",
+      "client_secret",
+      "cookie",
+      "passwd",
+      "password",
+      "proxy_authorization",
+      "refresh_token",
+      "secret",
+      "set_cookie",
+      "x_api_key",
+      "x_auth_token"
+    ],
+    "secret_env": [],
+    "secret_env_unusable": []
+  },
+  "recording": {
+    "payload_rate": 1.0,
+    "payloads": "kept"
+  },
+  "schemas": {},
+  "graph_fingerprint": "sha256:f4195d1fc2b153ce",
+  "behaviour_fingerprint": "sha256:8b6ecc1b1747335e",
+  "fetch_policy": [],
+  "mcp": [],
+  "unfinished": {},
+  "suspensions": [],
+  "resume_waivers": [],
+  "stream_waivers": [],
+  "cassette": {
+    "mode": "record",
+    "path": "runs/live/2026-09-05/run_20260905T115345Z_f12c0a29/cassette.jsonl",
+    "dropped": null,
+    "hits": 0,
+    "misses": 0,
+    "recorded": 2,
+    "diverged": 0
+  },
+  "memory": null,
+  "retrieval": [],
+  "paths": {
+    "trajectory": "runs/live/2026-09-05/run_20260905T115345Z_f12c0a29/trajectory.jsonl",
+    "workspace": "runs/live/2026-09-05/run_20260905T115345Z_f12c0a29/workspace"
+  },
+  "counts": {
+    "records": 5,
+    "run_start": 1,
+    "node_execution": 2,
+    "model_call": 0,
+    "tool_call": 2,
+    "consultation": 0,
+    "delegation": 0,
+    "resource_access": 0
+  },
+  "totals": {
+    "tokens": {
+      "input_uncached": 0,
+      "input_cache_read": 0,
+      "input_cache_write": 0,
+      "output": 0
+    },
+    "cost": {
+      "value": 0.0,
+      "currency": null,
+      "basis": null,
+      "is_upper_bound": false,
+      "reason": null,
+      "measured": null,
+      "priced_calls": 0,
+      "unpriced_calls": 0
+    },
+    "tool_spend": {
+      "amount": null,
+      "currency": null,
+      "calls": 0,
+      "source": null
+    },
+    "charged_cost": null,
+    "held_back_ms": 0
+  }
+}

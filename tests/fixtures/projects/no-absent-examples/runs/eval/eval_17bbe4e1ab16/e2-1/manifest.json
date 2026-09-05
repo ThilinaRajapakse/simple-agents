@@ -1,5 +1,5 @@
 {
-  "format_version": "0.42",
+  "format_version": "0.43",
   "trajectory_format_version": "0.30",
   "library_version": "0.1.2",
   "run_id": "e2-1",
@@ -15,8 +15,9 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-05T00:53:04.370Z",
-  "ended_at": "2026-09-05T00:53:04.380Z",
+  "trigger": null,
+  "started_at": "2026-09-05T11:22:41.141Z",
+  "ended_at": "2026-09-05T11:22:41.153Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1920746699,

@@ -19,6 +19,10 @@ which are read and never written.
 **The finance desk** is the person the agent asks when it cannot settle a claim alone. Their
 answer resumes the waiting run.
 
+**Nightly reconcile** runs at 02:00 over the day's ledger with no one at the desk, and **month-end
+close** runs after it on the first of the month. A question either cannot settle is shelved
+for the finance desk to read in the morning.
+
 ## What the builder said about it
 
 > "The thing I care about is that it never quietly approves something over the limit. If it is

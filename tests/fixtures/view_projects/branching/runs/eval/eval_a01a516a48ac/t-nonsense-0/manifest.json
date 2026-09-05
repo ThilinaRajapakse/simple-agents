@@ -1,5 +1,5 @@
 {
-  "format_version": "0.42",
+  "format_version": "0.43",
   "trajectory_format_version": "0.30",
   "library_version": "0.1.2",
   "run_id": "t-nonsense-0",
@@ -17,8 +17,9 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-04T08:25:13.768Z",
-  "ended_at": "2026-09-04T08:25:13.821Z",
+  "trigger": null,
+  "started_at": "2026-09-05T11:29:14.689Z",
+  "ended_at": "2026-09-05T11:29:14.749Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1357902488,

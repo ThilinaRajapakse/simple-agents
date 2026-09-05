@@ -165,7 +165,8 @@ def build_shipped() -> None:
     what ``agent.py`` reaches; the surface's own numbers live there beside the declaration,
     which is what separates them from the pipeline's. ``design.md`` carries the four sections
     FT-34 requires, with a product section naming two of the three surfaces, so the check that
-    reads the declaration against it has something to report.
+    reads the declaration against it has something to report. ``surface.py`` also declares the
+    two jobs the operate runs below record as their ``trigger``.
 
     **The live runs are real runs, replayed.** Each of ``measured``'s two claims is run again
     under an envelope that says an end user was on the other end, against the committed
@@ -259,6 +260,10 @@ def build_operating(project: Path) -> None:
     has answered, one whose tool was throttled until its attempts were spent, and two turns of
     one conversation. The seventh is killed mid-run in a process of its own, which is the only
     way to leave the open manifest a run reads as abandoned from.
+
+    Each records the job that started it: the five are the nightly reconcile, the two turns
+    are the month-end close, and the killed one carries a trigger the product never declared,
+    which is what the operate page's undeclared row is read from.
     """
     from simple_agents import ConversationStore, RunEnvelope, RunSuspended
 
@@ -273,7 +278,7 @@ def build_operating(project: Path) -> None:
         made = background.reconcile()
         for mode in ("waiting", "clock", "shelve", "throttled", "settle"):
             try:
-                made.run({"mode": mode}, envelope=env, model=None)
+                made.run({"mode": mode}, envelope=env, model=None, trigger="nightly reconcile")
             except RunSuspended as stopped:
                 print(f"  suspended: {stopped.run_id} ({mode})")
                 continue
@@ -287,6 +292,7 @@ def build_operating(project: Path) -> None:
                 envelope=env,
                 model=None,
                 conversation_id="finance-august-close",
+                trigger="month-end close",
             )
             print(f"  conversation turn {turn}")
 
@@ -314,7 +320,7 @@ def _abandon_one(project: Path) -> None:
         "                budget=Budget(max_steps=4, max_tokens=None, max_cost=None,\n"
         "                              max_wall_clock_ms=1000))\n"
         "made.run({'mode': 'settle'}, envelope=RunEnvelope(run_dir='runs').with_live(),\n"
-        "         model=None)\n"
+        "         model=None, trigger='weekly digest')\n"
     )
     done = subprocess.run(
         [sys.executable, "-c", script], cwd=project, capture_output=True, text=True

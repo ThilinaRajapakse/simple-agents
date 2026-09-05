@@ -1,5 +1,5 @@
 {
-  "format_version": "0.42",
+  "format_version": "0.43",
   "trajectory_format_version": "0.30",
   "library_version": "0.1.2",
   "run_id": "t-export-filter-1",
@@ -17,8 +17,9 @@
     "turn": 1
   },
   "conversation": null,
-  "started_at": "2026-09-04T08:24:48.270Z",
-  "ended_at": "2026-09-04T08:24:53.310Z",
+  "trigger": null,
+  "started_at": "2026-09-05T11:28:47.790Z",
+  "ended_at": "2026-09-05T11:28:52.799Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1222375606,
