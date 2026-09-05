@@ -247,6 +247,11 @@ prompt rule changing what the agent does, to the builder as `shape`, `constant` 
 `prompt_rule` decisions. A rule invented while testing reads as the builder's own once it is
 in a file, and `check` lists the numbers no decision names.
 
+**Put a `prompt_rule` decision with the prompt, not a summary.** One project's summary was
+agreed and the eighteen places its prompts cut a value short were in none of it. Send the
+builder to the prompts page, which shows each prompt as written and as sent and marks every
+value the step's code cut (`docs/view.md` §6.10). Name the steps it reaches under `produces`.
+
 **Read `design.md` and say where the build departs.** A node that cannot do what the
 design promised is a change to it: tell the builder and re-record `design_confirmed_at` (FT-34).
 
@@ -283,7 +288,7 @@ through and declare who that is, `consult(ask, answered_by="builder")`, and make
 reach it. A blocking channel such as `ask_on_stdin` prints the question and waits, so the
 run never stops and one exercises the whole path.
 
-**Where the design has the run stop and wait, continue it too.** A channel that raises
+**Resuming a run that stopped to ask.** A channel that raises
 `Suspend` ends the run with its state on disk, and `Pipeline.resume` picks it up
 (`docs/pipeline.md` §1.8). Read what it waits for, take the builder's answer, pass it in:
 
@@ -300,6 +305,11 @@ except RunSuspended as stopped:
 The coding agent is that `ask_the_builder` while the project is built: it carries the answer
 in, and the builder is who gave it. Building the stopping half alone leaves a run on disk that
 nothing continues, and an answer that reaches nothing. FT-41 reads that.
+
+**Continuing a dead run.** `resume` continues a run that stopped itself to wait. A run whose
+process was killed is `Pipeline.rerun`, which runs it again from what it was given and serves
+the calls it already made from its own cassette (`docs/pipeline.md` §1.13). Use it where the builder
+asks for long runs to survive a reboot; a checkpoint table is that rebuilt by hand.
 
 **Gate.**
 
@@ -369,6 +379,11 @@ each. Where the run is meant to be unattended, `unattended()` says so and passes
 
 **Settle what a live run keeps** before one is made, since the rate is decided as each run
 starts and the material is now the end user's.
+
+**Agree the surface's design before more of it is built.** Stage 4 built the product; what
+somebody else is about to use is usually more. Put the design to the builder,
+write it into `design.md`'s product section, and declare a `Product` naming each surface
+(`docs/product.md` §2.1). FT-34 fails a project here whose code declares none.
 
 **Name what the end user reads.** Where the project stores the result for later reading, each
 stored result carries `pipeline.behaviour_fingerprint(model=client)` and something re-runs

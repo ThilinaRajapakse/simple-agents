@@ -20,9 +20,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from ..envelope import runs
 from ..records.manifest import DEFAULT_ROLE
+from .adopted import reached_by
 
 __all__ = ["Produced", "produced_across"]
 
@@ -55,6 +57,10 @@ class Produced:
     """Whether any run read carried a ``constants`` array. Manifests hold one from format
     ``0.33``, so a project whose runs all predate it has none and is told that rather than
     being read as a project that defines no constant."""
+
+    facilities: set[str] = field(default_factory=set)
+    """Every library facility any run recorded reaching, by the name `adopted.FACILITIES`
+    gives it. The report reads this against what `research.md`'s survey adopted."""
 
     sliced_from: set[str] = field(default_factory=set)
     """Every pipeline any run was a slice of, by that pipeline's ``graph_fingerprint``.
@@ -112,6 +118,7 @@ def produced_across(run_dir: Path) -> Produced:
     saw_constants = False
     found_slices: set[str] = set()
     roles: dict[str, set[str]] = {}
+    facilities: set[str] = set()
     for handle in runs(run_dir, nested=True, scripted=None):
         # A manifest nothing could parse is not a run this read, and FT-13 is what reports it.
         # Counting it would make `runs_read` a count of directories.
@@ -123,6 +130,7 @@ def produced_across(run_dir: Path) -> Produced:
         newest = max(newest, day)
         _note_each(nodes, manifest.get("nodes"), "node_id", day, roles, handle.role)
         _note_each(tools, manifest.get("tools"), "name", day, roles, handle.role)
+        reached_by(manifest, _tool_names(manifest.get("tools")), facilities)
         sliced = manifest.get("slice")
         if isinstance(sliced, dict) and isinstance(sliced.get("of"), str):
             found_slices.add(str(sliced["of"]))
@@ -135,6 +143,7 @@ def produced_across(run_dir: Path) -> Produced:
         tools=tools,
         constants=constants,
         roles=roles,
+        facilities=facilities,
         runs_read=read,
         newest_day=newest,
         constants_recorded=saw_constants,
@@ -165,3 +174,10 @@ def _note_each(
         if isinstance(name, str) and name:
             held[name] = max(held.get(name, ""), day)
             roles.setdefault(name, set()).add(role)
+
+
+def _tool_names(held: Any) -> set[str]:
+    """The tool names one manifest recorded, for reading which facilities the run reached."""
+    if not isinstance(held, list):
+        return set()
+    return {str(entry["name"]) for entry in held if isinstance(entry, dict) and entry.get("name")}

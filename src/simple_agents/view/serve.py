@@ -7,7 +7,7 @@ question takes an answer, an answered one takes an amendment, and each lands in
 was looking at. The page re-reads the project as it changes, so the builder keeps it open
 while the coding agent works.
 
-Nothing here writes the brief: an answer or an amendment is a thread the coding agent reads
+The brief is written by the coding agent: an answer or an amendment is a thread it reads
 and records, asking whatever follow-up the question's scaffold needs.
 """
 

@@ -326,7 +326,7 @@ def select(source: Source, n_answerable: int, n_unanswerable: int, seed: int) ->
 def build_pool(
     source: Source, chosen: list[Selected], records: list[dict], seed: int
 ) -> dict[tuple[str, str], dict]:
-    """Every selected question's paragraphs, padded to size from records nobody asked about."""
+    """Every selected question's paragraphs, padded to size from unasked records."""
     pool: dict[tuple[str, str], dict] = {}
     for item in chosen:
         for paragraph in item.record["paragraphs"]:

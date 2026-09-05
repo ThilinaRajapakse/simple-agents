@@ -665,8 +665,8 @@ def _refuse_incomparable(
 def _refuse_reshaped_inputs(before: _Shape, after: _Shape, *, name: str) -> None:
     """Refuse a rewiring that feeds a node a value of a different declared shape.
 
-    Nothing checks that a successor accepts its predecessor's type, so this would fail on every
-    rollout rather than report a comparison.
+    A successor's acceptance of its predecessor's type is unchecked at run time, so a
+    rewiring that got through here fails on every rollout.
     """
     for node_id in sorted(set(before.entries) & set(after.entries)):
         if not before.feeding(node_id) or not after.feeding(node_id):

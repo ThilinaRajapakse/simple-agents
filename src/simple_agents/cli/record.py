@@ -196,7 +196,7 @@ def _what_the_builder_said(args: argparse.Namespace) -> str | None:
     whatever was passed, which for a decision the builder settled is usually nothing.
 
     Raises :class:`~simple_agents.errors.ConfigurationError` naming the ids the file holds
-    where there is no such comment, since a decision recorded against a comment nobody wrote
+    where there is no such comment, since a decision recorded against a missing comment
     would say the builder settled something they never saw.
     """
     if not getattr(args, "from_comment", None):

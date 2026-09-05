@@ -16,7 +16,7 @@
 | Part | Candidate | What it is | Outcome |
 |---|---|---|---|
 | Finding passages | a hosted answering service | question in, answer out, priced per call | rejected: the collection is internal and may not leave the network |
-| Finding passages | BM25 over the collection | lexical, no model, ships with this library | adopted: `document_search` in `docs/tools.md` §4 |
+| Finding passages | BM25 over the collection | lexical, no model, ships with this library | adopted: lexical search over the notes, registered as catalogue_search |
 | Finding passages | embeddings and a reranker | finds a passage worded differently from the question | adopted alongside BM25: `docs/retrieval.md` |
 | Answering | one call reading every retrieved passage | the common shape in published work | adopted |
 | Answering | one call per passage, then a merge | more calls, and the merge has to resolve disagreement | rejected: cost, and nothing said the merge was better here |

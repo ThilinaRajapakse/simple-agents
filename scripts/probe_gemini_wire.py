@@ -68,7 +68,7 @@ def write(name: str, status: int, request: dict[str, Any], response: Any) -> Non
 def main() -> None:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
-        raise SystemExit("Set GEMINI_API_KEY. It is in .env, which nothing reads for you.")
+        raise SystemExit("Set GEMINI_API_KEY. It is in .env, which this script does not load.")
     headers = {"x-goog-api-key": key, "Content-Type": "application/json"}
     client = httpx.Client(timeout=300.0)
 

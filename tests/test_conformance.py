@@ -1583,18 +1583,87 @@ class TestFT30AndDecisionsTheBuilderNeverSaw:
         assert {c.entry_id for c in report.failed} == {"FT-30"}
         assert "'dependency'" in report.failed[0].findings[0].message
 
-    def test_not_applicable_settles_a_kind_a_project_has_nothing_of(self, tmp_path) -> None:
-        root = copied("conforming", tmp_path)
+    def _not_applicable(self, root, *, stage: str | None) -> None:
+        """Record the project's `presentation` decision as `not_applicable` at `stage`."""
         brief = (root / "brief.toml").read_text()
+        settled = f'status = "not_applicable"\nrecorded_at = "{STAMP}"'
+        if stage is not None:
+            settled += f'\nstage = "{stage}"'
         brief = brief.replace(
             f'[decisions.presentation_of_this_project]\nkind = "presentation"\n'
             f'status = "agreed"\nrecorded_at = "{STAMP}"',
-            f'[decisions.presentation_of_this_project]\nkind = "presentation"\n'
-            f'status = "not_applicable"\nrecorded_at = "{STAMP}"',
+            f'[decisions.presentation_of_this_project]\nkind = "presentation"\n{settled}',
         )
         (root / "brief.toml").write_text(brief)
 
+    def test_not_applicable_settles_a_kind_a_project_has_nothing_of(self, tmp_path) -> None:
+        """Settled where the code exists, which is where the answer is knowable."""
+        root = copied("conforming", tmp_path)
+        self._not_applicable(root, stage="build")
+
         assert run_checks(root).ok
+
+    def test_not_applicable_before_the_code_is_a_forecast(self, tmp_path) -> None:
+        """One project marked five kinds `not_applicable` at brainstorm, then built a
+        dependency into the code with no decision, and this check passed throughout."""
+        root = copied("conforming", tmp_path)
+        self._not_applicable(root, stage="brainstorm")
+
+        report = run_checks(root)
+
+        assert {c.entry_id for c in report.failed} == {"FT-30"}
+        printed = report.failed[0].findings[0].message
+        assert "'presentation'" in printed
+        assert "'brainstorm'" in printed
+        assert "before the code existed" in printed
+
+    def test_a_not_applicable_with_no_stage_says_when_it_was_settled(self, tmp_path) -> None:
+        """The entry says when it was settled, so the failure says that is unknown.
+
+        It does not say the decision predates the code: with no stage recorded, when it was
+        settled is what the check cannot read.
+        """
+        root = copied("conforming", tmp_path)
+        self._not_applicable(root, stage=None)
+
+        report = run_checks(root)
+
+        assert {c.entry_id for c in report.failed} == {"FT-30"}
+        printed = report.failed[0].findings[0].message
+        assert "the stage it was settled at unrecorded" in printed
+        assert "when it was settled is unknown" in printed
+        assert "before the code existed" not in printed
+
+    def test_the_evidence_is_extra_text_and_never_the_trigger(self, tmp_path) -> None:
+        """What the runs recorded is named beside the failure, and does not cause it.
+
+        The case this is written from reached its catalogue through `urllib` inside a
+        `Deterministic` node, which no manifest records.
+        """
+        root = copied("conforming", tmp_path)
+        self._not_applicable(root, stage="brainstorm")
+
+        printed = run_checks(root).failed[0].findings[0].message
+
+        assert "The runs of this project recorded" in printed
+
+    def test_before_build_a_forecast_is_not_read(self, tmp_path) -> None:
+        """A project that has not written code yet is not held to it.
+
+        The stage a project is at is what its artifacts show as well as what it declared, so
+        the runs have to go with the declaration: a project with runs has code, whatever its
+        brief says.
+        """
+        import shutil
+
+        root = copied("conforming", tmp_path)
+        self._not_applicable(root, stage="brainstorm")
+        brief = (root / "brief.toml").read_text()
+        (root / "brief.toml").write_text(brief.replace('stage = "measure"', 'stage = "shape"', 1))
+        shutil.rmtree(root / "runs")
+        shutil.rmtree(root / "evals" / "results")
+
+        assert not [c for c in run_checks(root).failed if c.entry_id == "FT-30"]
 
     def test_the_message_is_the_taxonomy_s_own_text(self) -> None:
         report = run_checks(project("unsettled-decision"))
@@ -2964,6 +3033,324 @@ class TestTheAnswersNoDecisionRestsOn:
         root = self._with_from(tmp_path, [])
 
         assert run_checks(root).ok
+
+
+class TestAFacilityTheResearchAdoptedAndNothingReached:
+    """The survey says what became of each candidate, and this reads an `adopted` row.
+
+    One project adopted five library facilities and its build reached one: fetching became
+    `urllib` inside two `Deterministic` nodes, outside the host policy, the cassette and the
+    record, and nothing said so until the tree was read by hand afterwards.
+    """
+
+    SECTION = "## What was found against each part"
+
+    def _survey(self, root, rows: str) -> None:
+        """Replace the survey table with `rows`, keeping the section's other text."""
+        research = root / "research.md"
+        text = research.read_text(encoding="utf-8")
+        head, _, tail = text.partition(self.SECTION)
+        after = tail.split("\n## ", 1)
+        rest = f"\n## {after[1]}" if len(after) > 1 else ""
+        research.write_text(
+            f"{head}{self.SECTION}\n\n| Part | Candidate | Outcome |\n|---|---|---|\n{rows}\n{rest}",
+            encoding="utf-8",
+        )
+
+    def _note(self, report) -> str | None:
+        return next((n for n in report.notes if n.startswith("research.md adopted")), None)
+
+    def test_a_facility_no_run_recorded_is_named(self, tmp_path) -> None:
+        root = copied("conforming", tmp_path)
+        self._survey(root, "| Remembering | a store across runs | adopted: `memory_search` |")
+
+        printed = self._note(run_checks(root))
+
+        assert printed is not None
+        assert "memory_search" in printed
+        assert "Remembering / a store across runs" in printed
+
+    def test_a_facility_the_runs_reached_is_not_named(self, tmp_path) -> None:
+        """A run that recorded the tool under its own name has reached it."""
+        root = copied("conforming", tmp_path)
+        self._survey(root, "| Remembering | a store across runs | adopted: `memory_search` |")
+        _stamp_a_tool(root, name="memory_search", version="sha256:whatever")
+
+        assert self._note(run_checks(root)) is None
+
+    def test_a_rejected_row_is_not_read(self, tmp_path) -> None:
+        """Only what was taken up is read: a rejected candidate is a decision, not a gap."""
+        root = copied("conforming", tmp_path)
+        self._survey(root, "| Remembering | a store across runs | rejected: `memory_search` |")
+
+        assert self._note(run_checks(root)) is None
+
+    def test_a_row_naming_nothing_in_backticks_is_not_joined(self, tmp_path) -> None:
+        """A row calling it "the library's memory" is not read, and the count says so."""
+        root = copied("conforming", tmp_path)
+        self._survey(root, "| Remembering | the library's memory | adopted |")
+
+        report = run_checks(root)
+
+        assert self._note(report) is None
+        assert not [c for c in report.failed if c.entry_id == "FT-36"]
+
+    def test_it_says_how_many_rows_it_could_read(self, tmp_path) -> None:
+        root = copied("conforming", tmp_path)
+        self._survey(
+            root,
+            "| Remembering | a store across runs | adopted: `memory_search` |\n"
+            "| Fetching | a page reader | adopted, in the project's own words |",
+        )
+
+        printed = self._note(run_checks(root))
+
+        assert "Read 2 adopted row(s); 1 name something this library ships." in printed
+
+    def test_a_built_in_under_the_project_s_own_name_is_reached(self, tmp_path) -> None:
+        """`document_search(index, name="catalogue_search")` is documented and ordinary.
+
+        A tool is recognised by the version a run recorded as well as by its name, so a
+        renamed built-in is not reported as a facility nothing reached.
+        """
+        from simple_agents.builtins import DocumentIndex, document_search
+
+        renamed = document_search(DocumentIndex.from_texts({"a": "a"}), name="whatever_we_call_it")
+        root = copied("conforming", tmp_path)
+        self._survey(root, "| Finding | lexical search | adopted: `document_search` |")
+        _stamp_a_tool(root, name="whatever_we_call_it", version=str(renamed.version))
+
+        assert self._note(run_checks(root)) is None
+
+    def test_it_fails_nothing(self, tmp_path) -> None:
+        """A candidate adopted at research and dropped at shape is a design that changed."""
+        root = copied("conforming", tmp_path)
+        self._survey(root, "| Remembering | a store across runs | adopted: `memory_search` |")
+
+        report = run_checks(root)
+
+        assert self._note(report) is not None
+        assert report.ok
+
+    def test_before_build_it_says_nothing(self, tmp_path) -> None:
+        import shutil
+
+        root = copied("conforming", tmp_path)
+        self._survey(root, "| Remembering | a store across runs | adopted: `memory_search` |")
+        brief = (root / "brief.toml").read_text()
+        (root / "brief.toml").write_text(brief.replace('stage = "measure"', 'stage = "shape"', 1))
+        shutil.rmtree(root / "runs")
+        shutil.rmtree(root / "evals" / "results")
+
+        assert self._note(run_checks(root)) is None
+
+
+def _stamp_a_tool(root, *, name: str, version: str) -> None:
+    """Add one tool entry to every manifest under `root`, as a run that offered it would."""
+    import json
+
+    for manifest in sorted((root / "runs").rglob("manifest.json")):
+        held = json.loads(manifest.read_text(encoding="utf-8"))
+        held.setdefault("tools", []).append(
+            {"name": name, "version": version, "side_effect_class": "read_only", "offered": True}
+        )
+        manifest.write_text(json.dumps(held), encoding="utf-8")
+
+
+class TestTheCodeWouldNotRead:
+    """Two checks fall back when `agent.py` will not import, and both then pass.
+
+    FT-40 reads the run record instead and FT-34 stops asking whether a `Product` is declared,
+    so without the note a shipped project whose code raises passes both in silence.
+    """
+
+    def _broken(self, tmp_path, body: str = "raise RuntimeError('a missing dependency')\n"):
+        root = _copied_view("shipped", tmp_path)
+        (root / "agent.py").write_text(body, encoding="utf-8")
+        return root
+
+    def _note(self, report) -> str | None:
+        return next((n for n in report.notes if "could not be imported" in n), None)
+
+    def test_it_names_what_stopped_the_import(self, tmp_path) -> None:
+        printed = self._note(run_checks(self._broken(tmp_path)))
+
+        assert printed is not None
+        assert "a missing dependency" in printed
+        assert "FT-40" in printed and "FT-34" in printed
+
+    def test_a_project_with_no_agent_file_is_silent(self, tmp_path) -> None:
+        """It has not written one yet, and FT-40 says so under its own check."""
+        root = _copied_view("shipped", tmp_path)
+        (root / "agent.py").unlink()
+
+        assert self._note(run_checks(root)) is None
+
+    def test_code_that_reads_says_nothing(self, tmp_path) -> None:
+        assert self._note(run_checks(_copied_view("shipped", tmp_path))) is None
+
+    def test_it_fails_nothing(self, tmp_path) -> None:
+        report = run_checks(self._broken(tmp_path))
+
+        assert self._note(report) is not None
+        assert not [c for c in report.failed if c.entry_id in ("FT-34", "FT-40")]
+
+
+class TestADecisionThatNamesNothing:
+    """A `produces` requirement, from `build`, on the four kinds that carry one.
+
+    One project's `prompt_rule` decision was agreed as a summary of the rules, and the
+    eighteen places its prompts cut a value short were in none of it. A decision naming no
+    step can be joined to no prompt, so the prompts page's unagreed filter reads against
+    nothing and FT-42 has nothing to read.
+    """
+
+    def _strip_produces(self, root, decision: str) -> None:
+        brief = (root / "brief.toml").read_text()
+        lines = brief.splitlines()
+        inside = False
+        kept = []
+        for line in lines:
+            if line.startswith("["):
+                inside = line == f"[decisions.{decision}]"
+            if inside and line.startswith("produces ="):
+                continue
+            kept.append(line)
+        (root / "brief.toml").write_text("\n".join(kept) + "\n")
+
+    def test_at_ship_a_producing_decision_names_something(self, tmp_path) -> None:
+        root = copied("conforming", tmp_path)
+        self._strip_produces(root, "prompt_rule_of_this_project")
+        _ship(root)
+
+        report = run_checks(root)
+
+        failed = [c for c in report.failed if c.entry_id == "FT-42"]
+        assert failed
+        assert "names nothing" in failed[0].findings[0].message
+        assert "prompt_rule_of_this_project" in failed[0].findings[0].message
+
+    def test_before_ship_it_is_reported_under_a_passing_check(self, tmp_path) -> None:
+        """A decision is agreed before the code exists, which is what `build` is."""
+        root = copied("conforming", tmp_path)
+        self._strip_produces(root, "prompt_rule_of_this_project")
+
+        found = _by_id(run_checks(root), "FT-42")
+
+        assert found.outcome is Outcome.PASSED
+        assert "name nothing" in (found.detail or "")
+
+    def test_a_kind_that_carries_no_produces_is_not_read(self, tmp_path) -> None:
+        """`presentation` and `measurement` leave nothing in a run record to join against."""
+        root = copied("conforming", tmp_path)
+        _ship(root)
+
+        printed = (_by_id(run_checks(root), "FT-42").detail or "") + "".join(
+            f.message for c in run_checks(root).failed for f in c.findings
+        )
+
+        assert "presentation_of_this_project" not in printed
+        assert "measurement_of_this_project" not in printed
+
+    def test_a_not_applicable_decision_names_nothing_to_look_for(self, tmp_path) -> None:
+        root = copied("conforming", tmp_path)
+        self._strip_produces(root, "prompt_rule_of_this_project")
+        brief = (root / "brief.toml").read_text()
+        (root / "brief.toml").write_text(
+            brief.replace(
+                '[decisions.prompt_rule_of_this_project]\nkind = "prompt_rule"\nstatus = "agreed"',
+                '[decisions.prompt_rule_of_this_project]\nkind = "prompt_rule"\n'
+                'status = "not_applicable"\nstage = "build"',
+                1,
+            )
+        )
+        _ship(root)
+
+        assert not [c for c in run_checks(root).failed if c.entry_id == "FT-42"]
+
+
+class TestAShippedProjectDeclaresItsProduct:
+    """From `ship`, FT-34 reads the product section against a declared `Product`.
+
+    A project declaring none was not read that way at all, which is the project whose product
+    is real, elaborate and undeclared: one built it after the last gate over four design
+    rounds and twenty rounds of fixes, for the second project running.
+    """
+
+    def test_the_code_read_and_declaring_none_fails(self, tmp_path) -> None:
+        """`shipped` with its product declaration taken out: everything else is in place."""
+        root = _copied_view("shipped", tmp_path)
+        agent = root / "agent.py"
+        agent.write_text(
+            agent.read_text().replace("import surface  # noqa: E402,F401", ""), encoding="utf-8"
+        )
+        _ship(root)
+
+        failed = [c for c in run_checks(root).failed if c.entry_id == "FT-34"]
+
+        assert failed
+        assert "declares no `Product`" in failed[0].findings[0].message
+
+    def test_a_declared_product_is_read_against_its_surfaces(self, tmp_path) -> None:
+        """A project that declares one is read against those surfaces, not against nothing."""
+        root = _copied_view("shipped", tmp_path)
+
+        failed = [c for c in run_checks(root).failed if c.entry_id == "FT-34"]
+
+        assert not [f for f in failed if "declares no `Product`" in f.findings[0].message]
+
+    def test_code_that_could_not_be_read_does_not_fail_the_design(self, tmp_path) -> None:
+        """The missing thing is the reading, not the declaration."""
+        root = copied("conforming", tmp_path)
+        _ship(root)
+
+        failed = [c for c in run_checks(root).failed if c.entry_id == "FT-34"]
+
+        assert not [f for f in failed if "declares no `Product`" in f.findings[0].message]
+
+    def test_before_ship_a_project_declaring_none_is_not_read_this_way(self, tmp_path) -> None:
+        root = _copied_view("shipped", tmp_path)
+        agent = root / "agent.py"
+        agent.write_text(
+            agent.read_text().replace("import surface  # noqa: E402,F401", ""), encoding="utf-8"
+        )
+        brief = (root / "brief.toml").read_text()
+        (root / "brief.toml").write_text(
+            re.sub(r'^stage = ".*"$', 'stage = "measure"', brief, count=1, flags=re.MULTILINE)
+        )
+        # A live run is what says a project has shipped, whatever its brief declares.
+        shutil.rmtree(root / "runs" / "live")
+
+        failed = [c for c in run_checks(root).failed if c.entry_id == "FT-34"]
+
+        assert not [f for f in failed if "declares no `Product`" in f.findings[0].message]
+
+
+def _copied_view(name: str, tmp_path: Path) -> Path:
+    """A view fixture copied somewhere writable. Those carry `agent.py`, which these read."""
+    source = Path(__file__).parent / "fixtures" / "view_projects" / name
+    if not source.exists():
+        pytest.skip(f"no view fixture {name}; run scripts/build_view_fixtures.py")
+    target = tmp_path / name
+    shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__"))
+    return target
+
+
+def _ship(root) -> None:
+    """Move a copied project to stage `ship`, re-confirming what that gate reads."""
+    brief = (root / "brief.toml").read_text()
+    for key in ("understanding_confirmed_at", "design_confirmed_at", "research_confirmed_at"):
+        brief = re.sub(rf'^{key} = ".*"$', f'{key} = "ship"', brief, flags=re.MULTILINE)
+    brief = re.sub(r'^stage = ".*"$', 'stage = "ship"', brief, count=1, flags=re.MULTILINE)
+    if 'asked_at = "' in brief:
+        brief = re.sub(r'^asked_at = ".*"$', 'asked_at = "ship"', brief, flags=re.MULTILINE)
+    else:
+        brief = brief.replace(
+            '[entries.anything_else]\nstatus = "answered"',
+            '[entries.anything_else]\nstatus = "answered"\nasked_at = "ship"',
+            1,
+        )
+    (root / "brief.toml").write_text(brief)
 
 
 class TestTheComplementOverNothing:

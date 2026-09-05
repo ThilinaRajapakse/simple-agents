@@ -100,6 +100,11 @@ class Report:
     notes: tuple[str, ...] = field(default=())
     reading: str | None = None
 
+    facilities: frozenset[str] = frozenset()
+    """The library facilities the project's runs recorded reaching, read once while the checks
+    ran. `simple-agents view` draws the same join on its research page and takes this rather
+    than opening every manifest a second time."""
+
     @property
     def failed(self) -> tuple[CheckResult, ...]:
         return tuple(check for check in self.checks if check.failed)

@@ -16,7 +16,7 @@ Or over specific paths::
 
 What it declines: a `blank-line` whose subject is not named beside it, and one whose name is
 dotted or is defined more than once in the cited file, since `Tool.resolve` and
-`Workspace.resolve` are two definitions of `resolve` and nothing says which was meant.
+`Workspace.resolve` are two definitions of `resolve` and which was meant is unknown.
 
 This is deliberately not part of `prose_check.py`. That checks writing rules and skips
 `dev-docs/` on purpose; this checks whether a link resolves, which is a different question
@@ -60,7 +60,7 @@ sentence before it, and there a field does not count, because a field name is of
 word and `cost`, `score`, `kind` and `threshold` in running prose then resolve to one.
 
 What this cannot check: whether a citation pointing at a statement inside a function still
-points at the right statement. Nothing names that line, so nothing can resolve it.
+points at the right statement. That line is unnamed, and so unresolvable.
 """
 
 from __future__ import annotations

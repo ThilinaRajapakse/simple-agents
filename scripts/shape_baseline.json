@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "the prompts page: one region added to the findings, and two units decomposed",
+  "reason": "what the procedure reaches: FT-30 reads a not_applicable stage, FT-42 refuses a decision naming nothing, FT-34 requires a Product at ship, the adopted-facility note is a new module, and the report carries what the run walk found so the view reads it once",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -88,13 +88,13 @@
       "function lines": 52
     },
     "src/simple_agents/conformance/checks.py::function::ft_42": {
-      "function lines": 61
+      "function lines": 68
     },
     "src/simple_agents/conformance/checks.py::module": {
-      "module lines": 2025
+      "module lines": 2137
     },
     "src/simple_agents/conformance/elicitation.py::module": {
-      "module lines": 968
+      "module lines": 975
     },
     "src/simple_agents/conformance/run.py::function::_answers_no_decision_rests_on": {
       "function branches": 17
@@ -103,7 +103,7 @@
       "function branches": 15
     },
     "src/simple_agents/conformance/run.py::function::run_checks": {
-      "function lines": 71
+      "function lines": 54
     },
     "src/simple_agents/conformance/spend.py::function::unfinished_across": {
       "function branches": 20,
@@ -458,10 +458,6 @@
     "src/simple_agents/view/product.py::function::_one_surface": {
       "function branches": 15
     },
-    "src/simple_agents/view/research.py::function::read_research": {
-      "function branches": 30,
-      "function lines": 79
-    },
     "src/simple_agents/view/runs_overlay.py::function::_scan": {
       "function lines": 52
     },
@@ -612,7 +608,6 @@
     "src/simple_agents/view/findings.py::module": "One page's readers and drawings; the length is the page's regions (built and read as a builder 2026-08-29, and the prompts page's threads named 2026-09-04).",
     "src/simple_agents/view/operating.py::function::read_operating": "One page's reader; the length is the page's regions.",
     "src/simple_agents/view/product.py::function::_one_surface": "One surface's card; each branch is one optional field.",
-    "src/simple_agents/view/research.py::function::read_research": "One page's reader; the branches are the record shapes a research stage leaves.",
     "src/simple_agents/view/runs_overlay.py::function::_scan": "One directory scan; the length is the run states it tells apart.",
     "src/simple_agents/view/serve.py::function::_snapshot": "One snapshot of the served state; each branch is one region's presence rule."
   }

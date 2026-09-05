@@ -347,6 +347,9 @@ needs it is an agent asking the end user something when the terminal is unattend
 arrive tomorrow, and the process cannot wait. The same machinery serves a planned human review,
 an end user pressing pause, work parked before a redeploy, and a run waiting out a token quota.
 
+This is a run that stopped itself. A run whose process was killed left no state on disk, so
+§1.13 runs it again from what it was given, served from its own cassette.
+
 **There are three ways a run stops before its last node, and one way to continue from any of
 them.**
 

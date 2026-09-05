@@ -837,7 +837,8 @@ class EvalSuite:
             results = suite.rescore(run_dir="runs/eval/eval_a1226bc495df", split="held_out")
             results.write("evals/results/held-out-v3.json")
 
-        Nothing here executes a pipeline, calls a model or spends anything. Each rollout's
+        Rescoring is offline: no pipeline runs, no model is called, and spend stays at
+        zero. Each rollout's
         answer is read back from its trajectory and compared with ``matches`` as it was live,
         so this is how a metric that raised, a ``matches`` that was wrong, or a metric added
         afterwards is applied to rollouts already paid for.

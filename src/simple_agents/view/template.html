@@ -616,6 +616,7 @@ button.nm:hover{color:var(--accent)}
 .cand.not_investigated .cm{color:var(--faint)}
 .cand.rejected b,.cand.not_investigated b{color:var(--muted);font-weight:400}
 .cand .rests{color:var(--accent)}
+.cand .unreached{color:var(--note)}
 
 /* the hover layer: one tooltip, every mark */
 #tip{position:fixed;z-index:50;pointer-events:none;max-width:34em;padding:7px 10px;border-radius:7px;
@@ -4730,12 +4731,16 @@ function candidatesRegion() {
       <span><b>${esc(c.candidate)}</b><br><span class="asks">${
         esc(CANDIDATE_WORDS[c.outcome] || "")}${c.said ? `: ${esc(c.said)}` : ""}</span>${
       c.decisions.length ? `<br><span class="rests">${c.decisions.map(d =>
-        `<span class="mono">${esc(d.name)}</span>`).join(", ")} rests on it</span>` : ""}</span>
+        `<span class="mono">${esc(d.name)}</span>`).join(", ")} rests on it</span>` : ""}${
+      (c.unreached || []).length ? `<br><span class="unreached">No run has recorded ${
+        c.unreached.length === 1 ? "it" : c.unreached.map(n =>
+          `<span class="mono">${esc(n)}</span>`).join(", ")}</span>` : ""}</span>
     </div>`).join("")}</div>`;
   return `<div class="mregion" data-section="candidates">${measureTitle("Parts and candidates",
     `${fmt(held.parts.length)} parts`)}
     <p>One column per part, with the candidates weighed for it underneath. A filled mark was
-    adopted. An outline was rejected. A ring was not investigated.</p>
+    adopted. An outline was rejected. A ring was not investigated. A candidate that names
+    something this library ships says where no run has recorded reaching it.</p>
     <div class="partcols">${held.parts.map(column).join("")}</div>
     ${held.parts_said ? `<p class="asks">${longText("research:parts", held.parts_said)}</p>`
       : ""}</div>`;

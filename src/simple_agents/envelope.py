@@ -509,7 +509,7 @@ def runs(
 ) -> list[RunHandle]:
     """Every run written under ``run_dir``, newest first.
 
-    Reads the directories the envelope wrote. Nothing here executes anything::
+    Reads the directories the envelope wrote, without running a pipeline::
 
         from simple_agents import runs
 
@@ -884,9 +884,9 @@ class RunEnvelope:
         of its evaluation, which has already scoped ``run_dir``, so a rollout adds nothing
         further and returns an empty path here.
 
-        Nothing reads a run back by its location. Every reader finds a run by its manifest and
-        reads what that says, so a project holding runs written under an older layout keeps
-        working and no directory has to be migrated.
+        Every reader finds a run by its manifest and reads what that says, so a project
+        holding runs written under an older layout keeps working and its directories stay
+        where they are.
         """
         if self.evaluation is not None:
             return Path()

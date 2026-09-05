@@ -712,6 +712,10 @@ def _first_pass(
     stage: str | None,
 ) -> dict[str, Any]:
     """Everything the page shows that is read rather than joined."""
+    # The checks walk every manifest to answer FT-42, and the research page's own join reads
+    # the same thing. Reading it once here is what keeps the page to one walk.
+    checks = read_checks(root)
+    reached = set(checks["facilities"]) if checks else None
     return {
         "project": _project_name(root),
         "intent": _project_intent(brief),
@@ -731,10 +735,10 @@ def _first_pass(
         "questions_due": _questions_due(brief, stage, comments),
         "brief": _brief_panels(brief),
         "measured": read_evaluation(root),
-        "checks": read_checks(root),
+        "checks": checks,
         "stages_asked": read_stages(brief),
         "idea": read_idea(root, brief),
-        "research": read_research(root, brief),
+        "research": read_research(root, brief, reached=reached),
         "operating": read_operating(root),
         "walks": None,
         "examples": read_examples(root),

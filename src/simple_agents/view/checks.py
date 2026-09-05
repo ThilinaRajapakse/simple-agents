@@ -71,4 +71,6 @@ def read_checks(root: str | Path) -> dict[str, Any] | None:
         "counts": counts,
         "rows": rows,
         "reading": report.reading,
+        # Read while the checks ran, so the research page's own join opens no manifest again.
+        "facilities": sorted(report.facilities),
     }

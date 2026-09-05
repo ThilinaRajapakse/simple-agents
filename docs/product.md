@@ -2,7 +2,7 @@
 
 The product is the surface the end user meets the agent through, together with any artifact the project keeps for them to read. The agent runs inside it. Every project has one, and where the builder runs a script and reads what it prints, that script is the product.
 
-`used_through` records what it is at `brainstorm`, the product section of `design.md` pins how it works at `shape` (FT-34), and stage 4 builds it beside the pipeline. This document is what those three rest on.
+`used_through` records what it is at `brainstorm`, the product section of `design.md` pins how it works at `shape` (FT-34), stage 4 builds it beside the pipeline, and stage 6 agrees the surface an end user meets before more of it is built. This document is what those three rest on.
 
 The library ships the machinery a product invokes: a run per request, a run that waits for a person, the record every run leaves, and the stamp an accumulating artifact carries. The server, the page and the scheduler are the project's.
 
@@ -65,7 +65,7 @@ product; registering a second is refused.
 
 **FT-34 reads it against `design.md`.** The product section lists what the end user can do and
 classifies each interaction, and a declared surface that section never names is an interaction
-the builder was not shown. A project declaring no product is not read this way.
+the builder was not shown. Before `ship` a project declaring no product is not read this way; from `ship` FT-34 fails one whose code was read and declares none.
 
 ## 3. A request is a run
 

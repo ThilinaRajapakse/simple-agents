@@ -609,7 +609,10 @@ and a confirmation naming an earlier stage than the project is at says so.
 **Parts and candidates** is `research.md`'s survey, one column a part: each candidate with what
 became of it and why, filled where it was adopted, outlined where it was rejected, and a ring
 where it was not investigated. A candidate a `dependency` decision's own words reach names that
-decision under it.
+decision under it. **An adopted candidate that names something this library ships
+says where no run has recorded reaching it**, read the way the report's own note reads it
+(`docs/conformance.md` §4.4): only what the row wrote in backticks, and a built-in registered
+under a name of the project's own is read as reached.
 
 **Decisions resting on it** is each `dependency` decision with what it chose, why, and the
 candidates it weighed. Matched on the words the decision uses, so a candidate described in

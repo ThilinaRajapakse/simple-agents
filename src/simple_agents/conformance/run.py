@@ -13,7 +13,14 @@ from pathlib import Path
 from typing import Any
 
 from ..envelope import EVAL_BUCKET
-from .artifacts import DEFAULT_RUNS, Artifacts, read_json, the_run_to_compare
+from .adopted import rows_read, unreached
+from .artifacts import (
+    DEFAULT_RESEARCH,
+    DEFAULT_RUNS,
+    Artifacts,
+    read_json,
+    the_run_to_compare,
+)
 from .brief import Brief
 from .checks import (
     CHECKS,
@@ -106,25 +113,40 @@ def run_checks(
         brief=found.relative(declared.path),
         checks=tuple(checks),
         reading=_what_the_checks_read(found),
-        notes=tuple(
-            note
-            for note in (
-                found.different_evaluations(),
-                found.reading_a_live_run(),
-                _what_the_live_runs_did(found, stage),
-                _stages_the_tier_drops(declared.tier, found),
-                _the_pipeline_moved(declared, ctx, stage),
-                _the_number_came_from_elsewhere(ctx, stage),
-                _rollouts_the_results_file_does_not_describe(found),
-                _answers_no_decision_rests_on(declared, stage),
-                _dependencies_no_research_rests_under(declared, stage),
-                _produced_by_no_decision(declared, ctx.produced, stage),
-                _spend_that_produced_nothing(ctx.unfinished),
-                _comments_awaiting(found, declared),
-                _no_step_carries_a_figure(declared, ctx, ctx.produced, stage),
-            )
-            if note
-        ),
+        facilities=frozenset(ctx.produced.facilities),
+        notes=_notes_for(found, declared, ctx, stage, Path(root)),
+    )
+
+
+def _notes_for(
+    found: Artifacts, declared: Brief, ctx: Context, stage: str, root: Path
+) -> tuple[str, ...]:
+    """Every note the report prints, in the order it prints them.
+
+    A note is a fact about what the report read, addressed to the coding agent, and it never
+    changes the exit status (`docs/conformance.md` §4.4). One that has nothing to say returns
+    ``None`` and is dropped here.
+    """
+    return tuple(
+        note
+        for note in (
+            found.different_evaluations(),
+            found.reading_a_live_run(),
+            _what_the_live_runs_did(found, stage),
+            _stages_the_tier_drops(declared.tier, found),
+            _the_pipeline_moved(declared, ctx, stage),
+            _the_number_came_from_elsewhere(ctx, stage),
+            _rollouts_the_results_file_does_not_describe(found),
+            _answers_no_decision_rests_on(declared, stage),
+            _dependencies_no_research_rests_under(declared, stage),
+            _the_code_would_not_read(ctx.declared, Path(root)),
+            _adopted_and_unreached(found, ctx.produced, stage),
+            _produced_by_no_decision(declared, ctx.produced, stage),
+            _spend_that_produced_nothing(ctx.unfinished),
+            _comments_awaiting(found, declared),
+            _no_step_carries_a_figure(declared, ctx, ctx.produced, stage),
+        )
+        if note
     )
 
 
@@ -576,6 +598,70 @@ def _answers_no_decision_rests_on(brief: Brief, stage: str) -> str | None:
 RESEARCH_ENTRIES = frozenset({"approaches", "available_material"})
 
 
+def _the_reason_in(said: str) -> str:
+    """The reason out of a problem the view wrote, which appends its own advice to one.
+
+    `load_project` writes for the page, so its text carries what a builder should do about the
+    failure as well as what it was. The report's note wants the failure alone.
+    """
+    return said.split(", so ")[0].split(". ")[0].rstrip(".")
+
+
+def _the_code_would_not_read(declared: DeclaredPipelines, root: Path) -> str | None:
+    """Why the project's own code could not be read, where there is an `agent.py` to read.
+
+    Two checks fall back when the code will not import: FT-40 reads the manifest instead, and
+    FT-34 stops asking whether a `Product` is declared. Both then pass, so without this the
+    report says nothing at all about a project whose `agent.py` raises.
+
+    A project with no `agent.py` is silent here: it has not written one yet, and FT-40 says so.
+    """
+    if declared.imported or declared.problem is None:
+        return None
+    if not (root / "agent.py").exists():
+        return None
+    return (
+        f"{declared.reason or declared.problem}. Until it reads, the checks that ask what "
+        f"the code declares fall back or stop asking: a step declared and never built (FT-40) "
+        f"is read off the run record, and whether a shipped project declares a `Product` "
+        f'(FT-34) goes unread. `python -c "import agent"` in the project root shows what this '
+        f"read."
+    )
+
+
+def _adopted_and_unreached(found: Artifacts, produced: Produced, stage: str) -> str | None:
+    """The library facilities `research.md` adopted that no run recorded reaching.
+
+    FT-36 reads that every survey row's outcome cell says something. This reads what an
+    adopted one says, against what the runs hold. One project adopted five facilities and its
+    build reached one: fetching became `urllib` inside two `Deterministic` nodes, outside the
+    host policy, the cassette and the record.
+
+    From stage `build`, where there is code to have reached them. It reports and never fails:
+    a candidate adopted at `research` and dropped at `shape` is a design that changed, and the
+    survey has no way to record that.
+
+    Only what a row wrote in backticks is read, so the note says how many rows it could join.
+    """
+    if STAGES.index(stage) < STAGES.index("build") or found.research is None:
+        return None
+    try:
+        text = found.research.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    missing = unreached(text, produced.facilities)
+    if not missing:
+        return None
+    named = ", ".join(f"{name} (row {row!r})" for name, row in missing)
+    rows, joined = rows_read(text)
+    return (
+        f"{DEFAULT_RESEARCH} adopted {len(missing)} library facility(ies) that no run has "
+        f"recorded: {named}. Either use them, or record what the project built instead under "
+        f"`produces` on the decision that replaced them. Read {rows} adopted row(s); {joined} "
+        f"name something this library ships."
+    )
+
+
 def _dependencies_no_research_rests_under(brief: Brief, stage: str) -> str | None:
     """The dependency decisions whose `from` names no research entry.
 
@@ -706,22 +792,28 @@ def _pipelines_in_the_code(root: Path) -> DeclaredPipelines:
     and the one check that reads this falls back to the manifest and says which it used.
     """
     if not (root / "agent.py").exists():
-        return DeclaredPipelines(problem="no agent.py, so no pipeline is declared in code")
+        return DeclaredPipelines(
+            problem="no agent.py, so no pipeline is declared in code",
+            reason="there is no agent.py",
+        )
     try:
         from ..view.discovery import load_project
 
         loaded = load_project(root)
     except Exception as error:  # noqa: BLE001 - a project that will not import still reports
-        return DeclaredPipelines(problem=f"agent.py could not be imported: {error}")
+        return DeclaredPipelines(
+            problem=f"agent.py could not be imported: {error}",
+            reason=f"agent.py could not be imported: {error}",
+        )
     if not loaded.imported or not loaded.pipelines:
         # An `agent.py` that imports and declares nothing the convention can find has told
         # this check nothing. Saying `pass` off it would cite a reading that never happened,
         # so the manifest answers instead.
-        return DeclaredPipelines(
-            problem="; ".join(loaded.problems)
-            or "agent.py declares no pipeline a @pipeline_factory or a module-level "
-            "Pipeline makes findable"
+        said = "; ".join(loaded.problems) or (
+            "agent.py declares no pipeline a @pipeline_factory or a module-level Pipeline "
+            "makes findable"
         )
+        return DeclaredPipelines(problem=said, reason=_the_reason_in(said))
     many = len(loaded.pipelines) > 1
     planned = tuple(
         f"{name}/{step}" if many else step

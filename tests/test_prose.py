@@ -129,6 +129,10 @@ class TestTheStateIsNamed:
         found = self._rules(tmp_path, "Nobody opens a window; the reply lands in the outbox.")
         assert "nobody" in found
 
+    def test_the_decision_form_is_reported(self, tmp_path) -> None:
+        found = self._rules(tmp_path, "Nobody decided which of the two the run uses.")
+        assert "nobody" in found
+
     def test_the_state_named_is_not(self, tmp_path) -> None:
         found = self._rules(tmp_path, "An unconfirmed design says so.")
         assert "nobody" not in found
@@ -187,6 +191,59 @@ class TestAbsenceIsStatedPositively:
         found = self._rules(tmp_path, "Tools reaching it: none.")
 
         assert "negation_cascade" not in found
+
+
+class TestAbsenceIsReportedAsAConclusion:
+    """Absence written as what has not happened, with the conclusion left to the reader.
+
+    "No run has recorded a duration" and "nothing records the direction" state the derivation.
+    The rule fires where a sentence opens on one of them, and leaves the object position and a
+    consequence clause alone.
+    """
+
+    def _rules(self, tmp_path, body: str) -> set[str]:
+        probe = tmp_path / "probe.py"
+        probe.write_text(f'"""x.\n\n{body}\n"""\n', encoding="utf-8")
+        return {v.rule for v in check_file(probe, builder_facing=True)}
+
+    def test_the_perfect_report_is_reported(self, tmp_path) -> None:
+        found = self._rules(tmp_path, "No run has recorded a duration for the step.")
+
+        assert "bare_absence" in found
+
+    def test_the_nothing_subject_is_reported(self, tmp_path) -> None:
+        found = self._rules(tmp_path, "Nothing records the direction of the edge.")
+
+        assert "bare_absence" in found
+
+    def test_it_is_reported_mid_line(self, tmp_path) -> None:
+        found = self._rules(tmp_path, "The step ran once. Nothing names the store it read.")
+
+        assert "bare_absence" in found
+
+    def test_the_conclusion_is_not(self, tmp_path) -> None:
+        found = self._rules(tmp_path, "Duration unmeasured, and the direction is unrecorded.")
+
+        assert "bare_absence" not in found
+
+    def test_a_consequence_clause_is_left_alone(self, tmp_path) -> None:
+        """The copula carries "so nothing is lost", which is what the rules ask for."""
+        found = self._rules(
+            tmp_path, "The write happens inside the lock, so nothing is lost on a retry."
+        )
+
+        assert "bare_absence" not in found
+
+    def test_the_object_position_is_left_alone(self, tmp_path) -> None:
+        found = self._rules(tmp_path, "A tool that annotates nothing says so.")
+
+        assert "bare_absence" not in found
+
+    def test_a_wrapped_line_continuing_a_sentence_is_left_alone(self, tmp_path) -> None:
+        """Prose is hard-wrapped, so a line opening on `nothing` is usually mid-sentence."""
+        found = self._rules(tmp_path, "A tool that annotates\nnothing says so, which is a finding.")
+
+        assert "bare_absence" not in found
 
 
 class TestTheExampleChecks:

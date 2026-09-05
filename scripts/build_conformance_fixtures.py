@@ -140,8 +140,8 @@ ANSWERS = {
     ),
     "what_this_turns_on": (
         "Deciding a question is unanswerable. The other three parts have established "
-        "approaches and the choice between them is cost; nothing found says how to decide "
-        "absence well, and what was adopted records it rather than deciding it. Finding "
+        "approaches and the choice between them is cost; how to decide absence well is "
+        "unsettled in what was found, and what was adopted records that. Finding "
         "passages worded differently from the question is second, and is why retrieval runs "
         "both methods."
     ),
@@ -248,7 +248,7 @@ RESEARCH = """# What was already known about answering a question from a passage
 | Part | Candidate | What it is | Outcome |
 |---|---|---|---|
 | Finding passages | a hosted answering service | question in, answer out, priced per call | rejected: the collection is internal and may not leave the network |
-| Finding passages | BM25 over the collection | lexical, no model, ships with this library | adopted: `document_search` in `docs/tools.md` §4 |
+| Finding passages | BM25 over the collection | lexical, no model, ships with this library | adopted: lexical search over the notes, registered as catalogue_search |
 | Finding passages | embeddings and a reranker | finds a passage worded differently from the question | adopted alongside BM25: `docs/retrieval.md` |
 | Answering | one call reading every retrieved passage | the common shape in published work | adopted |
 | Answering | one call per passage, then a merge | more calls, and the merge has to resolve disagreement | rejected: cost, and nothing said the merge was better here |
@@ -303,8 +303,8 @@ support team disagreed with is not remembered anywhere.
 ## The product
 
 The terminal. One interaction: running the answer script with a question starts a run, and the
-printed span is that run's return value, read once. Nothing reads an artifact, because none
-outlives the run, and nothing records a judgement.
+printed span is that run's return value, read once. The run leaves no artifact behind,
+and judgements are unrecorded.
 
 ## What the builder said about it
 

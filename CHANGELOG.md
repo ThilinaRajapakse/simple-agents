@@ -54,8 +54,31 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   in it. A selection is filed under a digest of the words and keeps them, the run they were
   read in, and the digest the fixed text had.
 
+- The report names the library facilities `research.md`'s survey adopted that no run has
+  recorded, from stage `build`. It reads what a row wrote in backticks, and a built-in
+  registered under a name of the project's own is read by the version a run recorded. The
+  research page marks the same candidates. `docs/conformance.md` §4.4.
+
 ### Changed
 
+- **Breaking.** From stage `build`, a decision recorded `not_applicable` carries the `stage` it
+  was settled at, and that stage is `build` or later (FT-30). Before the code exists the answer
+  is a forecast. Re-record each with
+  `simple-agents record decision <name> --kind <kind> --status not_applicable --stage build`.
+- **Breaking.** From stage `ship`, a `dependency`, `shape`, `constant` or `prompt_rule` decision
+  names what it became under `produces` (FT-42). A decision that names nothing can be joined to
+  no part of the code.
+- **Breaking.** From stage `ship`, a project whose code was read and declares no `Product` fails
+  FT-34. Where the code could not be read, the reason is reported and the design is not failed
+  for it. `docs/product.md` §2.1.
+- The `involvement` question offers two granularities rather than three timings: every decision
+  is put to the builder before the thing it decides is built, and what the builder chooses is
+  whether they see each as it arises or a batch settled before any code is written. The option
+  that put a batch at the stage gate is gone, since the code is written by then.
+- `docs/procedure.md`'s `build` stage names `Pipeline.rerun` for a run whose process was killed,
+  beside `Pipeline.resume` for one that stopped to ask, and says to put a `prompt_rule` decision
+  with the prompt rather than a summary. Its `ship` stage says to design the product surface
+  with the builder before building it.
 - **Breaking.** A prompt function returns a `Prompt`. A string or a list of message dicts is
   refused with a `ConfigurationError` naming the call that replaces it: in a node's prompt, in
   `ModelHandle.complete`, and in a consultation reader's `Reading.complete`. Text a project has

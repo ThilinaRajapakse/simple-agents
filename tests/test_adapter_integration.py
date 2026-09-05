@@ -159,7 +159,7 @@ class TestMistral:
 class TestAgentLoop:
     """The multi-turn path, replayed from a recorded run against a real backend.
 
-    Nothing else covers it. A `FakeModelClient` ignores the messages it is sent, so the loop
+    This is the only test that covers it. A `FakeModelClient` ignores the messages it is sent, so the loop
     can build a conversation no backend accepts and every test still passes. That is what
     happened: the assistant messages carrying tool calls were in the library's own shape, and
     the first live run was rejected with a 422.
@@ -868,7 +868,7 @@ class TestGemini:
 class TestGeminiAgentLoop:
     """The multi-turn path against a backend that refuses the turn after a dropped signature.
 
-    Nothing else covers it. The conversation the loop builds carries each tool call back to the
+    This is the only test that covers it. The conversation the loop builds carries each tool call back to the
     backend, and this one answers 400 unless the opaque string it sent with that call comes
     back verbatim. A `FakeModelClient` ignores the messages it is sent, so every test would
     pass over a conversation no backend accepts.

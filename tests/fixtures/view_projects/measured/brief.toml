@@ -183,6 +183,7 @@ status = "agreed"
 recorded_at = "2026-08-27T09:14:02Z"
 chose = "extract reads the claim into fields, and decide is given the fields and the policy's arithmetic rather than the claim"
 considered = ["one call that reads and decides", "deciding in plain code from the fields"]
+produces = ["extract", "decide"]
 because = "the single call applied the rules loosely, and the free-text justifications need reading"
 
 [decisions.audit_bound]
@@ -191,6 +192,7 @@ status = "agreed"
 recorded_at = "2026-08-27T09:14:02Z"
 chose = "audit sends the decision back at most twice, then finance has it"
 considered = ["no audit", "an unbounded loop"]
+produces = ["audit"]
 because = "two decisions that cannot agree are what finance is for"
 
 [decisions.parking]

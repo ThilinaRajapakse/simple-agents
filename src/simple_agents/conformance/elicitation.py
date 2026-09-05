@@ -149,18 +149,25 @@ QUESTIONS: tuple[Question, ...] = (
         required=True,
         ask=(
             "Building this means deciding things the builder has not been asked about. How "
-            "much of that do they want to see, and when?"
+            "much of that do they want to see?"
         ),
         scaffold=(
-            "Offer the three, and say what each costs them: every decision as it comes, which "
-            "is slowest and misses nothing; a batch at each stage gate, which is one review "
-            "per stage; or only the ones that change what the agent does, which is fewest and "
-            "relies on the coding agent's judgement of which those are.\n"
-            "This sets when the six decision kinds are put to the builder, not whether. All "
-            "six are recorded and settled at every level (FT-30), because a decision the "
-            "builder never saw is one they cannot change later. Ask this before the design "
-            "starts, since it "
-            "governs every exchange after it."
+            "Every decision is put to the builder before the thing it decides is built. That "
+            "is not a choice: a decision put after the code is written costs a rebuild to "
+            "change, so the review becomes a formality. What the builder chooses is the "
+            "granularity. Offer the two and say what each costs them: each decision as it "
+            "arises, which interrupts most and misses nothing; or a batch put at the point "
+            "the design for that piece is settled and before any code is written, which is "
+            "fewer interruptions and asks them to hold more in their head at once.\n"
+            "A decision that comes up mid-build is put then, not held for the next batch. "
+            "Writing the code is where a threshold or a prompt rule is discovered, and a "
+            "batch cannot contain what did not exist when it was assembled.\n"
+            "`dependency` and `shape` are put on their own whichever they choose, because the "
+            "rest of the project rests on them.\n"
+            "This sets how coarsely the six decision kinds reach the builder, not whether. "
+            "All six are recorded and settled at either granularity (FT-30), because a "
+            "decision the builder never saw is one they cannot change later. Ask this before "
+            "the design starts, since it governs every exchange after it."
         ),
     ),
     Question(

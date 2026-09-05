@@ -80,6 +80,7 @@ from .artifacts import (
     the_run_to_compare,
 )
 from .brief import Brief, BriefEntry
+from .decisions import Decision, PRODUCING_KINDS
 from .elicitation import QUESTIONS, Question, required_at
 from .produced import Produced
 from .report import CheckResult, Finding, Outcome
@@ -159,6 +160,10 @@ class DeclaredPipelines:
 
     planned: tuple[str, ...] = ()
     problem: str | None = None
+    reason: str | None = None
+    """Why the code would not read, without the advice `problem` carries for the view's own
+    reader. The report's note prints this, so a reword of that advice cannot truncate it."""
+
     imported: bool = False
     surfaces: tuple[str, ...] = ()
     """Every surface the project's `Product` declares, by name. Empty where it declares no
@@ -739,6 +744,26 @@ def ft_34(ctx: Context) -> CheckResult:
     return _result(ctx, "FT-34", Outcome.PASSED, read=read + _read(ctx, ctx.artifacts.design))
 
 
+def _no_product_at_ship(ctx: Context, stage: str) -> bool:
+    """Whether a shipped project's code was read and declared no `Product`.
+
+    A project that declares one has its product section read against those surfaces at every
+    stage from `shape`. A project that declares none was not read that way at all, which is
+    how a product built after the last gate goes through it unseen.
+
+    Where the code could not be read, this is false: the missing thing is the reading, and
+    failing the design for it would send the builder to `design.md` for a problem in
+    `agent.py`. FT-40 reports why the code would not read, and only where the manifest cannot
+    answer it either, so a shipped project whose `agent.py` raises passes this clause in
+    silence.
+    """
+    if stage != "ship":
+        return False
+    if getattr(ctx.declared, "surfaces", ()) or ():
+        return False
+    return bool(getattr(ctx.declared, "imported", False))
+
+
 def _design_reason(ctx: Context, stage: str) -> str | None:
     """Why the design is not written down or not current, or `None` where it is."""
     if ctx.artifacts.design is None:
@@ -752,6 +777,12 @@ def _design_reason(ctx: Context, stage: str) -> str | None:
         return f"{DEFAULT_DESIGN} has nothing under {', '.join(repr(name) for name in blank)}"
     if not quoted_in(text, QUOTED_SECTION):
         return f"{DEFAULT_DESIGN} quotes nobody under {QUOTED_SECTION!r}"
+    if _no_product_at_ship(ctx, stage):
+        return (
+            "the code was read and declares no `Product`, so the product section names "
+            "nothing this gate can read it against. Every project has one, and where the "
+            "builder runs a script and reads what it prints, that script is the product"
+        )
     unnamed = _surfaces_not_in(ctx, text)
     if unnamed:
         return (
@@ -876,19 +907,87 @@ def _research_reason(ctx: Context, stage: str) -> str | None:
 # -- FT-30: design decisions the builder never saw -------------------------------------------
 
 
+# Where a `not_applicable` becomes knowable. Before the code exists a coding agent is
+# forecasting whether the project will rest on a service, write a number or state a rule in a
+# prompt; at `build` it can read the answer off what it wrote.
+KNOWABLE_AT = "build"
+
+
 def ft_30(ctx: Context) -> CheckResult:
-    """Every decision kind has an entry, and none is still `proposed`."""
+    """Every kind has an entry, none is `proposed`, and no `not_applicable` predates the code."""
+    stage = ctx.stage()
     read = _read(ctx, ctx.brief.path)
     missing = ctx.brief.kinds_with_no_decision()
     unseen = ctx.brief.unseen_decisions()
-    if not missing and not unseen:
+    forecast = _not_applicable_before_the_code(ctx, stage)
+    if not missing and not unseen and not forecast:
         return _result(ctx, "FT-30", Outcome.PASSED, read=read)
     parts = []
     if unseen:
         parts.append(f"{', '.join(repr(name) for name in unseen)} still recorded 'proposed'")
     if missing:
         parts.append(f"nothing recorded for {', '.join(repr(name) for name in missing)}")
+    if forecast:
+        parts.append(_forecast_reason(ctx, forecast))
     return _failure(ctx, "FT-30", read, reason="; ".join(parts))
+
+
+def _not_applicable_before_the_code(ctx: Context, stage: str) -> tuple[Decision, ...]:
+    """The `not_applicable` decisions settled before `build`, once the project has reached it.
+
+    A kind with nothing in it is recorded rather than left out, so nothing-to-decide and
+    nobody-thought-about-it are different states. A `not_applicable` written at `brainstorm`
+    is a third thing: a forecast about a project that does not exist yet. One project marked
+    five of the six kinds `not_applicable` there, then put its catalogue into the code with no
+    `dependency` decision, and this check passed over it throughout.
+
+    A decision carrying no `stage` at all is read the same way, since nothing says when it was
+    settled.
+    """
+    if STAGES.index(stage) < STAGES.index(KNOWABLE_AT):
+        return ()
+    return tuple(
+        decision
+        for decision in ctx.brief.decisions
+        if decision.status == "not_applicable"
+        and (
+            decision.stage is None
+            or decision.stage not in STAGES
+            or STAGES.index(decision.stage) < STAGES.index(KNOWABLE_AT)
+        )
+    )
+
+
+def _forecast_reason(ctx: Context, forecast: tuple[Decision, ...]) -> str:
+    """The `not_applicable` decisions that predate the code, with what the runs recorded.
+
+    The evidence is extra text and never the trigger. The case this entry is written from
+    reached its catalogue through `urllib` inside a `Deterministic` node, which no manifest
+    records, so a check that fired only where the runs contradict the answer would have passed
+    over it too.
+    """
+    kinds = ", ".join(repr(name) for name in dict.fromkeys(d.kind for d in forecast))
+    stages = sorted({repr(entry.stage) for entry in forecast if entry.stage in STAGES})
+    unstamped = any(entry.stage not in STAGES for entry in forecast)
+    if stages and unstamped:
+        said = (
+            f"{kinds} recorded 'not_applicable' at {', '.join(stages)}, which is before the "
+            f"code existed, and at a stage the brief leaves unrecorded"
+        )
+    elif stages:
+        said = (
+            f"{kinds} recorded 'not_applicable' at {', '.join(stages)}, which is before the "
+            f"code existed"
+        )
+    else:
+        said = (
+            f"{kinds} recorded 'not_applicable' with the stage it was settled at unrecorded, "
+            f"so when it was settled is unknown"
+        )
+    counts = [f"{len(held)} {word}(s)" for word, held in ctx.produced.by_kind() if held]
+    if counts:
+        said += f". The runs of this project recorded {', '.join(counts)}"
+    return said
 
 
 # -- FT-31: shipped on a development channel -------------------------------------------------
@@ -2284,6 +2383,56 @@ def _recorded_elsewhere(ctx: Context, named: dict[str, list[str]]) -> str:
     return f" {len(found)} of them by runs the project made for itself: {spelt}."
 
 
+def _producing_that_name_nothing(ctx: Context) -> tuple[tuple[str, str], ...]:
+    """Decisions of a kind that carries `produces` which name nothing, once the code exists.
+
+    A `prompt_rule` decision naming no step cannot be joined to a prompt, so the prompts page's
+    unagreed filter reads against nothing and this check has nothing to read. One project's
+    `prompt_rule` decision was agreed as a summary of the rules, and the eighteen places its
+    prompts cut a value short were in none of it.
+
+    Empty before `build`, since a decision is agreed before the code exists.
+    """
+    if STAGES.index(ctx.stage()) < STAGES.index(KNOWABLE_AT):
+        return ()
+    return tuple(
+        (decision.name, decision.kind)
+        for decision in ctx.brief.decisions
+        if decision.kind in PRODUCING_KINDS
+        and decision.status != "not_applicable"
+        and not decision.produces
+    )
+
+
+def _nameless(unnameable: tuple[tuple[str, str], ...], stage: str) -> str:
+    """What to say about decisions naming nothing, where the stage does not yet fail on them."""
+    if not unnameable:
+        return ""
+    spelt = ", ".join(f"{name} ({kind})" for name, kind in unnameable)
+    return (
+        f" {len(unnameable)} decision(s) of a kind that carries `produces` name nothing: "
+        f"{spelt}. This fails from stage `ship`."
+    )
+
+
+def _refuse_a_decision_naming_nothing(
+    ctx: Context, read: tuple[str, ...], unnameable: tuple[tuple[str, str], ...]
+) -> CheckResult | None:
+    """The failure for decisions that name nothing, or ``None`` where there is none to make.
+
+    Taken before the join, since a decision naming nothing has no name to read against a run.
+    """
+    if not unnameable or ctx.stage() != "ship":
+        return None
+    return _failure(
+        ctx,
+        "FT-42",
+        read,
+        count=str(len(unnameable)),
+        list=", ".join(f"{name} ({kind}, names nothing)" for name, kind in unnameable),
+    )
+
+
 def ft_42(ctx: Context) -> CheckResult:
     """Every name under `produces` against what the runs recorded: reported, a failure at `ship`.
 
@@ -2294,6 +2443,10 @@ def ft_42(ctx: Context) -> CheckResult:
     """
     named = _named_under_produces(ctx)
     read = (ctx.artifacts.relative(ctx.brief.path) or "brief.toml", f"{DEFAULT_RUNS}/")
+    unnameable = _producing_that_name_nothing(ctx)
+    refused = _refuse_a_decision_naming_nothing(ctx, read, unnameable)
+    if refused is not None:
+        return refused
     if not named:
         return _result(
             ctx,
@@ -2303,6 +2456,7 @@ def ft_42(ctx: Context) -> CheckResult:
                 "No decision names what it became. `produces` on a dependency, shape, "
                 "constant or prompt_rule decision names the tools, nodes or numbers it "
                 "produced, and this check reads those against what the runs recorded."
+                + _nameless(unnameable, ctx.stage())
             ),
         )
     if not ctx.produced.runs_read:
@@ -2336,6 +2490,7 @@ def ft_42(ctx: Context) -> CheckResult:
             detail=(
                 f"{len(named) - len(unread)} name(s) under `produces` were all recorded by "
                 f"runs under {DEFAULT_RUNS}/.{_recorded_elsewhere(ctx, named)}{aside}"
+                + _nameless(unnameable, ctx.stage())
             ),
         )
     spelt = ", ".join(f"{name} ({', '.join(named[name])})" for name in missing)
@@ -2350,6 +2505,7 @@ def ft_42(ctx: Context) -> CheckResult:
             f"{len(missing)} of {len(named)} name(s) under `produces` were recorded by no run "
             f"of this project: {spelt}. A decision is agreed before the code exists, which is "
             f"what `build` is for. This fails from stage `ship`.{aside}"
+            + _nameless(unnameable, ctx.stage())
         ),
     )
 

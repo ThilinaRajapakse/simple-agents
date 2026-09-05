@@ -16,8 +16,8 @@ support team disagreed with is not remembered anywhere.
 ## The product
 
 The terminal. One interaction: running the answer script with a question starts a run, and the
-printed span is that run's return value, read once. Nothing reads an artifact, because none
-outlives the run, and nothing records a judgement.
+printed span is that run's return value, read once. The run leaves no artifact behind,
+and judgements are unrecorded.
 
 ## What the builder said about it
 

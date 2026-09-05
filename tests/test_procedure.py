@@ -78,7 +78,15 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # capability nothing in the index points at is one a coding agent has to find by accident.
 # And from 3959 on 2026-09-05, for the prompts page: a builder who never sees a prompt cannot
 # agree to one, and a coding agent that does not know the page exists cannot point at it.
-WORD_BUDGET = 3998
+# And from 3998 on 2026-09-05, for three instructions the procedure did not carry. `rerun` for
+# a run whose process was killed: one project read the resume paragraph, correctly ruled it
+# out, and rebuilt chunked checkpointing around a facility the library already had. A
+# `prompt_rule` decision put with the prompt rather than a summary of it, which is what hid
+# eighteen truncation sites on that project. And designing the product with the builder at
+# `ship`, for the second project running that built it after the last gate. The paragraph
+# restating `involvement`'s own scaffold was written and then cut, which is what the budget is
+# against.
+WORD_BUDGET = 4177
 # Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
 # three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
 # `simple-agents record` command, seven words over the ceiling across eight sentences.
@@ -1167,14 +1175,35 @@ class TestTheInvolvementQuestion:
         assert question("involvement").stage == "brainstorm"
         assert question("involvement").required
 
-    def test_it_offers_the_three_levels_and_says_what_it_does_not_move(self) -> None:
-        """It sets when the six kinds are put to the builder, not whether."""
+    def test_it_offers_two_granularities_and_says_what_it_does_not_move(self) -> None:
+        """It sets how coarsely the six kinds are put to the builder, not whether."""
         scaffold = question("involvement").scaffold
 
-        assert "every decision as it comes" in scaffold
-        assert "batch at each stage gate" in scaffold
+        assert "each decision as it arises" in scaffold
+        assert "a batch put at the point" in scaffold
         assert "not whether" in scaffold
         assert "FT-30" in scaffold
+
+    def test_a_review_after_the_code_is_not_on_offer(self) -> None:
+        """One project answered "batch at each stage gate", where the code is already written.
+
+        A decision put then costs a rebuild to change, so the review is a formality, and
+        FT-30 cannot tell agreement from a rubber stamp.
+        """
+        scaffold = question("involvement").scaffold
+
+        assert "before the thing it decides is built" in scaffold
+        assert "That is not a choice" in scaffold
+        assert "stage gate" not in scaffold
+
+    def test_a_decision_found_mid_build_is_not_held_for_a_batch(self) -> None:
+        """Writing the code is where a threshold or a prompt rule is discovered."""
+        assert "not held for the next batch" in question("involvement").scaffold
+
+    def test_the_two_expensive_kinds_are_never_batched(self) -> None:
+        scaffold = question("involvement").scaffold
+
+        assert "`dependency` and `shape` are put on their own" in scaffold
 
 
 class TestThePresentationQuestion:

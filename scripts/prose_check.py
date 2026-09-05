@@ -25,8 +25,8 @@ Two things this cannot check:
 
 1. Whether a clause explains a consequence to the reader or defends a design decision to the
    maintainer. That distinction stays in CLAUDE.md.
-2. Whether an example that parses and resolves does what it says. Nothing here executes one,
-   so an example that leaves out a node, or passes a value of the wrong shape, or shows an
+2. Whether an example that parses and resolves does what it says. Examples are read and
+   not run, so an example that leaves out a node, or passes a value of the wrong shape, or shows an
    output the code no longer produces, passes every rule above. Running the example is what
    finds that, and `tests/test_labelling_pass.py` is what that looks like.
 """
@@ -135,6 +135,42 @@ NEGATION_CASCADE = re.compile(
     re.I,
 )
 
+# The bare report of what has not happened, with the conclusion left for the reader to
+# derive: "no run has recorded a duration", "nothing records the direction". The cascade
+# above catches these two only when a `so` clause follows, and most of them have no `so`
+# clause. The verb after `nothing` has to assert a record, which leaves the copula alone:
+# "the number comes from inside the lock, so nothing is out of order" states a consequence,
+# and that is what the rules ask for.
+_BARE_ABSENCE = (
+    r"no \w+ (?:has|have|had) (?:ever )?\w+(?:ed|en)\b"
+    r"|nothing (?:\w+ ){0,2}?(?:says|tells|reports|records|names|declares|describes|knows"
+    r"|tracks|shows|measures|executes|does|reads|writes|checks|enforces|verifies|holds"
+    r"|carries|covers)\b"
+)
+# Only where the sentence opens on it. `nothing` in the object position is a different
+# sentence: "a tool that annotates nothing says so" reports what the tool did.
+BARE_ABSENCE = re.compile(rf"(?:[.!?]\s+|\*\*)(?:{_BARE_ABSENCE})", re.I)
+BARE_ABSENCE_OPENING = re.compile(rf"^(?:{_BARE_ABSENCE})", re.I)
+# Leading list markers, quoting and emphasis, so a bulleted sentence opens on its first word.
+LINE_MARKERS = " \t->*#|"
+
+
+def _opens_a_sentence(lines: list[str], index: int) -> bool:
+    """Whether line ``index`` starts a sentence rather than continuing a wrapped one.
+
+    Prose here is hard-wrapped, so a line beginning with `nothing` is usually the middle of a
+    sentence. The line before it is what says which::
+
+        _opens_a_sentence(["It is read once.", "Nothing else reads it."], 1)
+    """
+    for previous in reversed(lines[:index]):
+        stripped = previous.strip()
+        if not stripped:
+            return True
+        return stripped.endswith((".", "!", "?", ":", '"""', "::"))
+    return True
+
+
 # "Nobody does X" for a state that has a name. Thilina, 2026-08-29: *"Never use the
 # construction 'Nobody does...', 'Nobody agreed...', 'Nobody saw...'. Why the fuck do you just
 # not write what you mean plainly."* "A design nobody has agreed to" is "an unconfirmed
@@ -144,6 +180,7 @@ NEGATION_CASCADE = re.compile(
 NOBODY = re.compile(
     r"\b[Nn]obody (?:has|had|have|is|was|does|did|can|will|opens|agreed|agrees|saw|sees|"
     r"answered|answers|looked|looks|asked|asks|waits|waiting|recorded|records|reads|"
+    r"decided|decides|chose|chooses|checked|checks|ran|runs|wrote|writes|knew|knows|"
     r"acting|acts|attends|remembers|measured|notices)\b"
 )
 
@@ -350,6 +387,12 @@ HINTS = {
         "unknown' rather than 'nothing says X', 'X is undeclared' rather than 'no step has "
         "declared X'. One short declarative sentence, and no account of the reasoning that "
         "reached it."
+    ),
+    "bare_absence": (
+        "Absence reported as what has not happened, leaving the conclusion to the reader. "
+        "State it: 'no run has recorded a duration' is 'Duration unmeasured', 'nothing "
+        "records the direction' is 'Direction unrecorded'. Where a sentence states a "
+        "mechanism and its consequence it is already right, and reads 'so nothing is lost'."
     ),
     "emphatic": (
         "Emphatic construction or narrative about people failing. Describe the mechanism."
@@ -595,6 +638,10 @@ def check_file(path: Path, *, builder_facing: bool) -> list[Violation]:
             add(i, "nobody")
         if NEGATION_CASCADE.search(line):
             add(i, "negation_cascade")
+        elif BARE_ABSENCE.search(line) or (
+            _opens_a_sentence(lines, i) and BARE_ABSENCE_OPENING.search(line.lstrip(LINE_MARKERS))
+        ):
+            add(i, "bare_absence")
 
     if path.suffix == ".py":
         found.extend(_check_docstrings(path, text, lines))

@@ -1465,7 +1465,7 @@ returning it.
 **`matches` has no default.** What counts as a correct answer is a decision about the task:
 whether case matters, whether a longer span containing the answer counts, whether a date may be
 written either way. A library default would decide it silently, and the project would score
-against a rule nobody chose.
+against a rule the library set.
 
 ### 6.1 Rollouts and seeds
 
@@ -1641,8 +1641,8 @@ and is required wherever a `spends_money` tool is reachable.
 
 ### 6.4 Scoring rollouts that already ran
 
-`suite.rescore` scores rollouts from their run directories. Nothing executes a pipeline, calls a
-model or spends anything.
+`suite.rescore` scores rollouts from their run directories. Rescoring is offline: no
+pipeline runs, no model is called, and spend stays at zero.
 
 ```python
 results = suite.rescore(run_dir="runs/eval/eval_a1226bc495df", split="held_out")

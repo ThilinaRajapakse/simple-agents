@@ -132,6 +132,8 @@ because = "the four sources the builder asked for are not in any catalogue this 
 
 **One decision covers as many names as it settled.** A decision agreeing the rate limits every source asks for names all of them.
 
+**A decision of one of these four kinds names something.** One that names nothing can be joined to no part of the code: the prompts page's unagreed filter reads against nothing, and FT-42 has nothing to read. It is reported from stage `build`, where the code exists, and fails from `ship`, which is how FT-42 reads a name no run recorded. Neither fires earlier, because a decision is agreed before the code it describes is written.
+
 FT-42 reads these against the node ids, tool names and constants of every run under `runs/`, whatever its role, and fails from stage `ship` on a name no run recorded. A decision the builder agreed to can be about a pipeline the project runs for itself, and a name that pipeline recorded is a name the project built; the report says which roles recorded each. It reads across every run rather than the newest: a project with more than one pipeline runs whichever it was asked for, so the newest run describes one of them. The report prints the other direction, what the runs hold that no decision names (§4.4).
 
 ---
@@ -200,7 +202,7 @@ All twenty-nine are `artifact` surface: they read files and run nothing.
 | FT-25 | the brief's `consultation` answer, `tools` in the run's manifest, and `nodes` in `evals/results/<latest>.json` | the answer names something to ask and no consultation tool reaches a node; a pass notes where neither the run nor any rollout asked through it |
 | FT-32 | the brief's `tool_effects` answer, and `tools` in the run's manifest | the run declares a side-effect class the answer never mentions |
 | FT-33 | `BUILD-LOG.md`, and when the run the checks read ended | the log was last written before that run |
-| FT-34 | `design.md`, and `design_confirmed_at` in `brief.toml` | at stage `shape`, a section is empty, the builder is not quoted, or it was confirmed earlier |
+| FT-34 | `design.md`, `design_confirmed_at` in `brief.toml`, and the `Product` the code declares | at stage `shape`, a section is empty, the builder is not quoted, or it was confirmed earlier; at `ship`, the code was read and declares no `Product` |
 | FT-35 | `unfinished` in the manifest of every run this pipeline made | a node spent a whole allowance without calling a tool, consulting or delegating |
 | FT-36 | `research.md`, and `research_confirmed_at` in `brief.toml` | at stage `research`, a section is empty, a candidate row has no outcome, or it was confirmed earlier |
 | FT-01 | `evals/results/<latest>.json` | no evaluation, at tier `evaluated` |
@@ -215,7 +217,7 @@ All twenty-nine are `artifact` surface: they read files and run nothing.
 | FT-39 | `comments.toml`, and `comments_block_gates` in `brief.toml` | a comment the builder left is still `open` and the brief says open comments block |
 | FT-40 | the pipelines `agent.py` declares, or `nodes` in `runs/<latest>/manifest.json` where the code declares none | a step is still `NotBuilt`: counted at every stage, a failure from `ship` |
 | FT-41 | `suspensions` in the manifest of every run under `runs/` | a run stopped to ask and is still waiting, and no run was ever resumed: counted at every stage, a failure from `ship` |
-| FT-42 | `produces` in the brief, against `nodes`, `tools` and `constants` in the manifest of every agent run under `runs/` | a decision names something no run of this project recorded: counted at every stage, a failure from `ship` |
+| FT-42 | `produces` in the brief, against `nodes`, `tools` and `constants` in the manifest of every agent run under `runs/` | a decision names something no run of this project recorded, or a decision of a producing kind names nothing at all: counted at every stage, a failure from `ship` |
 | FT-43 | `mcp` in `runs/<latest>/manifest.json`, one entry per MCP server the run declared tools from | a server offers a description, a schema or a set of tools other than what the project declared |
 | FT-44 | `recorded_at` on every entry and decision in `brief.toml`, against the clock the suite runs on | a stamp is ahead of the clock by more than five minutes, so it was composed rather than read |
 
@@ -375,10 +377,10 @@ project makes for itself declares RunEnvelope(role=...) so it is not read as the
      FAIL  FT-01  No evaluation at all
 
         No evaluation results found, but this project claims tier `evaluated`. A demo run is
-        a single input chosen by someone who wanted it to pass, so it does not measure
-        behaviour on inputs nobody chose. Create a labeled example set, define a scoring
-        function over it, and run the evaluation. If this project is a throwaway, declare
-        tier `prototype` in the brief and this gate will not fire.
+        a single input chosen by someone who wanted it to pass, so its result covers that
+        one input. Create a labeled example set, define a scoring function over it, and run
+        the evaluation. If this project is a throwaway, declare tier `prototype` in the
+        brief and this gate will not fire.
 
   blocked  FT-45  The number was measured over a pipeline the project does not declare
         No readable evaluation results, which FT-01 reports.
@@ -551,6 +553,32 @@ it under `from`.
 ```
 
 Seven entries are read: `what_it_does`, `purpose`, `end_user`, `smallest_worthwhile`, `finished_version`, `not_building` and `success_story`. The rest of the brief says how the project is built or how well, which the note above and the checks already cover. A `from` naming an entry the brief has none of is reported beside it.
+
+**The project's own code would not read.** Two checks ask what `agent.py` declares, and both fall back when it will not import: FT-40 reads the run record instead, and FT-34 stops asking whether a `Product` is declared. Both then pass, so the note is what says the reading failed.
+
+```
+agent.py could not be imported (RuntimeError: no module named 'httpx'). Until it
+imports, the checks that ask what the code declares read the run record instead or
+stop asking: a step declared and never built (FT-40) is read off the manifest, and
+whether a shipped project declares a `Product` (FT-34) goes unread. Run
+`python -c "import agent"` in the project root.
+```
+
+A project with no `agent.py` is silent here rather than reported: it has not written one yet, and FT-40 says so under its own check.
+
+**A facility the research adopted that nothing reached.** From stage `build`. `research.md`'s survey says what became of each candidate, and FT-36 reads that the cell says something rather than what it says. This reads an `adopted` row against what the runs recorded:
+
+```
+research.md adopted 3 library facilities that no run has recorded: http_fetch and
+read_page (row 'fetching a page'), memory_search (row 'the taste model'),
+extract_to_schema (row 'reading a description'). Either use them, or record what
+the project built instead under `produces` on the decision that replaced them.
+Read 14 adopted rows; 6 name something this library ships.
+```
+
+Only what a row wrote in backticks is read, so a row calling something "the library's page fetcher" is not joined and the count says how many rows were. A tool is recognised by the version a run recorded as well as by its name, so a built-in registered under a name of the project's own is read as reached; a run recorded against an older library carries an older version, which the name still catches.
+
+**It reports and never fails.** A candidate adopted at `research` and dropped at `shape` is a design that changed, and the survey has no way to record that. What the note cannot see is what replaced it: a fetch written with `urllib` inside a `Deterministic` node reaches no manifest, so the absence is reported and the substitute is not.
 
 **What the runs recorded that no decision names.** The other side of `produces` (§2.2), from stage `shape`. A decision names what it became; this is everything the runs hold that no decision named: a tool that ran, a step that ran, a number the code defines.
 

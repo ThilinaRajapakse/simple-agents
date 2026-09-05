@@ -75,7 +75,7 @@ answer = "A confident answer to a question the collection does not cover, which 
 [entries.what_this_turns_on]
 status = "answered"
 recorded_at = "2026-08-27T09:14:02Z"
-answer = "Deciding a question is unanswerable. The other three parts have established approaches and the choice between them is cost; nothing found says how to decide absence well, and what was adopted records it rather than deciding it. Finding passages worded differently from the question is second, and is why retrieval runs both methods."
+answer = "Deciding a question is unanswerable. The other three parts have established approaches and the choice between them is cost; how to decide absence well is unsettled in what was found, and what was adopted records that. Finding passages worded differently from the question is second, and is why retrieval runs both methods."
 
 [entries.ground_truth]
 status = "answered"

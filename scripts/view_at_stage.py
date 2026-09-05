@@ -13,7 +13,7 @@ copy of the graph is maintained and nothing here can drift from `agent.py`:
 ``measure``      everything the project has
 ===============  ============================================================
 
-**A `shape` stage this produces is a built pipeline nobody has run.** A real project at that
+**A `shape` stage this produces is a built pipeline with no run behind it.** A real project at that
 gate has most of its steps standing in as `NotBuilt`, which is a different picture and a
 different `agent.py`. What this shows is the run overlay and the evaluation removed, which is
 what the drawing does with nothing to overlay.

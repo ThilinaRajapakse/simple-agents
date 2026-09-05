@@ -33,6 +33,9 @@ __all__ = [
     "the_run_to_compare",
     "IDEA_SECTIONS",
     "PRODUCT_SECTION",
+    "ADOPTED",
+    "IN_BACKTICKS",
+    "adopted_rows",
     "empty_sections",
     "other_roles",
     "read_json",
@@ -293,6 +296,54 @@ def survey_rows(text: str, section: str, column: str) -> tuple[tuple[str, str], 
             before = [cell.strip("*_` ") for cell in cells[:index] if cell.strip("*_` ")]
             outcome = cells[index].strip("*_` ") if index < len(cells) else ""
             found.append((" / ".join(before) or "an unnamed row", outcome))
+    return tuple(found)
+
+
+ADOPTED = "adopted"
+"""What an ``Outcome`` cell opens with where the candidate was taken up."""
+
+IN_BACKTICKS = re.compile(r"`([^`]+)`")
+"""Every name a markdown cell wrote in backticks."""
+
+
+def adopted_rows(text: str, section: str, column: str) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Each survey row taken up, with the names it wrote in backticks.
+
+    A row is read as adopted where its ``column`` cell opens with ``adopted``, which is the
+    word `docs/procedure.md` gives for the outcome::
+
+        adopted_rows(research, "What was found against each part", "Outcome")
+        # (('fetching a page', ('http_fetch', 'read_page')), ...)
+
+    Only what a row wrote in backticks is returned. A row naming a facility in prose is not
+    read, and the caller says how many rows it could read, so an unjoined row reads as unread
+    rather than as covered.
+    """
+    found: list[tuple[str, tuple[str, ...]]] = []
+    for rows in _tables_under(text, section):
+        header, *body = rows
+        keys = [_heading_key(cell) for cell in header]
+        if _heading_key(column) not in keys:
+            continue
+        index = keys.index(_heading_key(column))
+        for cells in body:
+            if all(set(cell) <= set("-: ") for cell in cells):
+                continue
+            if index >= len(cells):
+                continue
+            outcome = cells[index].strip("*_` ")
+            if not outcome.casefold().startswith(ADOPTED):
+                continue
+            before = [cell.strip("*_` ") for cell in cells[:index] if cell.strip("*_` ")]
+            named = tuple(
+                dict.fromkeys(
+                    name.strip()
+                    for cell in cells
+                    for name in IN_BACKTICKS.findall(cell)
+                    if name.strip()
+                )
+            )
+            found.append((" / ".join(before) or "an unnamed row", named))
     return tuple(found)
 
 

@@ -89,7 +89,7 @@ class BriefEntry:
 
     A question a gate puts again at every stage fails FT-24 while ``asked_at`` is absent or
     names an earlier stage than the project is at, which is how a re-asked question differs
-    from one settled once. Nothing reads it on any other entry.
+    from one settled once. On any other entry it is validated and read back by nothing.
 
     **``recorded_at`` is required on an ``answered`` entry**, and a re-asked question moves it
     with ``asked_at``, since what it dates is the writing.
