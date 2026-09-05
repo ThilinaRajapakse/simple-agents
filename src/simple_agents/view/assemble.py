@@ -739,7 +739,7 @@ def _first_pass(
         "stages_asked": read_stages(brief),
         "idea": read_idea(root, brief),
         "research": read_research(root, brief, reached=reached),
-        "operating": read_operating(root),
+        "operating": read_operating(root, product=getattr(loaded, "product", None)),
         "walks": None,
         "examples": read_examples(root),
         "decisions_join": _join_decisions(declared, brief)

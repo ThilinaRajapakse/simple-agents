@@ -530,6 +530,7 @@ button.nm:hover{color:var(--accent)}
 .pdraw .psurface rect{fill:var(--surface);stroke:var(--line-strong);stroke-width:1.2}
 .pdraw .psurface.ppipe rect{fill:var(--accent-soft);stroke:var(--accent)}
 .pdraw .psurface.standin rect{stroke:var(--attention);stroke-dasharray:5 4}
+.pdraw .psurface.pjob rect{stroke:var(--edge);stroke-dasharray:2 3}
 .pdraw .pname{fill:var(--ink);font-family:"JetBrains Mono",monospace;font-size:13px}
 .pdraw .psub{fill:var(--muted);font-family:"JetBrains Mono",monospace;font-size:11.5px}
 .pdraw .parrow path{stroke:var(--edge);stroke-width:1.4;fill:none}
@@ -4971,6 +4972,34 @@ function ranRegion(op) {
     <p class="asks">The figures above this are the live runs alone.</p></div>`;
 }
 
+/* The declared jobs against what the live runs say started them. A trigger the runs carry
+   that the product does not declare is listed and marked. */
+function jobsRegion(op) {
+  const rows = op.jobs || [];
+  const declared = rows.filter(j => j.declared).length, undeclared = rows.length - declared;
+  const ran = j => !j.runs ? "No run yet"
+    : `${fmt(j.runs)} run${j.runs === 1 ? "" : "s"} · last ${esc(j.ago)} ago${
+        j.ended ? ` · ${esc(j.ended)}` : ""}`;
+  const held = j => [j.waiting ? `${fmt(j.waiting)} waiting on a person` : "",
+                     j.on_clock ? `${fmt(j.on_clock)} waiting on a clock` : "",
+                     j.shelved ? `${fmt(j.shelved)} shelved question${j.shelved === 1 ? "" : "s"}` : ""]
+    .filter(Boolean).join(", ");
+  return `<div class="mregion" data-section="jobs">${measureTitle("Jobs",
+    `${fmt(declared)} declared${undeclared ? ` · ${fmt(undeclared)} undeclared` : ""}`)}
+    ${rows.map(j => `<div class="stuckrow">
+      <span class="mono">${esc(j.name)}</span>
+      <span>${j.declared ? ran(j) : `<span class="bad">Not declared</span> · ${ran(j)}`}<br>
+        <span class="asks">${j.declared
+          ? `Runs <span class="mono">${esc(j.pipeline)}</span>${j.after
+              ? ` · after ${esc(j.after)}` : ""}${held(j) ? ` · ${held(j)}` : ""}`
+          : `${j.pipeline ? `Runs of <span class="mono">${esc(j.pipeline)}</span> say this
+            started them` : "A run says this started it"}, and the product declares no such
+            job. Add it to <span class="mono">Product(jobs=[...])</span> or fix the name the
+            scheduler passes.`}</span></span><span></span></div>`).join("")}
+    <p class="asks">Read from what each live run recorded as its trigger. A run with none was
+    asked for by somebody.</p></div>`;
+}
+
 function changesRegion(op) {
   const rows = (op.changes || []).slice().reverse();
   return `<div class="mregion">${measureTitle("Changes",
@@ -5060,7 +5089,13 @@ def product() -> Product:
   }
   const reaching = held.surfaces.filter(s => s.reaches_the_agent);
   const showing = held.surfaces.filter(s => !s.reaches_the_agent);
-  const pipes = [...new Set(reaching.map(s => s.pipeline || s.pipeline_named).filter(Boolean))];
+  const jobs = held.jobs || [];
+  /* The left column is what starts or answers a run: the surfaces, then after a gap the jobs,
+     which start one without the end user. Each keeps its own row. */
+  const GAP = jobs.length && reaching.length ? 0.6 : 0;
+  const left = [...reaching.map((s, k) => ({...s, row: k, job: false})),
+                ...jobs.map((j, k) => ({...j, row: reaching.length + GAP + k, job: true}))];
+  const pipes = [...new Set(left.map(s => s.pipeline || s.pipeline_named).filter(Boolean))];
   /* Three columns: what the end user acts on, what it reaches, and what they read. Every
      surface keeps its own row, so a label never sits on another surface's arrow, and a
      pipeline sits level with the middle of whatever points at it. */
@@ -5068,16 +5103,16 @@ def product() -> Product:
   /* The box carries the kind, so the arrow carries what the box cannot: the channel an
      answer travels through. An arrow with nothing to add is drawn bare. */
   const label = s => s.through || "";
-  const widest = [...reaching.map(label), ...showing.map(s => s.reads ? "writes " + s.reads : "")]
+  const widest = [...left.map(label), ...showing.map(s => s.reads ? "writes " + s.reads : "")]
     .reduce((a, w) => Math.max(a, String(w).length), 0);
   const GX = Math.max(110, widest * 6.4 + 30);
   const row = i => 5 + i * (SH + GY);
-  const rows = Math.max(reaching.length, showing.length, pipes.length, 1);
-  const W = SW + GX + PW + GX + SW + 8, H = rows * (SH + GY) + 8;
+  const leftRows = left.length ? left[left.length - 1].row + 1 : 0;
+  const rows = Math.max(leftRows, showing.length, pipes.length, 1);
+  const W = SW + GX + PW + GX + SW + 8, H = Math.ceil(rows * (SH + GY) + 8);
   const at = {};
   pipes.forEach((name, i) => {
-    const mine = reaching.map((s, k) => [s, k]).filter(([s]) =>
-      (s.pipeline || s.pipeline_named) === name).map(([, k]) => k);
+    const mine = left.filter(s => (s.pipeline || s.pipeline_named) === name).map(s => s.row);
     at[name] = mine.length ? mine.reduce((a, b) => a + b, 0) / mine.length : i;
   });
   const box = (x, y, w, words, sub, cls) => `<g class="psurface ${esc(cls || "")}">
@@ -5092,11 +5127,11 @@ def product() -> Product:
     <text x="${(x1 + x2) / 2}" y="${Math.min(y1, y2) - 13}" text-anchor="middle">${
       esc(words)}</text></g>`;
   let svg = "";
-  reaching.forEach((s, i) => {
-    const y = row(i);
-    svg += box(4, y, SW, s.name, s.kind_words, s.stand_in ? "standin" : "");
+  left.forEach(s => {
+    const y = row(s.row);
+    svg += box(4, y, SW, s.name, s.kind_words, s.job ? "pjob" : s.stand_in ? "standin" : "");
     const name = s.pipeline || s.pipeline_named;
-    const py = row(at[name] === undefined ? i : at[name]) + SH / 2;
+    const py = row(at[name] === undefined ? s.row : at[name]) + SH / 2;
     svg += link(SW + 8, y + SH / 2, SW + GX, py, label(s));
   });
   pipes.forEach(name => {
@@ -5113,12 +5148,15 @@ def product() -> Product:
   const bad = held.surfaces.filter(s => s.missing.length);
   const standIn = held.surfaces.filter(s => s.stand_in);
   const params = held.parameters || [];
-  return `<div class="mregion" data-section="product">${measureTitle("The product",
-    `${fmt(held.surfaces.length)} ${held.surfaces.length === 1 ? "surface" : "surfaces"}`)}
-    <p>What the end user meets, declared in <span class="mono">${
-      esc(held.declared_in || "the code")}</span> and joined to what the pipelines have.</p>
+  const counts = `${fmt(held.surfaces.length)} ${held.surfaces.length === 1 ? "surface" : "surfaces"}`
+    + (jobs.length ? ` · ${fmt(jobs.length)} ${jobs.length === 1 ? "job" : "jobs"}` : "");
+  return `<div class="mregion" data-section="product">${measureTitle("The product", counts)}
+    <p>What the end user meets${jobs.length ? " and what runs by itself" : ""}, declared in
+      <span class="mono">${esc(held.declared_in || "the code")}</span> and joined to what the
+      pipelines have.</p>
     <svg class="pdraw" viewBox="0 0 ${W} ${H}" role="img"
-      aria-label="The surfaces the end user meets">
+      aria-label="The surfaces the end user meets${jobs.length
+        ? " and the jobs that run without them" : ""}">
       <defs><marker id="pr" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="9"
         markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
         <path d="M0 0 L8 4 L0 8 z"/></marker></defs>${svg}</svg>
@@ -5133,6 +5171,13 @@ def product() -> Product:
         s.writers.length ? `<br><span class="asks">Written by ${s.writers.map(w =>
           `<span class="mono">${esc(w)}</span>`).join(", ")}</span>` : ""}${
         s.missing.length ? `<br><span class="bad">${esc(cap(s.missing.join("; ")))}.</span>`
+          : ""}</span></div>`).join("")}${jobs.map(j => `<div class="prow">
+      <span class="mono">${esc(j.name)}</span>
+      <span>Job${j.does ? ` · ${esc(j.does)}` : ""}<br><span class="asks">Runs <span
+        class="mono">${esc(j.pipeline_named)}</span>${j.after ? ` · after <span class="mono">${
+        esc(j.after)}</span>` : ""} · the project's own scheduler starts it and passes <span
+        class="mono">trigger=${esc(JSON.stringify(j.name))}</span></span>${
+        j.missing.length ? `<br><span class="bad">${esc(cap(j.missing.join("; ")))}.</span>`
           : ""}</span></div>`).join("")}</div>
     ${!held.reaches_the_agent ? `<p class="bad">No interaction here starts or answers a run.
       What the end user does never reaches the agent.</p>` : ""}
@@ -6233,7 +6278,9 @@ function renderSections() {
       stuckRegion(op)}${shelvedRegion(op)}</div>`);
     operateHeld.push(`<div class="mrow change" data-section="conversations">${
       conversationsRegion(op)}${changesRegion(op)}</div>`);
-    operateHeld.push(ranRegion(op));
+    operateHeld.push((op.jobs || []).length
+      ? `<div class="mrow outcomes" data-section="ran">${ranRegion(op)}${jobsRegion(op)}</div>`
+      : ranRegion(op));
   }
   shipHeld.push(checksRegion());
   shipHeld.push(productRegion());

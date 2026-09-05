@@ -531,7 +531,10 @@ the drawing, one row a surface: what the end user does there, the channel an ans
 through with who that channel says answers, the steps that write what an artifact surface
 shows, and any name the declaration uses that the code does not have. A channel still
 answered by a stand-in is marked, and so is a product no interaction of which reaches the
-agent. **Parameters** are the numbers the declaring module defines, which no run reaches.
+agent. A declared job (`docs/product.md` §6) sits under the surfaces with a dotted outline,
+joined to the pipeline it runs; its row says what it does, which job it follows, and the
+name the project's scheduler passes as `trigger=`. **Parameters** are the numbers the
+declaring module defines, which no run reaches.
 
 **Retention** is what a run of the shipped project keeps, in the builder's own answers.
 
@@ -573,6 +576,12 @@ alone.
 
 **What has run** is every run the project has, split by what each was for: real traffic, made
 while building, and an evaluation's rollouts. One figure over all three describes none of them.
+
+**Jobs** is every declared job against what the live runs recorded as their `trigger`: how
+many runs it has made, when the last one started and how it ended, and how many of its runs
+wait on a person or a clock or left a question shelved. A declared job with no run says so.
+A trigger the runs carry that the product does not declare is listed and marked, with what
+to do about it. The region appears once a run records a trigger or the product declares a job.
 
 ### 6.9 The brainstorm and research pages, region by region
 

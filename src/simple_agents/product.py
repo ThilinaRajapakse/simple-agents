@@ -20,7 +20,14 @@ tool declared what it touches. Declaration is the mechanism here too.
                     does="the person on the rota answers when the agent asks"),
             Surface("the outbox", "reads_the_artifact", reads="outbox",
                     does="the reply lands there as a draft for a person to send"),
+        ], jobs=[
+            Job("nightly digest", pipeline="digest",
+                does="every night at 02:00, over the day's tickets"),
         ])
+
+A `Job` is a run that starts without the end user: a schedule, a change in a store, another
+job finishing. The project's own scheduler runs it and passes the job's name as
+``Pipeline.run(trigger=...)``, which is what joins the runs back to the declaration.
 
 `simple-agents view` draws it on the `ship` page, joined to the pipelines, the channels and
 the stores it names. The declaration is read from the code and nothing writes it into a run
@@ -37,6 +44,7 @@ from .errors import ConfigurationError
 __all__ = [
     "Product",
     "Surface",
+    "Job",
     "INTERACTION_KINDS",
     "product_factory",
     "registered_product",
@@ -131,37 +139,128 @@ class Surface:
 
 
 @dataclass(frozen=True, slots=True)
+class Job:
+    """One run that starts without the end user: on a schedule, on a change, after another job.
+
+    ``name`` is what the builder calls it, ``pipeline`` the registered name of the pipeline
+    it runs, and ``does`` says when it runs, in the builder's words::
+
+        Job("nightly digest", pipeline="digest", does="every night at 02:00, over the day's tickets")
+        Job("rank", pipeline="rank", does="after every corpus change", after="nightly digest")
+
+    ``after`` names another job in the same ``Product`` that this one follows. Nothing here
+    runs: the project's own scheduler starts the pipeline and passes the job's name as
+    ``Pipeline.run(trigger="nightly digest")``, so each run says which job started it and the
+    view joins the runs to this declaration. A job with no name or no pipeline raises
+    ``ConfigurationError``.
+    """
+
+    name: str
+    pipeline: str
+    does: str = ""
+    after: str | None = None
+
+    def __post_init__(self) -> None:
+        if not str(self.name).strip():
+            raise ConfigurationError(
+                "A Job was declared with no name. The name is what the builder calls it, and "
+                "what the scheduler passes as trigger=: "
+                'Job("nightly digest", pipeline="digest", does="every night at 02:00").'
+            )
+        if not str(self.pipeline or "").strip():
+            raise ConfigurationError(
+                f"The job {self.name!r} names no pipeline. Add pipeline=, the registered name "
+                f"of the pipeline it runs: "
+                f'Job({self.name!r}, pipeline="digest", does="every night at 02:00").'
+            )
+        if self.after is not None and str(self.after).strip() == str(self.name).strip():
+            raise ConfigurationError(
+                f"The job {self.name!r} declares after={self.name!r}, which is itself. "
+                f"after= names another job of the same Product that this one follows."
+            )
+
+    @property
+    def kind_words(self) -> str:
+        """The trigger as a person reads it: ``"Job · after nightly digest"`` or ``"Job"``."""
+        return f"Job · after {self.after}" if self.after else "Job"
+
+
+@dataclass(frozen=True, slots=True)
 class Product:
-    """What the end user uses: every surface they meet the agent through.
+    """What the end user uses: the surfaces they meet the agent through, and the jobs that
+    run without them.
 
     ::
 
-        Product(surfaces=[Surface("the support inbox", "starts_a_run", pipeline="triage")])
+        Product(surfaces=[Surface("the support inbox", "starts_a_run", pipeline="triage")],
+                jobs=[Job("nightly digest", pipeline="digest", does="every night at 02:00")])
 
-    Declared once per project through :func:`product_factory`. A product with no surface that
-    reaches the agent is accepted and reported by the page, because that is a real state a
-    project passes through and refusing it would refuse a project mid-build.
+    ``surfaces`` are where the end user meets the agent; ``jobs`` are the runs that start
+    without them. Declared once per project through :func:`product_factory`. A product with no
+    surface that reaches the agent is accepted and reported by the page, because that is a
+    real state a project passes through and refusing it would refuse a project mid-build. A
+    job whose ``after`` names no job of this product raises ``ConfigurationError``.
     """
 
     surfaces: tuple[Surface, ...] = field(default_factory=tuple)
+    jobs: tuple[Job, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "surfaces", tuple(self.surfaces))
-        for surface in self.surfaces:
-            if not isinstance(surface, Surface):
-                raise ConfigurationError(
-                    f"Product was given {type(surface).__name__} where a Surface was "
-                    f"expected. Each entry says what the end user does at one place: "
-                    f'Surface("the rota", "answers_a_waiting_run", pipeline="triage").'
-                )
-        names = [s.name for s in self.surfaces]
-        twice = sorted({n for n in names if names.count(n) > 1})
-        if twice:
+        object.__setattr__(self, "jobs", tuple(self.jobs))
+        _refuse_bad_surfaces(self.surfaces)
+        _refuse_bad_jobs(self.jobs)
+
+    def job(self, name: str | None) -> "Job | None":
+        """The declared job of that name, or ``None``; what a run's ``trigger`` is joined by."""
+        if not name:
+            return None
+        return next((j for j in self.jobs if j.name == name), None)
+
+
+def _twice(names: list[str]) -> list[str]:
+    return sorted({n for n in names if names.count(n) > 1})
+
+
+def _refuse_bad_surfaces(surfaces: tuple[Any, ...]) -> None:
+    for surface in surfaces:
+        if not isinstance(surface, Surface):
             raise ConfigurationError(
-                f"Product declares {', '.join(repr(n) for n in twice)} more than once. One "
-                f"name names one surface; a place the end user does two things there is two "
-                f"surfaces with their own names."
+                f"Product was given {type(surface).__name__} where a Surface was "
+                f"expected. Each entry says what the end user does at one place: "
+                f'Surface("the rota", "answers_a_waiting_run", pipeline="triage").'
             )
+    twice = _twice([s.name for s in surfaces])
+    if twice:
+        raise ConfigurationError(
+            f"Product declares {', '.join(repr(n) for n in twice)} more than once. One "
+            f"name names one surface; a place the end user does two things there is two "
+            f"surfaces with their own names."
+        )
+
+
+def _refuse_bad_jobs(jobs: tuple[Any, ...]) -> None:
+    for job in jobs:
+        if not isinstance(job, Job):
+            raise ConfigurationError(
+                f"Product was given {type(job).__name__} under jobs= where a Job was "
+                f"expected. Each entry is one run that starts without the end user: "
+                f'Job("nightly digest", pipeline="digest", does="every night at 02:00").'
+            )
+    names = [j.name for j in jobs]
+    twice = _twice(names)
+    if twice:
+        raise ConfigurationError(
+            f"Product declares the job {', '.join(repr(n) for n in twice)} more than "
+            f"once. A run records the job's name as its trigger, so one name names one job."
+        )
+    unknown = sorted({j.after for j in jobs if j.after and j.after not in names})
+    if unknown:
+        raise ConfigurationError(
+            f"A job declares after={', '.join(repr(n) for n in unknown)}, and the product "
+            f"declares no job of that name. after= names another entry of jobs=: "
+            f'Job("rank", pipeline="rank", after="nightly digest").'
+        )
 
 
 _PRODUCT: list[Callable[[], Any]] = []

@@ -821,7 +821,8 @@ def _pipelines_in_the_code(root: Path) -> DeclaredPipelines:
         for step in _planned_in(pipeline)
     )
     surfaces = tuple(str(surface.name) for surface in getattr(loaded.product, "surfaces", ()) or ())
-    return DeclaredPipelines(planned=planned, imported=True, surfaces=surfaces)
+    jobs = tuple(str(job.name) for job in getattr(loaded.product, "jobs", ()) or ())
+    return DeclaredPipelines(planned=planned, imported=True, surfaces=surfaces, jobs=jobs)
 
 
 def _planned_in(pipeline: object, prefix: str = "") -> list[str]:

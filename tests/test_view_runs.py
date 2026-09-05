@@ -427,6 +427,16 @@ class TestTheShipPage:
             assert name in held, name
         assert "Starts a run" in held and "Answers a waiting run" in held
 
+    def test_a_job_is_drawn_beside_the_surfaces(self, pages) -> None:
+        """A declared job is a row of the product with the pipeline it runs and the name the
+        scheduler passes, and a job that follows another says so."""
+        held = pages["shipped"]["pages"]["ship"]["sections"]
+        assert "2 jobs" in held
+        for name in ("nightly reconcile", "month-end close"):
+            assert name in held, name
+        assert "Job · after nightly reconcile" in held
+        assert "scheduler starts it and passes trigger=" in held
+
     def test_a_surface_carries_what_the_code_says_about_what_it_names(self, pages) -> None:
         held = pages["shipped"]["pages"]["ship"]["sections"]
         # the channel it answers through, where it is, and who that channel says answers
@@ -492,6 +502,14 @@ class TestTheOperatePage:
         held = pages["shipped"]["pages"]["operate"]["sections"]
         assert "Shelved" in held and "po-80115-unit" in held
         assert "the nightly run is unattended" in held
+
+    def test_the_jobs_are_read_against_what_started_each_run(self, pages) -> None:
+        held = pages["shipped"]["pages"]["operate"]["sections"]
+        assert "Jobs" in held and "2 declared" in held and "1 undeclared" in held
+        assert "nightly reconcile" in held and "5 runs" in held
+        assert "month-end close" in held and "after nightly reconcile" in held
+        assert "weekly digest" in held and "Not declared" in held
+        assert "Product(jobs=[...])" in held
 
     def test_a_conversation_nothing_reads_says_so(self, pages) -> None:
         held = pages["shipped"]["pages"]["operate"]["sections"]

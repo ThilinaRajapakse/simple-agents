@@ -86,7 +86,10 @@ PROCEDURE = ROOT / "docs" / "procedure.md"
 # `ship`, for the second project running that built it after the last gate. The paragraph
 # restating `involvement`'s own scaffold was written and then cut, which is what the budget is
 # against.
-WORD_BUDGET = 4177
+WORD_BUDGET = 4190
+# Raised from 4177 at P3-77, 2026-09-05: the `ship` step declares a job beside a surface and the
+# feature index names `Job` and `trigger=`, thirteen words across two sentences, against a page
+# that stood at 4175.
 # Raised from 3840 at P3-72, 2026-09-02: every gate's hand edit of the brief (`stage`, the
 # three `*_confirmed_at` keys, `shape_confirmed`, `confirmed_against`) became a
 # `simple-agents record` command, seven words over the ceiling across eight sentences.

@@ -383,7 +383,7 @@ starts and the material is now the end user's.
 **Agree the surface's design before more of it is built.** Stage 4 built the product; what
 somebody else is about to use is usually more. Put the design to the builder,
 write it into `design.md`'s product section, and declare a `Product` naming each surface
-(`docs/product.md` §2.1). FT-34 fails a project here whose code declares none.
+and job (`docs/product.md` §2.1, §6). FT-34 fails a project here whose code declares none.
 
 **Name what the end user reads.** Where the project stores the result for later reading, each
 stored result carries `pipeline.behaviour_fingerprint(model=client)` and something re-runs
@@ -443,5 +443,5 @@ What this list names, the library ships. Check it before designing or building a
 - **Trajectory** (`docs/trajectory-format.md`): the seven record types and the four token classes on every model call.
 - **Evaluation** (`docs/evaluation.md`): example sets and splits §1 · a label a model wrote §1.4 · the eight rates §3 · a figure per criterion §3.1 · intervals, rollout noise, and the do-nothing baseline §4 · per-node reach and accuracy §5 · scoring runs the evaluation did not make §5.5 · scoring one step at a time, back to front §5.6 · rollouts in parallel §6.2 · resuming one that stopped §6.5 · what an evaluation refuses to run §7 · every figure grouped by a property of the example §8.2 · comparing two versions §9 · variants, `ablate()`, and a sweep's cost before it runs §10 · a metric the project declares, ratios, counts and judged pairs §11 · a condition a model or a person decides §12 · an example that is a conversation §13.
 - **View** (`docs/view.md`): the project on one page, `simple-agents view` · registering pipelines §2 · a step declared before it is built §3 · what flows between pipelines §4.
-- **Product** (`docs/product.md`): the three product shapes §1 · the four interaction kinds §2 · a request is a run §3 · a question the run cannot settle, shelved, and what happens when the answer arrives §4 · the artifact that accumulates §5.
+- **Product** (`docs/product.md`): the three product shapes §1 · the four interaction kinds §2 · a request is a run §3 · a question the run cannot settle, shelved, and what happens when the answer arrives §4 · the artifact that accumulates §5 · a `Job`, a run without the end user, and `trigger=` §6.
 - **Shipping** (`docs/shipping.md`): a run that says it is live §1 · reading live runs back §2 · who answers the agent after it ships §4 · memory across a person's runs §5.

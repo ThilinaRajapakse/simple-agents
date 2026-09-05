@@ -3,13 +3,15 @@
 Six records a live project leaves behind, all on disk and none of them read by the page until
 this: the suspensions a run stopped at, the questions a background run shelved, whether a run
 with no outcome is still going, the conversations runs are turns of, what each day's runs cost,
-and the tool calls that ended throttled.
+and the tool calls that ended throttled. A seventh joins the runs to the product's declared
+jobs: which job each run says started it, and what has run for each.
 
 ::
 
-    held = read_operating(".")
+    held = read_operating(".", product=loaded.product)
     held["now"]["waiting"]            # runs stopped waiting on a person
     [s["waiting_for"] for s in held["stuck"]]
+    [j["name"] for j in held["jobs"] if not j["declared"]]   # triggers no job declares
 
 ``None`` where the project has no live run, which is every project that has not shipped: the
 figures here are what real traffic did, and a development run is not that.
@@ -267,8 +269,92 @@ def _by_role(directory: Path) -> list[dict[str, Any]]:
     return [held[role] for role in ("live", "development", "evaluation") if role in held]
 
 
-def read_operating(root: str | Path) -> dict[str, Any] | None:
-    """Everything the operate page draws, or ``None`` where nothing has run for real."""
+def _jobs(
+    handles: list[Any],
+    product: Any,
+    stuck: list[dict[str, Any]],
+    shelved: list[dict[str, Any]],
+    now: datetime,
+) -> list[dict[str, Any]]:
+    """One entry per declared job, and one per trigger the runs recorded that no job declares.
+
+    Read from what each live run recorded as its ``trigger``: how many runs the job has made,
+    when the last one started and how it ended, and how many of its runs are waiting on a
+    person or a clock, or left a question shelved. A declared job with no run says so. A
+    trigger name the product does not declare is listed and marked.
+    """
+    declared = list(getattr(product, "jobs", ()) or ()) if product is not None else []
+    by_trigger: dict[str, list[Any]] = defaultdict(list)
+    for handle in handles:
+        if handle.trigger:
+            by_trigger[handle.trigger].append(handle)
+    waiting_on = {str(one["run"]): str(one["on"]) for one in stuck if not one.get("abandoned")}
+    shelved_runs = defaultdict(int)
+    for one in shelved:
+        shelved_runs[str(one["run"])] += 1
+    names = [job.name for job in declared] + sorted(
+        name for name in by_trigger if name not in {job.name for job in declared}
+    )
+    return [
+        _one_job(
+            name,
+            next((j for j in declared if j.name == name), None),
+            sorted(
+                by_trigger.get(name, ()),
+                key=lambda one: str(one.manifest.get("started_at") or ""),
+            ),
+            waiting_on,
+            shelved_runs,
+            now,
+        )
+        for name in names
+    ]
+
+
+def _one_job(
+    name: str,
+    job: Any,
+    mine: list[Any],
+    waiting_on: dict[str, str],
+    shelved_runs: dict[str, int],
+    now: datetime,
+) -> dict[str, Any]:
+    """One job's entry: the declaration where there is one, and what its runs did."""
+    last = mine[-1] if mine else None
+    started = last.manifest.get("started_at") if last else None
+    if last is None:
+        ended = ""
+    elif last.outcome is None:
+        ended = last.liveness or ""
+    else:
+        ended = _ended(last.manifest)
+    return {
+        "name": name,
+        "declared": job is not None,
+        "pipeline": job.pipeline if job is not None else _pipelines_of(mine),
+        "does": job.does if job is not None else "",
+        "after": job.after if job is not None else None,
+        "runs": len(mine),
+        "last": started,
+        "ago": _how_long(started, now) if last else "",
+        "ended": ended,
+        "waiting": sum(1 for one in mine if waiting_on.get(one.run_id) == "a person"),
+        "on_clock": sum(1 for one in mine if waiting_on.get(one.run_id) == "a clock"),
+        "shelved": sum(shelved_runs.get(one.run_id, 0) for one in mine),
+    }
+
+
+def _pipelines_of(handles: list[Any]) -> str:
+    """The pipelines a set of runs were of, joined, for a trigger no job declares."""
+    return ", ".join(sorted({handle.pipeline for handle in handles if handle.pipeline}))
+
+
+def read_operating(root: str | Path, product: Any = None) -> dict[str, Any] | None:
+    """Everything the operate page draws, or ``None`` where nothing has run for real.
+
+    ``product`` is the project's declared ``Product`` where it has one, which is what the
+    runs' ``trigger`` values are joined to under ``jobs``.
+    """
     from ..envelope import runs
 
     root = Path(root).expanduser()
@@ -320,4 +406,5 @@ def read_operating(root: str | Path) -> dict[str, Any] | None:
         ],
         "shelf": shelved,
         "conversations": _conversations(handles),
+        "jobs": _jobs(handles, product, stuck, shelved, now),
     }

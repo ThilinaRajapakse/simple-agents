@@ -231,6 +231,7 @@ from .pipeline import (
 )
 from .product import (
     INTERACTION_KINDS,
+    Job,
     Product,
     Surface,
     clear_registered_product,
@@ -308,6 +309,7 @@ __all__ = [
     "pipeline_factory",
     "Product",
     "Surface",
+    "Job",
     "INTERACTION_KINDS",
     "product_factory",
     "registered_product",

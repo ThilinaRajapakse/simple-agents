@@ -11,6 +11,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `Job`, declared under `Product(jobs=[...])`: a run that starts without the end user, on a
+  schedule, on a change or after another job. The ship page draws it beside the surfaces, the
+  operate page reads what each job has done, and FT-34 reads the design's product section
+  against it. `docs/product.md` §6.
+- `Pipeline.run(trigger=...)`, the declared job's name, recorded on the manifest.
+  `runs(trigger=...)`, `simple-agents report --trigger` and `simple-agents check --trigger`
+  read those runs back.
 - `Prompt`, `Value` and `Section`: a prompt is written as fixed text with named values, so a
   run records what the model was told apart from the data that filled it. `docs/prompts.md`.
 - `Prompt.turns`, for messages a run already recorded, and `Prompt.blocks`, for an image or any
@@ -96,6 +103,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   message, the values that filled it, what any of them cut, `instruction` digesting everything
   fixed about the prompt, and `templates` for the distinct pieces it was built from. Absent on a call whose messages are a conversation, which is every turn of an agent
   loop after the first.
+- Manifest format `0.43`. A run records `trigger`, the name of the declared job that started
+  it, and `null` on a run somebody asked for.
 - Manifest format `0.42`. Each entry in `prompts` carries `text`, which is `written` or
   `interpolated`; `observed`, the distinct instructions that step's calls were built from and
   how often; and `distinct`, how many there were. A prompt's

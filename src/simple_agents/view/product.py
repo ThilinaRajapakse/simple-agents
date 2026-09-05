@@ -8,7 +8,10 @@ stand-in (FT-31), and which store an artifact surface shows.
 ::
 
     read_product(root, loaded, pipelines)
-    # {'surfaces': [...], 'parameters': [...], 'reaches_the_agent': True, 'problems': [...]}
+    # {'surfaces': [...], 'jobs': [...], 'parameters': [...], 'reaches_the_agent': True}
+
+A declared `Job` is drawn beside the surfaces: what starts a run without the end user, and
+which pipeline it runs.
 
 The surface's own numbers are read from the module that declares it, the way a run's are read
 from the modules its steps come from. A project that declares its product beside its surface
@@ -106,6 +109,22 @@ def _one_surface(
     }
 
 
+def _one_job(job: Any, pipelines: list[dict[str, Any]]) -> dict[str, Any]:
+    """One declared job with the pipeline it runs, and what the join could not find."""
+    named = job.pipeline
+    found = next((p for p in pipelines if p["name"] == named), None)
+    missing = [] if found is not None else [f"no pipeline is registered as {named}"]
+    return {
+        "name": job.name,
+        "kind_words": job.kind_words,
+        "does": job.does,
+        "after": job.after,
+        "pipeline": named if found is not None else None,
+        "pipeline_named": named,
+        "missing": missing,
+    }
+
+
 def read_product(
     root: Any,
     loaded: Any,
@@ -118,6 +137,7 @@ def read_product(
 
         held = read_product(root, loaded, declared, resources)
         [s["name"] for s in held["surfaces"] if s["missing"]]   # names the code does not have
+        [j["name"] for j in held["jobs"]]                       # what runs without the end user
 
     ``parameters`` is every module-level number the declaring module defines, which is the
     surface's own; a run's manifest cannot record them, since no run reaches the surface.
@@ -131,6 +151,7 @@ def read_product(
     surfaces = [_one_surface(s, pipelines, resources) for s in product.surfaces]
     return {
         "surfaces": surfaces,
+        "jobs": [_one_job(j, pipelines) for j in getattr(product, "jobs", ()) or ()],
         "parameters": list(getattr(loaded, "product_parameters", ()) or ()),
         "reaches_the_agent": any(s["reaches_the_agent"] for s in surfaces),
         "declared_in": getattr(loaded, "product_module", None),

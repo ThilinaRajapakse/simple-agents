@@ -202,7 +202,7 @@ All twenty-nine are `artifact` surface: they read files and run nothing.
 | FT-25 | the brief's `consultation` answer, `tools` in the run's manifest, and `nodes` in `evals/results/<latest>.json` | the answer names something to ask and no consultation tool reaches a node; a pass notes where neither the run nor any rollout asked through it |
 | FT-32 | the brief's `tool_effects` answer, and `tools` in the run's manifest | the run declares a side-effect class the answer never mentions |
 | FT-33 | `BUILD-LOG.md`, and when the run the checks read ended | the log was last written before that run |
-| FT-34 | `design.md`, `design_confirmed_at` in `brief.toml`, and the `Product` the code declares | at stage `shape`, a section is empty, the builder is not quoted, or it was confirmed earlier; at `ship`, the code was read and declares no `Product` |
+| FT-34 | `design.md`, `design_confirmed_at` in `brief.toml`, and the `Product` the code declares | at stage `shape`, a section is empty, the builder is not quoted, a declared surface or job is not in the product section, or it was confirmed earlier; at `ship`, the code was read and declares no `Product` |
 | FT-35 | `unfinished` in the manifest of every run this pipeline made | a node spent a whole allowance without calling a tool, consulting or delegating |
 | FT-36 | `research.md`, and `research_confirmed_at` in `brief.toml` | at stage `research`, a section is empty, a candidate row has no outcome, or it was confirmed earlier |
 | FT-01 | `evals/results/<latest>.json` | no evaluation, at tier `evaluated` |

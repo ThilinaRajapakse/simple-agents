@@ -987,6 +987,38 @@ class TestDeclaringTheProduct:
                 ]
             )
 
+    def test_a_job_says_which_pipeline_it_runs_and_what_it_follows(self) -> None:
+        from simple_agents import Job, Product
+
+        nightly = Job("nightly", pipeline="reconcile", does="every night at 02:00")
+        close = Job("close", pipeline="reconcile", after="nightly")
+        held = Product(jobs=[nightly, close])
+        assert nightly.kind_words == "Job" and close.kind_words == "Job · after nightly"
+        assert held.job("close") is close and held.job("weekly") is None
+
+    def test_a_job_with_no_name_or_no_pipeline_is_refused(self) -> None:
+        from simple_agents import ConfigurationError, Job
+
+        with pytest.raises(ConfigurationError, match="no name"):
+            Job("", pipeline="reconcile")
+        with pytest.raises(ConfigurationError, match="names no pipeline"):
+            Job("nightly", pipeline="")
+
+    def test_a_job_following_a_job_the_product_does_not_declare_is_refused(self) -> None:
+        from simple_agents import ConfigurationError, Job, Product
+
+        with pytest.raises(ConfigurationError, match="declares no job of that name"):
+            Product(jobs=[Job("close", pipeline="reconcile", after="nightly")])
+        with pytest.raises(ConfigurationError, match="itself"):
+            Job("close", pipeline="reconcile", after="close")
+
+    def test_two_jobs_under_one_name_are_refused(self) -> None:
+        """A run records the job's name as its trigger, so one name names one job."""
+        from simple_agents import ConfigurationError, Job, Product
+
+        with pytest.raises(ConfigurationError, match="more than once"):
+            Product(jobs=[Job("nightly", pipeline="a"), Job("nightly", pipeline="b")])
+
     def test_a_second_product_is_refused(self) -> None:
         from simple_agents import ConfigurationError, Product, product_factory
         from simple_agents.product import clear_registered_product
@@ -1036,6 +1068,22 @@ class TestTheProductOnThePage:
             "REASON_CHARS",
             "STALE_AFTER_HOURS",
         ]
+
+    def test_a_job_joins_to_the_pipeline_it_runs(self) -> None:
+        held = {j["name"]: j for j in self.product()["jobs"]}
+        assert held["nightly reconcile"]["pipeline"] == "reconcile"
+        assert held["nightly reconcile"]["after"] is None
+        assert held["month-end close"]["after"] == "nightly reconcile"
+        assert held["month-end close"]["kind_words"] == "Job · after nightly reconcile"
+        assert all(not j["missing"] for j in held.values())
+
+    def test_a_job_naming_a_pipeline_the_code_does_not_register_is_reported(self) -> None:
+        from simple_agents import Job
+        from simple_agents.view.product import _one_job
+
+        held = _one_job(Job("nightly", pipeline="reconcil"), [{"name": "reconcile"}])
+        assert held["pipeline"] is None and held["pipeline_named"] == "reconcil"
+        assert held["missing"] == ["no pipeline is registered as reconcil"]
 
     def test_a_project_declaring_none_has_none(self) -> None:
         assert shape("measured")["product"] is None
@@ -1258,6 +1306,12 @@ class TestAFigureWithNoInterval:
         assert figure["point"] == pytest.approx(2 / 12)
 
 
+def _now():
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc)
+
+
 class TestWhatALiveProjectIsDoing:
     """The six records a live project leaves behind, which the page read none of (`P3-57`)."""
 
@@ -1278,6 +1332,60 @@ class TestWhatALiveProjectIsDoing:
         assert person["options"] == ["write it off", "chase it"]
         clock = stuck["the month to close"]
         assert clock["on"] == "a clock" and clock["until"] == "2026-09-01T09:00:00Z"
+
+    def test_each_declared_job_reads_what_its_runs_did(self) -> None:
+        """The runs that name a job as their trigger, joined to the declaration."""
+        from simple_agents.view.discovery import load_project
+        from simple_agents.view.operating import read_operating
+
+        loaded = load_project(FIXTURES / "shipped")
+        jobs = {j["name"]: j for j in read_operating(FIXTURES / "shipped", loaded.product)["jobs"]}
+        nightly = jobs["nightly reconcile"]
+        assert nightly["declared"] and nightly["pipeline"] == "reconcile"
+        assert nightly["runs"] == 5 and nightly["waiting"] == 1 and nightly["shelved"] == 1
+        assert nightly["on_clock"] == 1  # the month-to-close wait is a clock, not a person
+        assert nightly["ended"] == "finished" and nightly["ago"]
+        close = jobs["month-end close"]
+        assert close["runs"] == 2 and close["after"] == "nightly reconcile"
+
+    def test_a_trigger_no_job_declares_is_listed_and_marked(self) -> None:
+        """The killed run names a job the product never declared."""
+        from simple_agents.view.discovery import load_project
+        from simple_agents.view.operating import read_operating
+
+        loaded = load_project(FIXTURES / "shipped")
+        jobs = {j["name"]: j for j in read_operating(FIXTURES / "shipped", loaded.product)["jobs"]}
+        weekly = jobs["weekly digest"]
+        assert not weekly["declared"] and weekly["runs"] == 1 and weekly["does"] == ""
+        assert weekly["ended"] in ("running", "abandoned", "unknown")
+
+    def test_a_declared_job_with_no_run_says_so(self, tmp_path: Path) -> None:
+        from simple_agents import Job, Product
+        from simple_agents.view.operating import _jobs
+
+        held = _jobs([], Product(jobs=[Job("nightly", pipeline="x")]), [], [], _now())
+        assert held == [
+            {
+                "name": "nightly",
+                "declared": True,
+                "pipeline": "x",
+                "does": "",
+                "after": None,
+                "runs": 0,
+                "last": None,
+                "ago": "",
+                "ended": "",
+                "waiting": 0,
+                "on_clock": 0,
+                "shelved": 0,
+            }
+        ]
+
+    def test_without_a_product_the_jobs_are_the_triggers_the_runs_recorded(self) -> None:
+        """A project declaring no product still has runs saying what started them."""
+        jobs = {j["name"]: j for j in self.held()["jobs"]}
+        assert set(jobs) == {"nightly reconcile", "month-end close", "weekly digest"}
+        assert not any(j["declared"] for j in jobs.values())
 
     def test_a_shelved_question_carries_why_nobody_answered_it(self) -> None:
         held = self.held()["shelf"]

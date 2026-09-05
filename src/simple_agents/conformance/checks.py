@@ -168,6 +168,9 @@ class DeclaredPipelines:
     surfaces: tuple[str, ...] = ()
     """Every surface the project's `Product` declares, by name. Empty where it declares no
     product, which is every project that has not adopted the declaration."""
+    jobs: tuple[str, ...] = ()
+    """Every job the project's `Product` declares, by name: the runs that start without the
+    end user. Read against the product section the same way the surfaces are."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -790,6 +793,13 @@ def _design_reason(ctx: Context, stage: str) -> str | None:
             f"{', '.join(repr(name) for name in unnamed)}, which the code declares as a "
             f"surface"
         )
+    unnamed = _jobs_not_in(ctx, text)
+    if unnamed:
+        return (
+            f"{DEFAULT_DESIGN} says nothing about "
+            f"{', '.join(repr(name) for name in unnamed)}, which the code declares as a job "
+            f"that runs without the end user"
+        )
     confirmed = ctx.brief.design_confirmed_at
     if confirmed is None:
         return "the brief carries no design_confirmed_at"
@@ -813,7 +823,20 @@ def _surfaces_not_in(ctx: Context, text: str) -> tuple[str, ...]:
     Empty for a project declaring no product, so nothing here reaches a project that has not
     adopted the declaration.
     """
-    declared = getattr(ctx.declared, "surfaces", ()) or ()
+    return _declared_not_in(getattr(ctx.declared, "surfaces", ()) or (), text)
+
+
+def _jobs_not_in(ctx: Context, text: str) -> tuple[str, ...]:
+    """Declared jobs the product section of `design.md` does not name.
+
+    A job is a run that starts without the end user (`docs/product.md` §6), and the section
+    says when each runs the way it says what each surface does. Matched the way the surfaces
+    are, on the job's own name.
+    """
+    return _declared_not_in(getattr(ctx.declared, "jobs", ()) or (), text)
+
+
+def _declared_not_in(declared: tuple[str, ...], text: str) -> tuple[str, ...]:
     if not declared:
         return ()
     section = _section_of(text, PRODUCT_SECTION)

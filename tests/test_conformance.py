@@ -4584,11 +4584,11 @@ class TestTheDesignAgainstTheDeclaredProduct:
             '## What the builder said about it\n\n> "That is what I asked for."\n'
         )
 
-    def project(self, tmp_path, product: str, surfaces: str) -> Path:
+    def project(self, tmp_path, product: str, surfaces: str, jobs: str = "") -> Path:
         root = tmp_path / "project"
         root.mkdir()
         (root / "agent.py").write_text(
-            "from simple_agents import (Budget, Deterministic, Pipeline, Product, Surface,\n"
+            "from simple_agents import (Budget, Deterministic, Job, Pipeline, Product, Surface,\n"
             "                           pipeline_factory, product_factory)\n"
             "\n"
             "@pipeline_factory('one')\n"
@@ -4599,7 +4599,7 @@ class TestTheDesignAgainstTheDeclaredProduct:
             "\n"
             "@product_factory\n"
             "def product():\n"
-            f"    return Product(surfaces=[{surfaces}])\n",
+            f"    return Product(surfaces=[{surfaces}], jobs=[{jobs}])\n",
             encoding="utf-8",
         )
         (root / "design.md").write_text(self.sections(product), encoding="utf-8")
@@ -4630,6 +4630,27 @@ class TestTheDesignAgainstTheDeclaredProduct:
             "**The inbox** is where a ticket arrives, and the reply lands in **the outbox**.",
             "Surface('the inbox', 'starts_a_run', pipeline='one'), "
             "Surface('the outbox', 'reads_the_artifact', reads='outbox')",
+        )
+        assert self.reason(root) == ""
+
+    def test_a_job_the_product_section_never_names_fails(self, tmp_path) -> None:
+        """A job is a run that starts without the end user, and the section says when it
+        runs the way it says what a surface does."""
+        root = self.project(
+            tmp_path,
+            "**The inbox** is where a ticket arrives.",
+            "Surface('the inbox', 'starts_a_run', pipeline='one')",
+            "Job('nightly digest', pipeline='one', does='every night at 02:00')",
+        )
+        assert "says nothing about 'nightly digest'" in self.reason(root)
+        assert "declares as a job" in self.reason(root)
+
+    def test_a_section_naming_the_job_passes(self, tmp_path) -> None:
+        root = self.project(
+            tmp_path,
+            "**The inbox** is where a ticket arrives. The **nightly digest** runs at 02:00.",
+            "Surface('the inbox', 'starts_a_run', pipeline='one')",
+            "Job('nightly digest', pipeline='one', does='every night at 02:00')",
         )
         assert self.reason(root) == ""
 

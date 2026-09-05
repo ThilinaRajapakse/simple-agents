@@ -4,7 +4,7 @@ The product is the surface the end user meets the agent through, together with a
 
 `used_through` records what it is at `brainstorm`, the product section of `design.md` pins how it works at `shape` (FT-34), stage 4 builds it beside the pipeline, and stage 6 agrees the surface an end user meets before more of it is built. This document is what those three rest on.
 
-The library ships the machinery a product invokes: a run per request, a run that waits for a person, the record every run leaves, and the stamp an accumulating artifact carries. The server, the page and the scheduler are the project's.
+The library ships the machinery a product invokes: a run per request, a run that waits for a person, the record every run leaves, and the stamp an accumulating artifact carries. The server, the page and the scheduler are the project's; what the scheduler runs is declared beside the surfaces (§6), so the builder sees it.
 
 ---
 
@@ -36,7 +36,7 @@ sees the pipeline and never what called it. `simple-agents view` draws the produ
 declaration, the way it draws a resource from `touches=`:
 
 ```python
-from simple_agents import Product, Surface, product_factory
+from simple_agents import Job, Product, Surface, product_factory
 
 
 @product_factory
@@ -48,6 +48,9 @@ def product() -> Product:
                 does="the person on the rota answers when the agent asks"),
         Surface("the outbox", "reads_the_artifact", reads="outbox",
                 does="the reply lands there as a draft for a person to send"),
+    ], jobs=[
+        Job("nightly digest", pipeline="digest",
+            does="every night at 02:00, over the day's tickets"),
     ])
 ```
 
@@ -63,9 +66,13 @@ declaring it is the one whose numbers the page reads as the surface's own, so de
 beside the surface's own code puts both in front of the builder. A project declares one
 product; registering a second is refused.
 
+`jobs` are the runs that start without the end user: a schedule, a change in a store, another
+job finishing. Each names the `pipeline` it runs and says when in `does`; `after` names the job
+it follows. §6 is what a job is and how its runs are joined back to it.
+
 **FT-34 reads it against `design.md`.** The product section lists what the end user can do and
 classifies each interaction, and a declared surface that section never names is an interaction
-the builder was not shown. Before `ship` a project declaring no product is not read this way; from `ship` FT-34 fails one whose code was read and declares none.
+the builder was not shown. A declared job the section never names is read the same way. Before `ship` a project declaring no product is not read this way; from `ship` FT-34 fails one whose code was read and declares none.
 
 ## 3. A request is a run
 
@@ -188,13 +195,25 @@ Where the product keeps results for the end user to read, the artifact outlives 
 
 ## 6. What makes a run happen
 
-`used_through` names the trigger: a request, a schedule, something changing, or the builder by hand. The library owns no execution outside a call the caller made, so a schedule is the host's, calling a script that calls `run`:
+`used_through` names the trigger: a request, a schedule, something changing, or the builder by hand. The library owns no execution outside a call the caller made, so a schedule is the host's, calling a script that calls `run`. **A run that starts without the end user is declared as a `Job`** (§2.1), and the script passes the job's name as `trigger=`:
 
 ```python
 # refresh.py, run by cron or any scheduler the host already has
 for old in store.produced_by_anything_other_than(stamp):
-    store.write(pipeline.run(old.question, envelope=env, model=client), produced_by=stamp)
+    store.write(pipeline.run(old.question, envelope=env, model=client, trigger="refresh"),
+                produced_by=stamp)
 ```
+
+A `Job` runs nothing. It puts the schedule in front of the builder: the ship page draws each job beside the surfaces, the design section says when it runs (FT-34), and the operate page reads what each job has done from the runs that name it. A job that follows another job says so with `after=`, which is the trigger a scheduler cannot express on its own:
+
+```python
+Product(surfaces=[...], jobs=[
+    Job("refresh", pipeline="refresh", does="every night at 02:00"),
+    Job("rank", pipeline="rank", does="after a refresh lands a new entry", after="refresh"),
+])
+```
+
+The manifest records `trigger`, `runs("runs/", trigger="refresh")` reads one job's runs back, and `simple-agents report --trigger refresh` reports what it spent (`docs/run-envelope.md` §2.1). A run that passes a name the product does not declare is listed on the operate page as undeclared. A run asked for by a person passes nothing.
 
 The same shape serves the waiting half: a loop over `Pipeline.suspensions(run_dir)` resumes the runs whose answers have arrived, and `Pipeline.shelved(run_dir)` lists the questions a background run left behind (§4).
 
