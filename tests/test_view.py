@@ -1421,6 +1421,12 @@ class TestWhatALiveProjectIsDoing:
         now = self.held()["now"]
         assert now["running"] + now["abandoned"] + now["unknown"] == 1
 
+    def test_a_wait_on_a_clock_is_counted_apart_from_a_wait_on_a_person(self) -> None:
+        """The shipped fixture has one of each; only the person needs an operator."""
+        now = self.held()["now"]
+        assert now["waiting"] == 2
+        assert now["on_person"] == 1 and now["on_clock"] == 1
+
 
 class TestTheStagingOfTheElicitation:
     """Which questions a stage asks, and which are still ahead (`P3-55`)."""

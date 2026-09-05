@@ -4793,8 +4793,10 @@ function nowRegion(op) {
     `${fmt(op.runs)} live ${op.runs === 1 ? "run" : "runs"} on record`)}
     <div class="nowtiles">
       ${tile("Running", fmt(now.running), now.running ? "Started and not finished" : "Nothing in flight")}
-      ${tile("Waiting on a person", fmt(now.waiting),
-             now.waiting ? "Stopped until somebody answers" : "Nothing is waiting", now.waiting > 0)}
+      ${tile("Waiting", fmt(now.waiting),
+             now.waiting ? [now.on_person ? `${fmt(now.on_person)} on a person` : "",
+                            now.on_clock ? `${fmt(now.on_clock)} on a clock` : ""]
+               .filter(Boolean).join(", ") : "Nothing is waiting", now.on_person > 0)}
       ${tile("Abandoned", fmt(now.abandoned),
              now.abandoned ? "Started, and it cannot still be going" : "None",
              now.abandoned > 0)}

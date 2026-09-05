@@ -483,7 +483,8 @@ class TestTheOperatePage:
     def test_now_counts_what_needs_a_person(self, pages) -> None:
         held = pages["shipped"]["pages"]["operate"]["sections"]
         assert "Now" in held and "10 live runs on record" in held
-        assert "Waiting on a person" in held and "Shelved questions" in held
+        assert "Waiting" in held and "1 on a person, 1 on a clock" in held
+        assert "Shelved questions" in held
         assert "Spent today" in held and "Abandoned" in held
 
     def test_the_history_is_a_bar_a_day_with_what_it_cost(self, pages) -> None:

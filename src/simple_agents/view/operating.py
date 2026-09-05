@@ -9,7 +9,7 @@ jobs: which job each run says started it, and what has run for each.
 ::
 
     held = read_operating(".", product=loaded.product)
-    held["now"]["waiting"]            # runs stopped waiting on a person
+    held["now"]["waiting"]            # runs stopped, on a person or a clock
     [s["waiting_for"] for s in held["stuck"]]
     [j["name"] for j in held["jobs"] if not j["declared"]]   # triggers no job declares
 
@@ -349,6 +349,30 @@ def _pipelines_of(handles: list[Any]) -> str:
     return ", ".join(sorted({handle.pipeline for handle in handles if handle.pipeline}))
 
 
+def _now(
+    unfinished: list[Any],
+    stuck: list[dict[str, Any]],
+    shelved: list[dict[str, Any]],
+    history: list[dict[str, Any]],
+    currency: str | None,
+    now: datetime,
+) -> dict[str, Any]:
+    """The five counts of the Now region: what is going, waiting, dead, asked and spent today."""
+    today = now.strftime("%Y-%m-%d")
+    return {
+        "running": sum(1 for one in unfinished if one.liveness == "running"),
+        "abandoned": sum(1 for one in unfinished if one.liveness == "abandoned"),
+        "unknown": sum(1 for one in unfinished if one.liveness == "unknown"),
+        "waiting": len(stuck),
+        "on_person": sum(1 for one in stuck if one["on"] == "a person"),
+        "on_clock": sum(1 for one in stuck if one["on"] == "a clock"),
+        "shelved": len(shelved),
+        "spend": next((day["spend"] for day in history if day["day"] == today), 0.0),
+        "currency": currency,
+        "day": today,
+    }
+
+
 def read_operating(root: str | Path, product: Any = None) -> dict[str, Any] | None:
     """Everything the operate page draws, or ``None`` where nothing has run for real.
 
@@ -369,20 +393,9 @@ def read_operating(root: str | Path, product: Any = None) -> dict[str, Any] | No
     stuck = _stuck(root, now)
     shelved = _shelved(root, now)
     history, currency = _history(handles, root)
-    today = now.strftime("%Y-%m-%d")
-    spent_today = next((day["spend"] for day in history if day["day"] == today), 0.0)
     unfinished = [one for one in handles if one.outcome is None]
     return {
-        "now": {
-            "running": sum(1 for one in unfinished if one.liveness == "running"),
-            "abandoned": sum(1 for one in unfinished if one.liveness == "abandoned"),
-            "unknown": sum(1 for one in unfinished if one.liveness == "unknown"),
-            "waiting": len(stuck),
-            "shelved": len(shelved),
-            "spend": spent_today,
-            "currency": currency,
-            "day": today,
-        },
+        "now": _now(unfinished, stuck, shelved, history, currency, now),
         "runs": len(handles),
         "roles": _by_role(directory),
         "history": history,

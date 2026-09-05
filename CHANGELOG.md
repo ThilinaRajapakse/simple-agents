@@ -68,6 +68,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The operate page's Now tile for stopped runs is "Waiting", with how many wait on a person
+  and how many on a clock under the count; it is marked only where a person is needed. The
+  Jobs region splits the same way.
 - **Breaking.** From stage `build`, a decision recorded `not_applicable` carries the `stage` it
   was settled at, and that stage is `build` or later (FT-30). Before the code exists the answer
   is a forecast. Re-record each with

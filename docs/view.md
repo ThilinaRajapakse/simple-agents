@@ -549,9 +549,9 @@ on it is over the project's own live runs, the ones `runs(run_dir, live=True)` r
 here would overstate what the agent did for real users. The page exists once there is at
 least one live run.
 
-**Now** is five counts: runs still going, runs stopped waiting on a person, runs that cannot
-still be going, unanswered questions, and what today's runs cost. The three that need
-somebody are marked.
+**Now** is five counts: runs still going, runs stopped waiting (on a person or a clock, split
+under the count), runs that cannot still be going, unanswered questions, and what today's
+runs cost. A count that needs somebody is marked.
 
 **History** is one bar a day of how that day's live runs ended (finished, failed, stopped),
 with what the day cost on its own scale under it, over the last 7, 30 or 90 days. A triangle
