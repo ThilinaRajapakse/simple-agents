@@ -411,13 +411,19 @@ def _assistant_turn(
     ``reasoning`` is carried where the backend reported one, so the model is given its own
     chain of thought back on the turn it is still working on. Each adapter decides whether its
     backend accepts the field; one with no field for it drops it in ``messages_to_wire``.
+    ``reasoning_blocks`` carries what the backend sent in its own shape, for an adapter whose
+    backend requires it back verbatim: Anthropic's signed thinking block, OpenAI's encrypted
+    reasoning item.
 
-    The key is absent rather than null where there is nothing to carry, so a conversation from
-    a backend that reports no reasoning is byte-identical to one built before this existed.
+    The keys are absent rather than null where there is nothing to carry, so a conversation
+    from a backend that reports no reasoning is byte-identical to one built before this
+    existed.
     """
     turn: dict[str, Any] = {"role": "assistant", "content": content}
     if reasoning is not None and reasoning.text:
         turn["reasoning"] = reasoning.text
+    if reasoning is not None and reasoning.blocks:
+        turn["reasoning_blocks"] = [dict(block) for block in reasoning.blocks]
     if tool_calls is not None:
         turn["tool_calls"] = tool_calls
     return turn

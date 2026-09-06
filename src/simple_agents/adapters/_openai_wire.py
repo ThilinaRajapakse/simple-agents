@@ -1,13 +1,14 @@
-"""The parts of the wire format the two OpenAI-dialect backends use unchanged.
+"""The parts of the wire format the OpenAI-dialect backends use unchanged.
 
-Mistral's API and vLLM's server both accept OpenAI-shaped chat completions, so tool
-declarations, tool calls in a response, and JSON-schema output take the same form on each.
-What differs between them stays in the adapters: authentication, the seed parameter's name,
-what the usage block reports, and the shape of an error body.
+Mistral's API, vLLM's server and OpenAI's own Chat Completions all accept OpenAI-shaped chat
+completions, so tool declarations, tool calls in a response, and JSON-schema output take the
+same form on each. What differs between them stays in the adapters: authentication, the seed
+parameter's name, the output ceiling's name, what the usage block reports, and the shape of
+an error body.
 
-These are the pieces measured to be identical against both backends. Anything found to differ
-belongs back in its adapter. Gemini speaks its own dialect and is translated in
-``_gemini_wire``.
+These are the pieces measured to be identical against the three. Anything found to differ
+belongs back in its adapter. Gemini, Anthropic and OpenAI's Responses API each speak their own
+dialect and are translated in ``_gemini_wire``, ``_anthropic_wire`` and ``_responses_wire``.
 """
 
 from __future__ import annotations
@@ -200,7 +201,9 @@ def messages_to_wire(
     Left ``None``, the reasoning is dropped from the request, which is what a backend with no
     field for it needs. Sending it matters within a turn the model is still working on: a chat
     template that renders prior reasoning is given the model's own thinking back, and one that
-    ignores the field is unaffected.
+    ignores the field is unaffected. ``reasoning_blocks``, what a backend sent in its own
+    shape, is always dropped here: this dialect has no field for it, and an adapter for a
+    backend that needs it back translates the conversation itself.
 
     A message with no tool calls and no reasoning passes through unchanged. A tool call
     carrying ``ToolCallRequest.provider`` is refused, since this dialect cannot express it;
@@ -217,7 +220,11 @@ def messages_to_wire(
                 }
             )
             continue
-        wire = {k: v for k, v in message.items() if k not in ("tool_calls", "reasoning")}
+        wire = {
+            k: v
+            for k, v in message.items()
+            if k not in ("tool_calls", "reasoning", "reasoning_blocks")
+        }
         reasoning = message.get("reasoning")
         if reasoning_field is not None and isinstance(reasoning, str) and reasoning:
             wire[reasoning_field] = reasoning

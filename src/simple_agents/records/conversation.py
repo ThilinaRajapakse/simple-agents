@@ -43,7 +43,7 @@ Each rollout has its own store, so one name serves them all and a scoring rule r
 rollout's conversation back does not have to know which example it came from.
 """
 
-_PROVIDER_KEYS = ("provider", "reasoning")
+_PROVIDER_KEYS = ("provider", "reasoning", "reasoning_blocks")
 
 _WRITE_LOCK = threading.Lock()
 
