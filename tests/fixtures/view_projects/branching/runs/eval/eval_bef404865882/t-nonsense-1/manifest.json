@@ -1,7 +1,7 @@
 {
-  "format_version": "0.43",
-  "trajectory_format_version": "0.30",
-  "library_version": "0.1.2",
+  "format_version": "0.44",
+  "trajectory_format_version": "0.31",
+  "library_version": "0.2.0",
   "run_id": "t-nonsense-1",
   "pipeline": "triage",
   "role": "agent",
@@ -18,8 +18,8 @@
   },
   "conversation": null,
   "trigger": null,
-  "started_at": "2026-09-05T11:29:09.093Z",
-  "ended_at": "2026-09-05T11:29:10.044Z",
+  "started_at": "2026-09-06T10:51:57.345Z",
+  "ended_at": "2026-09-06T10:51:58.150Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1121378251,
@@ -619,6 +619,7 @@
   "suspensions": [],
   "resume_waivers": [],
   "stream_waivers": [],
+  "unseeded_models": [],
   "cassette": {
     "mode": "record",
     "path": "runs/variant_cassettes/baseline.jsonl",
@@ -652,7 +653,8 @@
         "type": "unknown",
         "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
       },
-      "output": 85
+      "output": 85,
+      "output_reasoning": null
     },
     "cost": {
       "value": 4.190000000000001e-05,

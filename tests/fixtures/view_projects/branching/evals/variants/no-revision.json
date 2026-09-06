@@ -69,7 +69,7 @@
             "status": "unchanged",
             "calls": "replayed",
             "estimated_calls": 1,
-            "estimated_cost": 0.0008852
+            "estimated_cost": 0.0008672
           },
           {
             "node_id": "escalate",
@@ -685,8 +685,8 @@
         "groups": {}
       },
       "cost": {
-        "baseline": 0.0015357000000000003,
-        "variant": 0.0015357000000000003
+        "baseline": 0.0015177,
+        "variant": 0.0015177
       },
       "tool_spend": {
         "baseline": 0.008,
@@ -700,7 +700,7 @@
             "type": "unknown",
             "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
           },
-          "output": 1838
+          "output": 1793
         },
         "variant": {
           "input_uncached": 8005,
@@ -709,7 +709,7 @@
             "type": "unknown",
             "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
           },
-          "output": 1838
+          "output": 1793
         }
       }
     }

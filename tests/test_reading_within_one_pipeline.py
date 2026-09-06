@@ -361,18 +361,24 @@ class TestTheNotesUnderTheChecksStayTrue:
     """Two notes whose truth rested on the run being the newest of any pipeline."""
 
     def _all_live(self, tmp_path: Path) -> Path:
-        """The measured pipeline with nothing but live runs, and another pipeline newer."""
+        """The measured pipeline with nothing but live runs, and another pipeline newer.
+
+        The added run's start is taken off the newest fixture run rather than written as a
+        date, since the fixtures are rebuilt and a fixed date fell behind them once.
+        """
         root = _fixture(tmp_path)
+        newest = ""
         for manifest_path in (root / "runs").rglob("manifest.json"):
             manifest = json.loads(manifest_path.read_text())
             manifest["live"] = True
+            newest = max(newest, str(manifest.get("started_at") or ""))
             manifest_path.write_text(json.dumps(manifest))
         _added_run(
             root,
             "run_freshen_live",
             pipeline="freshen",
             live=True,
-            started_at="2026-09-06T06:00:00.000Z",
+            started_at=newest[:11] + "23:59:59.000Z",
         )
         return root
 

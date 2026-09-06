@@ -1,6 +1,6 @@
 {
-  "format_version": "0.43",
-  "trajectory_format_version": "0.30",
+  "format_version": "0.44",
+  "trajectory_format_version": "0.31",
   "library_version": "0.2.0",
   "run_id": "e2-0",
   "pipeline": "answer",
@@ -16,8 +16,8 @@
   },
   "conversation": null,
   "trigger": null,
-  "started_at": "2026-09-05T16:30:38.883Z",
-  "ended_at": "2026-09-05T16:30:38.892Z",
+  "started_at": "2026-09-06T10:47:23.805Z",
+  "ended_at": "2026-09-06T10:47:23.815Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1684488919,
@@ -388,6 +388,7 @@
   "suspensions": [],
   "resume_waivers": [],
   "stream_waivers": [],
+  "unseeded_models": [],
   "cassette": {
     "mode": "replay",
     "path": "tests/cassettes/eval.jsonl",
@@ -418,7 +419,8 @@
       "input_uncached": 731,
       "input_cache_read": 480,
       "input_cache_write": 0,
-      "output": 125
+      "output": 125,
+      "output_reasoning": null
     },
     "cost": {
       "value": 0.00019185,

@@ -1,1 +1,1 @@
-{"eval_id": "eval_cc8f40c8a8b7", "finished": 8, "total": 8, "resumed": 0, "outcomes": {"correct": 4, "missed": 2, "correct_abstention": 2}, "cost": 0.0006461999999999999, "currency": "USD", "elapsed_s": 5.924589186004596, "remaining_s": null, "updated_at": "2026-09-05T11:29:03.865Z"}
+{"eval_id": "eval_cc8f40c8a8b7", "finished": 8, "total": 8, "resumed": 0, "outcomes": {"correct": 4, "missed": 2, "correct_abstention": 2}, "cost": 0.0006461999999999999, "currency": "USD", "elapsed_s": 7.9264039119998415, "remaining_s": null, "updated_at": "2026-09-06T10:51:53.234Z"}
