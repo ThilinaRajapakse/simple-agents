@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "a declared schedule: trigger joins the run arguments, the manifest, runs() and the report, so each recorded unit on that path grew by the one field",
+  "reason": "updated",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -365,7 +365,7 @@
       "function lines": 66
     },
     "src/simple_agents/pipeline/recording.py::function::_new_manifest": {
-      "function lines": 61
+      "function lines": 62
     },
     "src/simple_agents/pipeline/recording.py::function::_node_entries": {
       "function branches": 18,
@@ -379,14 +379,14 @@
       "class lines": 214
     },
     "src/simple_agents/records/manifest.py::class::Manifest": {
-      "class lines": 450
+      "class lines": 465
     },
     "src/simple_agents/records/manifest.py::function::Manifest.restore": {
-      "function branches": 37,
-      "function lines": 67
+      "function branches": 38,
+      "function lines": 68
     },
     "src/simple_agents/records/manifest.py::function::Manifest.to_json": {
-      "function lines": 75
+      "function lines": 76
     },
     "src/simple_agents/records/suspension.py::function::ValueCodec.decode": {
       "function branches": 14,
@@ -455,9 +455,6 @@
     },
     "src/simple_agents/view/findings.py::module": {
       "module lines": 902
-    },
-    "src/simple_agents/view/operating.py::function::read_operating": {
-      "function lines": 54
     },
     "src/simple_agents/view/product.py::function::_one_surface": {
       "function branches": 15
@@ -611,7 +608,6 @@
     "src/simple_agents/view/evaluation.py::function::read_evaluation": "One page's reader; the length is the page's regions.",
     "src/simple_agents/view/findings.py::function::_arms_never_taken": "One reading over recorded routes; the branches are the arm shapes.",
     "src/simple_agents/view/findings.py::module": "One page's readers and drawings; the length is the page's regions (built and read as a builder 2026-08-29, and the prompts page's threads named 2026-09-04).",
-    "src/simple_agents/view/operating.py::function::read_operating": "One page's reader; the length is the page's regions.",
     "src/simple_agents/view/product.py::function::_one_surface": "One surface's card; each branch is one optional field.",
     "src/simple_agents/view/runs_overlay.py::function::_scan": "One directory scan; the length is the run states it tells apart.",
     "src/simple_agents/view/serve.py::function::_snapshot": "One snapshot of the served state; each branch is one region's presence rule."

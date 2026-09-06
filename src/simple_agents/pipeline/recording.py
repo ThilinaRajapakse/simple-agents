@@ -421,6 +421,28 @@ def _stream_waivers(clients: Iterable[Any]) -> list[str]:
     return found
 
 
+def _unseeded_models(clients: Iterable[Any]) -> list[str]:
+    """Which models the run's seed will not reach, by ``request_model``.
+
+    An adapter for a backend with no seed parameter declares ``seeded = False`` and drops the
+    seed from every request. Read through the wrappers as ``_stream_waivers`` is, and
+    deduplicated by model, so the manifest names each model once whatever number of nodes call
+    it.
+    """
+    found: list[str] = []
+    seen: set[int] = set()
+    for client in clients:
+        while client is not None and id(client) not in seen:
+            seen.add(id(client))
+            if getattr(client, "seeded", True) is False:
+                identity = getattr(client, "identity", None)
+                name = identity().request_model if callable(identity) else type(client).__name__
+                if name not in found:
+                    found.append(name)
+            client = getattr(client, "inner", None)
+    return found
+
+
 def _declares_scripted(client: Any) -> bool:
     """Whether this client, or anything it wraps, answers from a script.
 
@@ -707,6 +729,7 @@ def _new_manifest(
         graph_fingerprint=pipeline.graph_fingerprint(),
         behaviour_fingerprint=pipeline.behaviour_fingerprint(model),
         stream_waivers=_stream_waivers(calling),
+        unseeded_models=_unseeded_models(calling),
     )
 
 

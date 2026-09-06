@@ -32,7 +32,7 @@ from .trajectory import FORMAT_VERSION as TRAJECTORY_FORMAT_VERSION
 
 __all__ = ["MANIFEST_FORMAT_VERSION", "Manifest", "source_version"]
 
-MANIFEST_FORMAT_VERSION = "0.43"
+MANIFEST_FORMAT_VERSION = "0.44"
 
 DEFAULT_ROLE = "agent"
 
@@ -199,6 +199,12 @@ class Manifest:
     """Model clients built to accept streamed calls whose token counts the backend did not
     report. Every count on those calls is `unknown`, so a reader of the numbers has this to
     trace it to."""
+
+    unseeded_models: list[str] = field(default_factory=list)
+    """Models the run's seed did not reach, by `request_model`: the adapter declares
+    `seeded = False` because its backend has no seed parameter, and drops the seed from every
+    request. The call records keep `params.seed`, which keyed the cassette and pinned nothing.
+    Empty where every backend took the seed."""
 
     recording: dict[str, Any] = field(
         default_factory=lambda: {"payload_rate": 1.0, "payloads": "kept"}
@@ -465,6 +471,7 @@ class Manifest:
             "suspensions": self.suspensions,
             "resume_waivers": self.resume_waivers,
             "stream_waivers": self.stream_waivers,
+            "unseeded_models": self.unseeded_models,
             "cassette": {**self.cassette, **self._cassette_counts},
             "memory": self.memory,
             "retrieval": self.retrieval,
@@ -494,13 +501,6 @@ class Manifest:
                 totals[name] = {"type": "unknown", "reason": self._unknown_tokens[name]}
             else:
                 totals[name] = self._tokens.get(name, 0)
-        return totals
-
-    def note_suspension(self, *, at: str, node_id: str, waiting_for: str) -> None:
-        """Record that the run stopped here, and later that it started again.
-
-        One entry per node that stopped, gaining ``resumed_at`` when the run continues. A run
-        that stopped in several nodes at once has one entry each, so the manifest names every
         if _REASONING_FIELD in self._unknown_tokens:
             totals[_REASONING_FIELD] = {
                 "type": "unknown",
@@ -508,6 +508,13 @@ class Manifest:
             }
         else:
             totals[_REASONING_FIELD] = self._tokens.get(_REASONING_FIELD)
+        return totals
+
+    def note_suspension(self, *, at: str, node_id: str, waiting_for: str) -> None:
+        """Record that the run stopped here, and later that it started again.
+
+        One entry per node that stopped, gaining ``resumed_at`` when the run continues. A run
+        that stopped in several nodes at once has one entry each, so the manifest names every
         question the run is waiting on. The gap between the two is time no budget was charged
         for, which is what makes a run that waited a day on a person auditable rather than a
         wall-clock figure nothing explains.
@@ -585,6 +592,7 @@ class Manifest:
             fetch_policy=list(raw.get("fetch_policy") or []),
             resume_waivers=list(raw.get("resume_waivers") or []),
             stream_waivers=list(raw.get("stream_waivers") or []),
+            unseeded_models=list(raw.get("unseeded_models") or []),
             recording=dict(raw.get("recording") or {"payload_rate": 1.0, "payloads": "kept"}),
             **overrides,
         )
