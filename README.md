@@ -100,8 +100,12 @@ a labelling pass or a judge under its own name. `runs("runs/")` reads them back 
 ## Pointing a run at a model
 
 ```python
-from simple_agents import GeminiClient, MistralClient, VLLMClient
+from simple_agents import AnthropicClient, GeminiClient, MistralClient, VLLMClient
+from simple_agents import OpenAIClient, OpenAIResponsesClient
 
+OpenAIClient(model="gpt-5.6-luna")                   # reads OPENAI_API_KEY, Chat Completions
+OpenAIResponsesClient(model="gpt-5.6-luna")          # the same key, the Responses API
+AnthropicClient(model="claude-sonnet-5")             # reads ANTHROPIC_API_KEY
 MistralClient(model="mistral-small-2603")            # reads MISTRAL_API_KEY
 GeminiClient(model="gemini-3.1-flash-lite")          # reads GEMINI_API_KEY
 VLLMClient(model="Qwen/Qwen3-8B", model_revision="<sha>")
@@ -170,7 +174,7 @@ The questions are the ones only you can answer: what the agent is for, what a ri
 | [`docs/conversation.md`](docs/conversation.md) | A conversation that outlives the run: how a node takes part, what a turn is, reading one back, and compaction. |
 | [`docs/prompts.md`](docs/prompts.md) | Writing a prompt as fixed text with named values, capping a value and recording what was cut, what a run records about how each prompt was built, and the page the builder reads it on. |
 | [`docs/context.md`](docs/context.md) | What the model is sent on each call, what overflow means, and how to replace the default. |
-| [`docs/model-clients.md`](docs/model-clients.md) | The model seam, the comparison between the three shipped adapters, a model per node, retries and pacing, streaming, reasoning output, and writing another. Each adapter has its own page: [`mistral.md`](docs/model-clients/mistral.md), [`gemini.md`](docs/model-clients/gemini.md), [`vllm.md`](docs/model-clients/vllm.md). |
+| [`docs/model-clients.md`](docs/model-clients.md) | The model seam, the comparison between the six shipped adapters, a model per node, retries and pacing, streaming, reasoning output, and writing another. Each backend has its own page: [`openai.md`](docs/model-clients/openai.md), [`anthropic.md`](docs/model-clients/anthropic.md), [`mistral.md`](docs/model-clients/mistral.md), [`gemini.md`](docs/model-clients/gemini.md), [`vllm.md`](docs/model-clients/vllm.md). |
 | [`docs/run-envelope.md`](docs/run-envelope.md) | The run directory, the manifest, cassette recording and replay, seeds, cost, redaction, and reading past runs back. |
 | [`docs/trajectory-format.md`](docs/trajectory-format.md) | The record schema with seven record types, token accounting, and the encoding rules everything downstream reads. |
 | [`docs/evaluation.md`](docs/evaluation.md) | Labelled example sets and their splits, k rollouts, the intervals over them, the eight rates, a figure per criterion, a metric the project declares itself, per-node metrics including reach and accuracy, comparing two versions, and comparing named variants of one pipeline. |

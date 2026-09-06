@@ -7,6 +7,33 @@ comments, results file and variant comparison.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `OpenAIClient`, over Chat Completions, for OpenAI and any endpoint that speaks that
+  dialect through `base_url`. `docs/model-clients/openai.md`.
+- `OpenAIResponsesClient`, over the Responses API, which returns the reasoning as a summary
+  and an encrypted item the next turn sends back.
+- `AnthropicClient`, over the Messages API, with a cache write priced per TTL and a signed
+  thinking block the next turn sends back. `docs/model-clients/anthropic.md`.
+- `tokens.output_reasoning` on a `model_call`: the part of `output` that was a chain of
+  thought, on a backend that reports it apart. `null` where the backend does not.
+- `unseeded_models` on the manifest: the models the run's seed did not reach, because their
+  API takes none. An adapter declares it with `seeded = False`.
+- A spent allowance is read off an error code as well as a phrase, and off the two 400s
+  Anthropic answers one with.
+- `Prompt.marked(cache_control=...)` reaches Anthropic's content block, with `ttl` inside the
+  mark for the one-hour cache.
+
+### Changed
+
+- Trajectory format `0.31`. `tokens` gains `output_reasoning`.
+- Manifest format `0.44`. `unseeded_models`, and `totals.tokens.output_reasoning`.
+- An assistant turn the loop builds carries `reasoning_blocks` beside `reasoning`, so an
+  adapter whose backend needs its reasoning back verbatim has it. `messages_to_wire` drops
+  both for the OpenAI dialect.
+
 ## [0.2.0] - 2026-09-05
 
 ### Added

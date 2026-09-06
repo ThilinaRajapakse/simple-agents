@@ -305,7 +305,7 @@ was carried:
 | `input_cache_write` | Prompt tokens written to cache this call. |
 | `cache_ttl` | The cache TTL in force, or `null` when no caching was used. |
 | `output` | Generated tokens, the chain of thought included. |
-| `output_reasoning` | The part of `output` that was a chain of thought, on a backend that reports it apart. `null` where the backend does not separate the two. |
+| `output_reasoning` | The part of `output` that was a chain of thought, on a backend that reports it apart. `null` where the backend does not separate the two, and on a call it reported no count for. |
 
 **`output_reasoning` is inside `output`, never added to it.** Gemini, OpenAI and Anthropic report the reasoning share of the output count, and every one of them bills it at the output rate, so cost derives from `output` alone. The count is what explains an output figure far larger than the answer on a backend that returns no chain of thought (`docs/model-clients.md` §6).
 

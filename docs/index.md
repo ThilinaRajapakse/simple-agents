@@ -2,7 +2,7 @@
 
 Simple Agents is a library for building an agent that can be evaluated, debugged, and improved. Every run records what it did, replays with no network access, and can be scored against a labelled set of examples, with a confidence interval on every figure.
 
-These twenty documents are the reference for what the library does. They are written for a builder and for the coding agent working on their behalf.
+These twenty-two documents are the reference for what the library does. They are written for a builder and for the coding agent working on their behalf.
 
 **Start with `docs/procedure.md`.** It is the order to build in, and each stage points at the documents that stage needs. `simple-agents init` registers it as a skill, so a coding agent has it loaded rather than having to remember it.
 
@@ -24,8 +24,10 @@ Read "What it covers" to determine if the library already ships a feature that i
 | `docs/context.md` | What the model is sent on each call, what overflow means, and how to replace the default | When a prompt outgrows what a backend accepts, or a node has to send less than the whole conversation |
 | `docs/memory.md` | The memory store, the tools that reach it, what an evaluation does with it, what redaction reaches, and why a write is a put | When the agent has to remember something after the run ends |
 | `docs/conversation.md` | A conversation that outlives the run: declaring the store, how a node takes part, what a turn is, reading a conversation back, compaction, and what each run records of it | When a second message has to know what the first one said: a chat, a ticket thread, anything multi-turn |
-| `docs/model-clients.md` | The model seam, the comparison between the three shipped backends, a model per node, retries and pacing, streaming, reasoning output, and writing an adapter | When choosing a backend, or connecting one the library does not ship |
+| `docs/model-clients.md` | The model seam, the comparison between the six shipped backends, a model per node, retries and pacing, streaming, reasoning output, and writing an adapter | When choosing a backend, or connecting one the library does not ship |
 | `docs/model-clients/gemini.md` | `GeminiClient`: pinning a model, declaring prices, prompt caching, evaluating against a backend that publishes no allowance, and the thought signature a tool call is refused without | When the run is pointed at Gemini |
+| `docs/model-clients/openai.md` | `OpenAIClient` and `OpenAIResponsesClient`: which API to reach for, pinning a model, declaring prices including the cache-write class GPT-5.6 bills, reasoning on each API, the seed one of them does not take, and other endpoints through `base_url` | When the run is pointed at OpenAI, or at a provider that speaks its dialect |
+| `docs/model-clients/anthropic.md` | `AnthropicClient`: the output ceiling every request needs, declaring prices per cache TTL, the cache mark, the thinking block that goes back verbatim, and the seed the API does not take | When the run is pointed at Anthropic |
 | `docs/model-clients/mistral.md` | `MistralClient`: declaring prices, prompt caching, the published rate-limit allowance, and what the backend does not report | When the run is pointed at Mistral |
 | `docs/model-clients/vllm.md` | `VLLMClient`: the serve command and what each flag decides, pinning the revision, per-call settings, and serving concurrency | When the run is pointed at a self-hosted vLLM server |
 | `docs/run-envelope.md` | The run directory, the manifest, what a run declares it is for, cassette recording and replay, seeds, cost, redaction, and reading past runs back | Before the first run that has to be reproducible, priced, or replayed, and when a project reads what its runs produced |

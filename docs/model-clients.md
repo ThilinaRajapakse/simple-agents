@@ -1,9 +1,11 @@
 # Model clients
 
-How a run reaches a model. Three adapters ship, and a project can supply its own without modifying the library.
+How a run reaches a model. Six adapters ship, over five backends, and a project can supply its own without modifying the library.
 
 | | Covers |
 |---|---|
+| [`docs/model-clients/openai.md`](model-clients/openai.md) | `OpenAIClient` and `OpenAIResponsesClient`: which API to reach for, pinning a model, declaring prices including the cache-write class GPT-5.6 bills, reasoning on each API, the seed one of them does not take, and other endpoints through `base_url` |
+| [`docs/model-clients/anthropic.md`](model-clients/anthropic.md) | `AnthropicClient`: the output ceiling every request needs, declaring prices per cache TTL, the cache mark, the thinking block that goes back verbatim, and the seed the API does not take |
 | [`docs/model-clients/mistral.md`](model-clients/mistral.md) | `MistralClient`: the constructor, declaring prices, prompt caching, the published rate-limit allowance, and what the backend does not report |
 | [`docs/model-clients/gemini.md`](model-clients/gemini.md) | `GeminiClient`: pinning a model, declaring prices including the rate a call cannot be priced without, prompt caching, running an evaluation against a backend that publishes no allowance, and the thought signature a tool call is refused without |
 | [`docs/model-clients/vllm.md`](model-clients/vllm.md) | `VLLMClient`: the serve command and what each flag decides, pinning the revision, per-call settings through `extra`, and reading serving concurrency |
@@ -35,26 +37,30 @@ Every failure inside an adapter is caller-facing, and raised rather than returne
 
 Rows describing what a provider does, rather than what the adapter fills in, can go stale. Verify those against the provider's documentation.
 
-| | `MistralClient` | `GeminiClient` | `VLLMClient` |
-|---|---|---|---|
-| `backend` | `hosted_api` | `hosted_api` | `self_hosted` |
-| Cost basis | `PriceBasis` | `PriceBasis` | `ComputeBasis` |
-| `model_revision` | `None`, the provider exposes none | the build string passed to the constructor | the SHA passed to the constructor |
-| Prompt caching | opt-in, per `prompt_cache_key` | automatic, no opt-in | automatic, no opt-in |
-| `input_cache_write` | `0` where the response carried a cached-token count, `unknown` where it did not | `unknown`, the provider counts no such class and bills its storage by the hour | reported as `created_cache_tokens` |
-| `concurrent_requests` | `None`, not applicable | `None`, not applicable | read off the server by default, `None` under `report_concurrency=False`, see `docs/model-clients/vllm.md` §5 |
-| Credentials | `MISTRAL_API_KEY` | `GEMINI_API_KEY` | none, unless the server sets one |
-| Published rate-limit allowance | five headers on a non-streamed response | none, on any response | none |
-| Token usage on a streamed response | reported, with or without `stream_options` | reported on every chunk, cumulative | reported, with `stream_options.include_usage` |
-| Prompt-token split on a streamed response | `cached_tokens` reported | `cachedContentTokenCount` reported | survives, under `--enable-prompt-tokens-details` |
-| Rate-limit allowance on a streamed response | **none**, where a non-streamed response carries five headers | none either way | none either way |
-| Tool calls on a streamed response | fragments joined by `index` | whole, in one chunk | fragments joined by `index`, under `--tool-call-parser hermes` |
-| Reasoning reported separately | **none**, on every model the API serves | `thought` parts, asked for by default | `reasoning`, under `--reasoning-parser` |
-| Suppressing reasoning | not available, `reasoning=False` is refused | `reasoning=False` sets the thinking budget to zero | `reasoning=False` sets the chat template's switch |
-| State a later request must return | none | a thought signature per tool call, on `ToolCallRequest.provider` | none |
+| | `OpenAIClient` | `OpenAIResponsesClient` | `AnthropicClient` | `MistralClient` | `GeminiClient` | `VLLMClient` |
+|---|---|---|---|---|---|---|
+| `backend` | `hosted_api` | `hosted_api` | `hosted_api` | `hosted_api` | `hosted_api` | `self_hosted` |
+| Cost basis | `PriceBasis` | `PriceBasis` | `PriceBasis`, with a write rate per TTL | `PriceBasis` | `PriceBasis` | `ComputeBasis` |
+| `model_revision` | as passed; a response names the dated snapshot on its own | as passed; the same | as passed | `None`, the provider exposes none | the build string passed to the constructor | the SHA passed to the constructor |
+| The run's seed | sent | **refused by the API**, dropped and declared | **no such parameter**, dropped and declared | sent as `random_seed` | sent | sent |
+| Prompt caching | automatic, `prompt_cache_key` routes | automatic, `prompt_cache_key` routes | on a `Prompt.marked(cache_control=...)` message | opt-in, per `prompt_cache_key` | automatic, no opt-in | automatic, no opt-in |
+| `input_cache_write` | `cache_write_tokens` on GPT-5.6 and later, billed at 1.25×; `0` on earlier models, which bill none | the same | `cache_creation_input_tokens`, billed at 1.25× or 2× by TTL | `0` where the response carried a cached-token count, `unknown` where it did not | `unknown`, the provider counts no such class and bills its storage by the hour | reported as `created_cache_tokens` |
+| `cache_ttl` | `null` | `null` | `"5m"` or `"1h"`, from the write's split | `null` | `null` | `null` |
+| `output_reasoning` | `reasoning_tokens` | `reasoning_tokens` | `thinking_tokens` | `null` | `thoughtsTokenCount`, and `null` on a call the provider reports none for | `null` |
+| `concurrent_requests` | `None` | `None` | `None` | `None`, not applicable | `None`, not applicable | read off the server by default, `None` under `report_concurrency=False`, see `docs/model-clients/vllm.md` §5 |
+| Credentials | `OPENAI_API_KEY` | `OPENAI_API_KEY` | `ANTHROPIC_API_KEY` | `MISTRAL_API_KEY` | `GEMINI_API_KEY` | none, unless the server sets one |
+| Published rate-limit allowance | on every response, resets as durations | the same | on every response, resets as RFC 3339 instants | five headers on a non-streamed response | none, on any response | none |
+| Token usage on a streamed response | reported, with `stream_options.include_usage` | on the final event, which carries the whole response | on `message_start` and `message_delta`, cumulative | reported, with or without `stream_options` | reported on every chunk, cumulative | reported, with `stream_options.include_usage` |
+| Prompt-token split on a streamed response | reported | reported | reported | `cached_tokens` reported | `cachedContentTokenCount` reported | survives, under `--enable-prompt-tokens-details` |
+| Rate-limit allowance on a streamed response | reported | reported | reported | **none**, where a non-streamed response carries five headers | none either way | none either way |
+| Tool calls on a streamed response | fragments joined by `index` | whole, on the final event | `input_json_delta` fragments per block | fragments joined by `index` | whole, in one chunk | fragments joined by `index`, under `--tool-call-parser hermes` |
+| Reasoning reported separately | **never**; the count alone | a summary and an encrypted item, asked for by default | a summary and a signed block, asked for by default | **none**, on every model the API serves | `thought` parts, asked for by default | `reasoning`, under `--reasoning-parser` |
+| Suppressing reasoning | `reasoning=False` sends `reasoning_effort: "none"` | `reasoning=False` sends `reasoning: {"effort": "none"}` | `reasoning=False` sends `thinking: {"type": "disabled"}` | not available, `reasoning=False` is refused | `reasoning=False` sets the thinking budget to zero | `reasoning=False` sets the chat template's switch |
+| State a later request must return | none | the reasoning item, on `Reasoning.blocks`; a turn without it is accepted | the thinking block, on `Reasoning.blocks`; a turn with it altered is refused | none | a thought signature per tool call, on `ToolCallRequest.provider` | none |
 
-The four streaming rows were measured against Mistral and vLLM on 2026-08-04 and against
-Gemini on 2026-08-12, the two reasoning rows on 2026-08-05 and 2026-08-12.
+The streaming rows were measured against Mistral and vLLM on 2026-08-04, against Gemini on
+2026-08-12, and against OpenAI and Anthropic on 2026-09-06; the reasoning rows on 2026-08-05,
+2026-08-12 and 2026-09-06.
 
 ## 3. Concurrency and compute cost
 
@@ -192,8 +198,11 @@ separately, the call's `model_call` record carries it on `outputs.reasoning`, ho
 them, the chain of thought is part of `content` and this field is `null`.
 
 **Reasoning is charged as output tokens either way.** A call whose `tokens.output` far exceeds
-the length of its `content` is explained by this field. On a backend that does not separate the
-two, nothing in the record explains it.
+the length of its `content` is explained by this field, and by `tokens.output_reasoning`, the
+share of the output count that was the chain of thought, on a backend that reports it
+(`docs/trajectory-format.md` §4.1.2). OpenAI's Chat Completions returns the count and no text,
+so there the count is the whole explanation. On a backend that separates neither, nothing in
+the record explains it.
 
 `Pipeline.run(on_reasoning=...)` delivers it as it arrives, on its own channel:
 
@@ -210,9 +219,12 @@ send its whole chain of thought before its first word of answer, so a display gi
 content, which on such a model is the moment the answer begins.
 
 **An `AgentNode` gives the model its own reasoning back.** The assistant turn the loop appends
-carries it, and each adapter decides what its backend accepts. This matters within a turn the
+carries it, as `reasoning` for the text and `reasoning_blocks` for what the backend sent in its
+own shape, and each adapter decides what its backend accepts. This matters within a turn the
 model is still working on: a chat template that renders prior reasoning is given it, and one
-that ignores the field is unaffected.
+that ignores the field is unaffected. Two backends need the blocks back verbatim: Anthropic
+refuses a turn whose thinking blocks were altered, and OpenAI's Responses API continues from
+its encrypted item (`docs/model-clients/anthropic.md` §5, `docs/model-clients/openai.md` §4).
 
 ### 6.1 Turning it off
 
@@ -225,7 +237,9 @@ VLLMClient(model="Qwen/Qwen3-8B", model_revision="<sha>", reasoning=False)
 
 The default keeps whatever the model produces. An adapter whose backend offers no such setting
 refuses the argument at construction rather than accepting a control that reads as applied and
-changes nothing; `MistralClient` is that case today.
+changes nothing; `MistralClient` is that case today. Where the setting exists and a model
+refuses it, as Claude Fable models refuse `thinking: {"type": "disabled"}`, the refusal comes
+back with the backend's own message.
 
 **Suppressing the chain of thought is not the same as not being sent it.** A backend may
 generate one, bill it as output tokens, and withhold it from the response. The library never
@@ -247,19 +261,25 @@ class FromTheFixtures:
 
 One project wrote 1,846 calls through a stand-in into the same `runs/` directory as its real ones. Its report counted them as spend and read 318 of their fan-out items as work that produced nothing, beside the real import. A run is marked where every model it could call is scripted; one that could reach a stand-in and a backend called a backend, so it spent what it spent and is not marked. `FakeModelClient(scripted=False)` says a run is meant to be read back as an ordinary one, which is what a test of a project's own reporting wants.
 
+**A backend with no seed parameter declares it.** Every run has a seed and every sampled call
+is sent one. An adapter whose backend takes none sets `seeded = False` on the class, drops the
+seed from the request, and the manifest lists the model under `unseeded_models`
+(`docs/run-envelope.md` §2.1), so a reader knows the seed keyed the cassette and pinned nothing.
+`AnthropicClient` and `OpenAIResponsesClient` do this.
+
 **A third method is optional.** `stream(request, on_chunk) -> ModelResponse` delivers content as it arrives and returns the same assembled response `complete` returns, so nothing downstream reads a different shape. The pieces passed to `on_chunk` must join to the response's `content` exactly, which the library checks; anything else produces a recording whose chunk boundaries index into text a replay does not have. An adapter without the method is a complete model client, and a node asking to stream against it is refused by name rather than quietly served.
 
 **A keyword on that method is optional too.** `stream(request, on_chunk, *, on_reasoning=None)` takes the chain of thought on its own sink, whose pieces must join to `response.reasoning.text` on the same rule. The library passes it only to a `stream` whose signature accepts it, so an adapter written with two parameters keeps working and is refused by name only when a run asks for `on_reasoning=`.
 
 **Fill `ModelResponse.reasoning` where the backend reports one separately**, with `text` for the chain of thought and `blocks` for anything the backend needs returned verbatim on a later request, such as a signature over the text or an opaque payload. `text` is `None` where only an opaque payload arrived. `content` keeps the chain of thought where the backend returns it inline: the markers are model-specific, and a wrong split rewrites the string an output schema is validated against.
 
-An adapter also translates an assistant turn's `reasoning` into what its backend accepts, or drops it where the backend has no field for it. `messages_to_wire(messages, reasoning_field=...)` is how the shipped adapters do it.
+An adapter also translates an assistant turn's `reasoning` into what its backend accepts, or drops it where the backend has no field for it. `messages_to_wire(messages, reasoning_field=...)` is how the OpenAI-dialect adapters do it. The turn's `reasoning_blocks` are the response's `blocks` as recorded, for an adapter whose backend wants them back: `_anthropic_wire.messages_from` and `_responses_wire.input_from` put them ahead of the tool calls they led to, and `messages_to_wire` drops them.
 
 A wrapper standing in front of an adapter delegates `stream` the way it delegates `complete`, and offers it, and its reasoning sink, only where the wrapped client has one.
 
 **Translate the conversation, not only the tool declarations.** An `AgentNode` appends what the model asked for as `{"id": ..., "name": ..., "arguments": {...}}`, which is the library's shape rather than any backend's. An adapter that forwards `request.messages` unchanged works for an `LLMNode`, which sends one message and never sees a tool call, and fails on the second turn of an `AgentNode`. The shipped adapters translate in `messages_to_wire`.
 
-**Return the state a backend sends with a tool call.** Some backends attach a value to each tool call and refuse the following request without it, such as Gemini's thought signature. It arrives on `ToolCallRequest.provider`, and an adapter fills it from the response and returns it unchanged when it translates the conversation. `messages_to_wire` has no field for it, because the OpenAI dialect has none: it refuses a call carrying `provider` rather than sending a turn the backend will reject. An adapter for a backend that sends such state translates the conversation itself, the way `_gemini_wire.contents_from` returns a signature as `thoughtSignature`. `docs/model-clients/gemini.md` §6 is the worked case, and the comparison table in §2 says which of the three shipped backends sends any.
+**Return the state a backend sends with a tool call.** Some backends attach a value to each tool call and refuse the following request without it, such as Gemini's thought signature. It arrives on `ToolCallRequest.provider`, and an adapter fills it from the response and returns it unchanged when it translates the conversation. `messages_to_wire` has no field for it, because the OpenAI dialect has none: it refuses a call carrying `provider` rather than sending a turn the backend will reject. An adapter for a backend that sends such state translates the conversation itself, the way `_gemini_wire.contents_from` returns a signature as `thoughtSignature`. `docs/model-clients/gemini.md` §6 is the worked case, and the comparison table in §2 says which of the shipped backends sends any.
 
 **Raise `ContextOverflow` when the backend refuses the request as too long**, rather than a
 general error. Every shipped backend answers 400 with a message naming the context length, and

@@ -285,8 +285,10 @@ class TestTheIndexListsWhatShips:
             18: "eighteen",
             19: "nineteen",
             20: "twenty",
+            21: "twenty-one",
+            22: "twenty-two",
         }
-        [named] = re.findall(r"These (\w+) documents", self.index())
+        [named] = re.findall(r"These ([\w-]+) documents", self.index())
 
         assert named == words[len(self.shipped())]
 
