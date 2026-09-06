@@ -1,0 +1,24 @@
+{
+  "status": 401,
+  "request": {
+    "model": "gpt-4.1-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "x"
+      }
+    ]
+  },
+  "response": {
+    "error": {
+      "message": "Incorrect API key provided: sk-bad. You can find your API key at https://platform.openai.com/account/api-keys.",
+      "type": "invalid_request_error",
+      "code": "invalid_api_key",
+      "param": null
+    },
+    "status": 401
+  },
+  "headers": {
+    "x-request-id": "req_ccdc62692cc64dd0809cc7c7cd035c7e"
+  }
+}

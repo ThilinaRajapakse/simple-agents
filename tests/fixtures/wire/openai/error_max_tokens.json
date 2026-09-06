@@ -1,0 +1,56 @@
+{
+  "status": 400,
+  "request": {
+    "model": "gpt-5-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Which retailer is in Kirkwall? Use the tool."
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "lookup",
+          "description": "Look up a retailer by town.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "town": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "town"
+            ],
+            "additionalProperties": false
+          },
+          "strict": true
+        }
+      }
+    ],
+    "seed": 7,
+    "temperature": 0.0,
+    "max_tokens": 300
+  },
+  "response": {
+    "error": {
+      "message": "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.",
+      "type": "invalid_request_error",
+      "param": "max_tokens",
+      "code": "unsupported_parameter"
+    }
+  },
+  "headers": {
+    "openai-processing-ms": "13",
+    "openai-version": "2020-10-01",
+    "x-ratelimit-limit-requests": "10000",
+    "x-ratelimit-limit-tokens": "10000000",
+    "x-ratelimit-remaining-requests": "9999",
+    "x-ratelimit-remaining-tokens": "9999987",
+    "x-ratelimit-reset-requests": "6ms",
+    "x-ratelimit-reset-tokens": "0s",
+    "x-request-id": "req_e1c31c7599494c618b73ee555c11446a"
+  }
+}

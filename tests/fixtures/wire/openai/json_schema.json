@@ -1,0 +1,80 @@
+{
+  "status": 200,
+  "request": {
+    "model": "gpt-4.1-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Capital of France?"
+      }
+    ],
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "output",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "answer": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "answer"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "seed": 7,
+    "max_tokens": 50
+  },
+  "response": {
+    "id": "chatcmpl-EL3vg1yPWJI73sABDjhRi6sAODxk6",
+    "object": "chat.completion",
+    "created": 1788688700,
+    "model": "gpt-4.1-mini-2025-04-14",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"answer\":\"The capital of France is Paris.\"}",
+          "refusal": null,
+          "annotations": []
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 39,
+      "completion_tokens": 11,
+      "total_tokens": 50,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "service_tier": "default",
+    "system_fingerprint": "fp_8b33040d7b"
+  },
+  "headers": {
+    "openai-processing-ms": "440",
+    "openai-version": "2020-10-01",
+    "x-ratelimit-limit-requests": "10000",
+    "x-ratelimit-limit-tokens": "10000000",
+    "x-ratelimit-remaining-requests": "9999",
+    "x-ratelimit-remaining-tokens": "9999993",
+    "x-ratelimit-reset-requests": "6ms",
+    "x-ratelimit-reset-tokens": "0s",
+    "x-request-id": "req_37dc78253b6948ab92f174a1d0ef3bd9"
+  }
+}

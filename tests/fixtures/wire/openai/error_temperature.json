@@ -1,0 +1,30 @@
+{
+  "status": 400,
+  "request": {
+    "model": "gpt-5-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "hi"
+      }
+    ],
+    "max_completion_tokens": 50,
+    "temperature": 0.2
+  },
+  "response": {
+    "error": {
+      "message": "Unsupported value: 'temperature' does not support 0.2 with this model. Only the default (1) value is supported.",
+      "type": "invalid_request_error",
+      "param": "temperature",
+      "code": "unsupported_value"
+    }
+  },
+  "headers": {
+    "x-ratelimit-limit-requests": "10000",
+    "x-ratelimit-limit-tokens": "10000000",
+    "x-ratelimit-remaining-requests": "9999",
+    "x-ratelimit-remaining-tokens": "9999997",
+    "x-ratelimit-reset-requests": "6ms",
+    "x-ratelimit-reset-tokens": "0s"
+  }
+}

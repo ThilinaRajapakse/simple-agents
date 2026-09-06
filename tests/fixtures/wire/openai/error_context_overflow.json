@@ -1,0 +1,32 @@
+{
+  "status": 400,
+  "request": {
+    "model": "gpt-4o-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "hello ... (140,000 tokens)"
+      }
+    ],
+    "max_tokens": 5
+  },
+  "response": {
+    "error": {
+      "message": "This model's maximum context length is 128000 tokens. However, your messages resulted in 140008 tokens. Please reduce the length of the messages.",
+      "type": "invalid_request_error",
+      "param": "messages",
+      "code": "context_length_exceeded"
+    }
+  },
+  "headers": {
+    "openai-processing-ms": "153",
+    "openai-version": "2020-10-01",
+    "x-ratelimit-limit-requests": "10000",
+    "x-ratelimit-limit-tokens": "10000000",
+    "x-ratelimit-remaining-requests": "9999",
+    "x-ratelimit-remaining-tokens": "9789998",
+    "x-ratelimit-reset-requests": "6ms",
+    "x-ratelimit-reset-tokens": "1.26s",
+    "x-request-id": "req_695787430fe048149772bcd7c6f5ba10"
+  }
+}

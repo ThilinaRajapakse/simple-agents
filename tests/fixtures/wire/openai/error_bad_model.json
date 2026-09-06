@@ -1,0 +1,23 @@
+{
+  "status": 404,
+  "request": {
+    "model": "gpt-nope",
+    "messages": [
+      {
+        "role": "user",
+        "content": "x"
+      }
+    ]
+  },
+  "response": {
+    "error": {
+      "message": "The model `gpt-nope` does not exist or you do not have access to it.",
+      "type": "invalid_request_error",
+      "param": null,
+      "code": "model_not_found"
+    }
+  },
+  "headers": {
+    "x-request-id": "req_49bec98afeda4b45b6ca9b7ee0506110"
+  }
+}

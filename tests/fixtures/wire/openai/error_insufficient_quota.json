@@ -1,0 +1,21 @@
+{
+  "status": 429,
+  "documented": "From the provider's error page, 2026-09-06. Not captured: a funded account cannot produce it.",
+  "request": {
+    "model": "gpt-5.6-luna",
+    "messages": [
+      {
+        "role": "user",
+        "content": "x"
+      }
+    ]
+  },
+  "response": {
+    "error": {
+      "message": "You exceeded your current quota, please check your plan and billing details.",
+      "type": "insufficient_quota",
+      "param": null,
+      "code": "insufficient_quota"
+    }
+  }
+}

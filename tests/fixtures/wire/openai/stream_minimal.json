@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "request": {
+    "model": "gpt-4.1-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Name three colours, comma separated."
+      }
+    ],
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    },
+    "max_tokens": 30
+  },
+  "sse": "data: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [{\"index\": 0, \"delta\": {\"role\": \"assistant\", \"content\": \"\", \"refusal\": null}, \"logprobs\": null, \"finish_reason\": null}], \"usage\": null, \"obfuscation\": \"5Mz7we1M\"}\n\ndata: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"Red\"}, \"logprobs\": null, \"finish_reason\": null}], \"usage\": null, \"obfuscation\": \"RYt7HWw\"}\n\ndata: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \",\"}, \"logprobs\": null, \"finish_reason\": null}], \"usage\": null, \"obfuscation\": \"93oQoANOh\"}\n\ndata: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \" blue\"}, \"logprobs\": null, \"finish_reason\": null}], \"usage\": null, \"obfuscation\": \"qMcKe\"}\n\ndata: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \",\"}, \"logprobs\": null, \"finish_reason\": null}], \"usage\": null, \"obfuscation\": \"3X5puMp8w\"}\n\ndata: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \" green\"}, \"logprobs\": null, \"finish_reason\": null}], \"usage\": null, \"obfuscation\": \"f6P1\"}\n\ndata: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [{\"index\": 0, \"delta\": {}, \"logprobs\": null, \"finish_reason\": \"stop\"}], \"usage\": null, \"obfuscation\": \"4JKF\"}\n\ndata: {\"id\": \"chatcmpl-EL3vgjSeKJ3Cx57WkGRipUiTIjHZi\", \"object\": \"chat.completion.chunk\", \"created\": 1788688700, \"model\": \"gpt-4.1-mini-2025-04-14\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f5b24f6c7f\", \"choices\": [], \"usage\": {\"prompt_tokens\": 14, \"completion_tokens\": 5, \"total_tokens\": 19, \"prompt_tokens_details\": {\"cached_tokens\": 0, \"audio_tokens\": 0}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"audio_tokens\": 0, \"accepted_prediction_tokens\": 0, \"rejected_prediction_tokens\": 0}}, \"obfuscation\": \"n7iIN8Kk3b\"}\n\ndata: [DONE]\n\n",
+  "headers": {
+    "x-ratelimit-limit-requests": "10000",
+    "x-ratelimit-limit-tokens": "10000000",
+    "x-ratelimit-remaining-requests": "9999",
+    "x-ratelimit-remaining-tokens": "9999989",
+    "x-ratelimit-reset-requests": "6ms",
+    "x-ratelimit-reset-tokens": "0s"
+  }
+}
