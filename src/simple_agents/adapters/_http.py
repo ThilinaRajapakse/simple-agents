@@ -26,7 +26,9 @@ from ..models import note_held_back
 
 __all__ = ["Retry", "HTTPBackend", "HttpResult", "retry_after_seconds"]
 
-RETRYABLE_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
+# 529 is what Anthropic answers an overload with, documented as a status to retry with backoff
+# the way a 503 is. Added 2026-09-06.
+RETRYABLE_STATUSES = frozenset({408, 429, 500, 502, 503, 504, 529})
 
 # What each backend says when the request is longer than the model's context window. Mistral
 # and vLLM were measured 2026-07-27 by `scripts/probe_context_overflow.py` and Gemini
@@ -116,7 +118,7 @@ class HttpResult:
 class Retry:
     """How many times a request is retried, and how long between attempts.
 
-    Applies to 408, 429, 500, 502, 503 and 504, and to a connection that failed to open. A
+    Applies to 408, 429, 500, 502, 503, 504 and 529, and to a connection that failed to open. A
     response carrying ``Retry-After`` waits for the interval it names instead of the backoff,
     up to ``max_backoff_s``, which caps the named interval as it caps the backoff::
 

@@ -76,7 +76,7 @@ Because concurrency drifts across a call's lifetime under continuous batching, a
 MistralClient(model="mistral-small-2603", retry=Retry(max_attempts=5))
 ```
 
-408, 429, 500, 502, 503 and 504 are retried, as is a connection that failed to open. Where the response carries `Retry-After`, in either the seconds form or the HTTP-date form, the call waits for the interval it names instead of the backoff, whether that is longer or shorter. Otherwise the backoff doubles. Anything else raises immediately with the backend's own message.
+408, 429, 500, 502, 503, 504 and 529 are retried, as is a connection that failed to open. Where the response carries `Retry-After`, in either the seconds form or the HTTP-date form, the call waits for the interval it names instead of the backoff, whether that is longer or shorter. Otherwise the backoff doubles. Anything else raises immediately with the backend's own message.
 
 Retries happen inside one call, so the trajectory records one `model_call` whose duration covers every attempt. Under a compute basis the charge covers the whole duration, retries included.
 
