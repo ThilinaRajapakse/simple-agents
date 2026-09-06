@@ -33,8 +33,8 @@ Nesting children inside their parent would make a single record unbounded in siz
 **What it looks like.** One `LLMNode` that made a single model call, abridged. The field tables in §2 to §5 define everything shown:
 
 ```jsonl
-{"format_version":"0.30","record_type":"node_execution","record_id":"r1","run_id":"run_7","parent_id":null,"sequence":1,"node_id":"extract_inseam","node_kind":"llm","seed":41,"inputs":{...},"outputs":{"inseam_cm":{"type":"unknown","reason":"not published"}},"budget":{"max_steps":1,"max_tokens":8000,"max_cost":null,"max_wall_clock_ms":30000},"termination":null,"route":[],"loop":null,"started_at":"2026-07-26T09:14:02.118Z","ended_at":"2026-07-26T09:14:04.902Z","error":null,"redactions":[],"omissions":[]}
-{"format_version":"0.30","record_type":"model_call","record_id":"r2","run_id":"run_7","parent_id":"r1","sequence":2,"backend":"self_hosted","request_model":"Qwen/Qwen3-8B","model_revision":"a1b2c3d","response_model":"Qwen/Qwen3-8B","params":{...},"seed":41,"inputs":{...},"outputs":{...},"finish_reason":"end_turn","tokens":{"input_uncached":1200,"input_cache_read":8400,"input_cache_write":0,"cache_ttl":null,"output":512},"concurrent_requests":4,"replayed":false,"cassette_key":"ck_9f2","context":{"context_builder":"AppendAll","dropped":[],"estimate":null},"recorded_duration_ms":null,"held_back_ms":0,"rate_limit":null,"provider":{},"stream":null,"item_index":null,"started_at":"2026-07-26T09:14:02.140Z","ended_at":"2026-07-26T09:14:04.880Z","error":null,"redactions":[],"omissions":[]}
+{"format_version":"0.31","record_type":"node_execution","record_id":"r1","run_id":"run_7","parent_id":null,"sequence":1,"node_id":"extract_inseam","node_kind":"llm","seed":41,"inputs":{...},"outputs":{"inseam_cm":{"type":"unknown","reason":"not published"}},"budget":{"max_steps":1,"max_tokens":8000,"max_cost":null,"max_wall_clock_ms":30000},"termination":null,"route":[],"loop":null,"started_at":"2026-07-26T09:14:02.118Z","ended_at":"2026-07-26T09:14:04.902Z","error":null,"redactions":[],"omissions":[]}
+{"format_version":"0.31","record_type":"model_call","record_id":"r2","run_id":"run_7","parent_id":"r1","sequence":2,"backend":"self_hosted","request_model":"Qwen/Qwen3-8B","model_revision":"a1b2c3d","response_model":"Qwen/Qwen3-8B","params":{...},"seed":41,"inputs":{...},"outputs":{...},"finish_reason":"end_turn","tokens":{"input_uncached":1200,"input_cache_read":8400,"input_cache_write":0,"cache_ttl":null,"output":512,"output_reasoning":null},"concurrent_requests":4,"replayed":false,"cassette_key":"ck_9f2","context":{"context_builder":"AppendAll","dropped":[],"estimate":null},"recorded_duration_ms":null,"held_back_ms":0,"rate_limit":null,"provider":{},"stream":null,"item_index":null,"started_at":"2026-07-26T09:14:02.140Z","ended_at":"2026-07-26T09:14:04.880Z","error":null,"redactions":[],"omissions":[]}
 ```
 
 Absent from the example: cost, total input tokens, and duration. All three are derived (§6).
@@ -62,11 +62,11 @@ Absent from the example: cost, total input tokens, and duration. All three are d
 
 ## 2. Common fields
 
-These fields are on all seven record types. Every record carries `format_version`, so a single line found on disk says how to interpret it. **Current version: `0.30`.**
+These fields are on all seven record types. Every record carries `format_version`, so a single line found on disk says how to interpret it. **Current version: `0.31`.**
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `format_version` | string | ✅ | `"0.30"`. Present on every record so a single line is interpretable in isolation. |
+| `format_version` | string | ✅ | `"0.31"`. Present on every record so a single line is interpretable in isolation. |
 | `record_type` | enum | ✅ | `node_execution` / `model_call` / `tool_call` / `consultation` / `delegation` |
 | `record_id` | string | ✅ | Unique within the run. |
 | `run_id` | string | ✅ | Identifies the run. Joins to the manifest. |
@@ -293,7 +293,8 @@ was carried:
   "input_cache_read": 8400,
   "input_cache_write": 0,
   "cache_ttl": null,
-  "output": 512
+  "output": 512,
+  "output_reasoning": 64
 }
 ```
 
@@ -303,7 +304,10 @@ was carried:
 | `input_cache_read` | Prompt tokens served from cache. |
 | `input_cache_write` | Prompt tokens written to cache this call. |
 | `cache_ttl` | The cache TTL in force, or `null` when no caching was used. |
-| `output` | Generated tokens. |
+| `output` | Generated tokens, the chain of thought included. |
+| `output_reasoning` | The part of `output` that was a chain of thought, on a backend that reports it apart. `null` where the backend does not separate the two. |
+
+**`output_reasoning` is inside `output`, never added to it.** Gemini, OpenAI and Anthropic report the reasoning share of the output count, and every one of them bills it at the output rate, so cost derives from `output` alone. The count is what explains an output figure far larger than the answer on a backend that returns no chain of thought (`docs/model-clients.md` §6).
 
 **`input_uncached` is not the prompt size.** Provider APIs commonly report the uncached remainder under a name like "input tokens". Total prompt tokens are `input_uncached + input_cache_read + input_cache_write`, the three are disjoint, and a token is counted once under the class it was processed as. On a workload with a large cached prefix, the uncached figure alone can be a small fraction of the prompt.
 
@@ -345,7 +349,7 @@ was carried:
 
 **`provider` on a tool call is state the backend sent with it and requires back on the next request**, in the backend's own shape. The key is absent where the backend sent none, which is every call to an OpenAI-dialect backend. `GeminiClient` fills it with the thought signature that backend refuses the following turn without, so a run resumed in another process rebuilds a conversation that backend still accepts (`docs/model-clients/gemini.md` §6).
 
-`reasoning` carries `text`, the chain of thought as text, and `blocks`, whatever the backend sent in its own shape for an adapter to return on a later request. `text` is `null` where a backend sent only an opaque payload, and `blocks` is `[]` where it sent only text.
+`reasoning` carries `text`, the chain of thought as text, and `blocks`, whatever the backend sent in its own shape for an adapter to return on a later request. `text` is `null` where a backend sent only an opaque payload, and `blocks` is `[]` where it sent only text. `AnthropicClient` fills `blocks` with the signed thinking block and `OpenAIResponsesClient` with the encrypted reasoning item; the assistant turn an `AgentNode` appends carries them as `reasoning_blocks`, beside `reasoning` for the text, and the next call's `inputs.messages` shows them going back.
 
 **A backend reporting no reasoning and a model producing none are the same record.** Both write `null`. Whether a backend separates the two is a property of that backend and, for a self-hosted server, of how it was started: `docs/model-clients/vllm.md` §2 covers what decides it. Where the chain of thought is not separated it is part of `content`, and this field is `null`.
 

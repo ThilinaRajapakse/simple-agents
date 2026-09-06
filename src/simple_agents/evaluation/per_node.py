@@ -957,7 +957,7 @@ def _add_tokens(reported: Mapping[str, Any], running: dict[str, Any]) -> None:
     A class the backend reported as unknown makes that class unknown for the node. Adding zero
     in its place would report a total lower than what was spent.
     """
-    for name in _TOKEN_FIELDS:
+    for name in (*_TOKEN_FIELDS, "output_reasoning"):
         value = reported.get(name)
         current = running.get(name, 0)
         if isinstance(current, dict):

@@ -266,7 +266,13 @@ class TestACostLimitAgainstAFigureThatIsABound:
         assert [m["calls"] for m in manifest["models"]["observed"]] == [1]
         assert manifest["totals"]["tokens"] == {
             key: calls[0]["tokens"][key]
-            for key in ("input_uncached", "input_cache_read", "input_cache_write", "output")
+            for key in (
+                "input_uncached",
+                "input_cache_read",
+                "input_cache_write",
+                "output",
+                "output_reasoning",
+            )
         }
         assert manifest["outcome"] == "error"
 

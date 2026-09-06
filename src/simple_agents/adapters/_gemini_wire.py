@@ -222,7 +222,8 @@ def tokens_from(usage: Mapping[str, Any]) -> TokenUsage:
 
     ``promptTokenCount`` includes the cached tokens, so the uncached count is the difference.
     ``thoughtsTokenCount`` is billed at the output rate and is added to the output count, which
-    is what makes a derived cost match the bill on a call that thought.
+    is what makes a derived cost match the bill on a call that thought; it is recorded apart
+    as ``output_reasoning`` too.
 
     The provider reports no cache-write count: it bills cache storage by the hour rather than
     by the token, and a request that populated the cache says nothing about having done so. So
@@ -250,6 +251,7 @@ def tokens_from(usage: Mapping[str, Any]) -> TokenUsage:
                 if isinstance(generated, int)
                 else Unknown(reason="not reported")
             ),
+            output_reasoning=thoughts if isinstance(thoughts, int) else None,
         )
 
     cached = usage.get("cachedContentTokenCount")
@@ -264,6 +266,7 @@ def tokens_from(usage: Mapping[str, Any]) -> TokenUsage:
             if isinstance(generated, int)
             else Unknown(reason="not reported")
         ),
+        output_reasoning=thoughts if isinstance(thoughts, int) else None,
     )
 
 

@@ -37,6 +37,9 @@ MANIFEST_FORMAT_VERSION = "0.43"
 DEFAULT_ROLE = "agent"
 
 _TOKEN_FIELDS = ("input_uncached", "input_cache_read", "input_cache_write", "output")
+# Inside `output` and summed apart from it. `null` in the totals where no call carried a
+# number, since a run of calls to a backend that does not separate the two has no figure.
+_REASONING_FIELD = "output_reasoning"
 
 
 def _basis_kinds(basis: dict[str, Any] | None) -> set[str]:
@@ -259,7 +262,7 @@ class Manifest:
         zero in its place would report a total lower than what was spent.
         """
         with self._lock:
-            for name in _TOKEN_FIELDS:
+            for name in (*_TOKEN_FIELDS, _REASONING_FIELD):
                 value = tokens.get(name)
                 if isinstance(value, dict) and value.get("type") == "unknown":
                     self._unknown_tokens.setdefault(
@@ -498,6 +501,13 @@ class Manifest:
 
         One entry per node that stopped, gaining ``resumed_at`` when the run continues. A run
         that stopped in several nodes at once has one entry each, so the manifest names every
+        if _REASONING_FIELD in self._unknown_tokens:
+            totals[_REASONING_FIELD] = {
+                "type": "unknown",
+                "reason": self._unknown_tokens[_REASONING_FIELD],
+            }
+        else:
+            totals[_REASONING_FIELD] = self._tokens.get(_REASONING_FIELD)
         question the run is waiting on. The gap between the two is time no budget was charged
         for, which is what makes a run that waited a day on a person auditable rather than a
         wall-clock figure nothing explains.

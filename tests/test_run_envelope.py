@@ -420,6 +420,7 @@ class TestManifest:
             "input_cache_read": 0,
             "input_cache_write": 0,
             "output": 5,
+            "output_reasoning": None,
         }
 
     def test_it_totals_the_time_the_run_spent_held_back(self, envelope, manifest_path) -> None:
@@ -465,7 +466,7 @@ class TestManifest:
         manifest = read_manifest(manifest_path)
         assert manifest["run_id"] == RUN_ID
         assert manifest["paths"]["trajectory"] == str(result.paths.trajectory)
-        assert manifest["trajectory_format_version"] == "0.30"
+        assert manifest["trajectory_format_version"] == "0.31"
 
     def test_it_records_a_completed_run_as_completed(self, envelope, manifest_path) -> None:
         one_llm_pipeline().run({}, envelope=envelope, run_id=RUN_ID, model=client_with(ANSWER))

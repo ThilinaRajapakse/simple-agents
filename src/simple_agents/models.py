@@ -135,6 +135,15 @@ class TokenUsage:
                    input_cache_read=Unknown(reason="server reports no prompt_tokens_details"),
                    input_cache_write=Unknown(reason="..."), cache_ttl=None, output=2)
 
+    ``output_reasoning`` is the part of ``output`` that was a chain of thought, on a backend
+    that reports the two apart: Gemini's ``thoughtsTokenCount``, OpenAI's ``reasoning_tokens``
+    and Anthropic's ``thinking_tokens``. It is inside ``output`` and is never added to it.
+    ``None`` where the backend does not separate the two, which is every vLLM and Mistral
+    call::
+
+        TokenUsage(input_uncached=54, input_cache_read=0, input_cache_write=0,
+                   cache_ttl=None, output=122, output_reasoning=64)
+
     ``total_input`` and ``total`` are computed from the fields and are not stored. They sum
     the counts that were measured, so a budget charged against them charges less than was
     spent on any axis the backend left unknown.
@@ -145,6 +154,7 @@ class TokenUsage:
     input_cache_write: int | Unknown
     cache_ttl: str | None
     output: int | Unknown
+    output_reasoning: int | Unknown | None = None
 
     @property
     def total_input(self) -> int:
@@ -182,6 +192,9 @@ class TokenUsage:
             "input_cache_write": _count_for_record(self.input_cache_write),
             "cache_ttl": self.cache_ttl,
             "output": _count_for_record(self.output),
+            "output_reasoning": (
+                None if self.output_reasoning is None else _count_for_record(self.output_reasoning)
+            ),
         }
 
 

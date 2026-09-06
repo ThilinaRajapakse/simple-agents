@@ -137,6 +137,7 @@ TOKEN_KEYS = {  # §4.1.2
     "input_cache_write",
     "cache_ttl",
     "output",
+    "output_reasoning",
 }
 
 # -----------------------------------------------------------------------------------------
@@ -195,7 +196,7 @@ class TestCommonFields:
     def test_format_version_is_declared_on_every_record(self, two_node_run):
         _, records = two_node_run
         # §2: present on every record so a single line is interpretable in isolation.
-        assert {r["format_version"] for r in records} == {"0.30"}
+        assert {r["format_version"] for r in records} == {"0.31"}
 
     def test_seq_is_monotonic_in_emission_order(self, two_node_run):
         _, records = two_node_run
@@ -297,8 +298,9 @@ class TestModelCallRecords:
             f"the other does not."
         )
 
-    def test_token_breakdown_is_five_fields_not_one(self, two_node_run):
-        """§4.1.2: a single input figure silently undercounts every cached call."""
+    def test_token_breakdown_is_six_fields_not_one(self, two_node_run):
+        """§4.1.2: a single input figure silently undercounts every cached call, and the
+        reasoning share of the output is its own field."""
         _, records = two_node_run
         call = next(r for r in records if r["record_type"] == "model_call")
         assert set(call["tokens"]) == TOKEN_KEYS

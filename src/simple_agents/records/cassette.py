@@ -531,6 +531,7 @@ def _tokens_from_record(raw: Mapping[str, Any]) -> TokenUsage:
         input_cache_write=raw.get("input_cache_write", 0),
         cache_ttl=raw.get("cache_ttl"),
         output=raw.get("output", 0),
+        output_reasoning=raw.get("output_reasoning"),
     )
 
 
@@ -815,6 +816,11 @@ def decode_model_response(raw: Mapping[str, Any]) -> ModelResponse:
             input_cache_write=_count(tokens.get("input_cache_write", 0)),
             cache_ttl=tokens.get("cache_ttl"),
             output=_count(tokens.get("output", 0)),
+            output_reasoning=(
+                None
+                if tokens.get("output_reasoning") is None
+                else _count(tokens.get("output_reasoning"))
+            ),
         ),
         concurrent_requests=raw.get("concurrent_requests"),
         rate_limit=RateLimit(**allowance) if isinstance(allowance, dict) else None,
