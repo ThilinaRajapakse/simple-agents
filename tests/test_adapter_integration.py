@@ -23,6 +23,10 @@ from schemas import Answer
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from record_backend_cassettes import (  # noqa: E402
     AGENT_QUESTION,
+    ANTHROPIC_MODEL,
+    ANTHROPIC_PRICES,
+    OPENAI_MODEL,
+    OPENAI_PRICES,
     CONTEXT_DOCUMENTS,
     EVAL_K,
     EVAL_SEED,
@@ -37,6 +41,7 @@ from record_backend_cassettes import (  # noqa: E402
     context_pipeline,
     eval_suite,
     mixed_pipeline,
+    pipeline as recorded_pipeline,
     search,
     stream_pipeline,
     tools_pipeline,
@@ -46,6 +51,9 @@ from simple_agents.cost import duration_seconds  # noqa: E402
 from simple_agents.evaluation import EvalResults  # noqa: E402
 
 from simple_agents import (
+    AnthropicClient,
+    OpenAIClient,
+    OpenAIResponsesClient,
     Prompt,
     Budget,
     Cassette,
@@ -701,13 +709,23 @@ class TestStreaming:
     server, each running one node that streams and one that does not.
     """
 
-    @pytest.fixture(params=["stream", "stream-vllm", "stream-gemini"])
+    @pytest.fixture(
+        params=[
+            "stream",
+            "stream-vllm",
+            "stream-gemini",
+            "stream-openai",
+            "stream-openai-responses",
+            "stream-anthropic",
+        ]
+    )
     def replayed(self, request, tmp_path):
         backend = request.param
         cassette = CASSETTES / f"{backend}.jsonl"
         if not cassette.exists():
             pytest.skip(f"no recorded {backend} cassette; run the recording script")
 
+        temperature = 0.0
         if backend == "stream":
             client = MistralClient(model="mistral-small-2603", api_key="not-used")
             basis, extra = MISTRAL_PRICES, None
@@ -718,12 +736,15 @@ class TestStreaming:
                 model_revision="3.1-flash-lite-05-2026",
             )
             basis, extra = GEMINI_PRICES, None
+        elif backend in NEW_ARMS:
+            client, basis = NEW_ARMS[backend]()
+            extra, temperature = None, None
         else:
             client = VLLMClient(model="Qwen/Qwen3-1.7B", model_revision=VLLM_REVISION)
             basis, extra = VLLM_DEVICE, NO_THINKING
 
         pieces: list[str] = []
-        result = stream_pipeline(extra).run(
+        result = stream_pipeline(extra, temperature=temperature).run(
             {"question": STREAM_QUESTION},
             envelope=RunEnvelope(
                 run_dir=tmp_path, cost_basis=basis, cassette=Cassette.replay(cassette)
@@ -1031,3 +1052,202 @@ class TestGeminiEvaluation:
     def test_the_metrics_are_what_the_live_run_produced(self, run) -> None:
         assert run.metrics["accuracy"].value == pytest.approx(1.0)
         assert run.metrics["false_confidence_rate"].value == 0.0
+
+
+# ---------------------------------------------------------------------------------------------
+# The three backends `P3-69` added, recorded 2026-09-06.
+
+
+def openai_client(**kwargs):
+    return OpenAIClient(model=OPENAI_MODEL, api_key="not-used-in-replay", **kwargs)
+
+
+def responses_client():
+    return OpenAIResponsesClient(model=OPENAI_MODEL, api_key="not-used-in-replay")
+
+
+def anthropic_client():
+    return AnthropicClient(model=ANTHROPIC_MODEL, api_key="not-used-in-replay")
+
+
+NEW_ARMS = {
+    "stream-openai": lambda: (openai_client(), OPENAI_PRICES),
+    "stream-openai-responses": lambda: (responses_client(), OPENAI_PRICES),
+    "stream-anthropic": lambda: (anthropic_client(), ANTHROPIC_PRICES),
+}
+
+
+def replay_new(tmp_path: Path, backend: str, client, basis):
+    """`replay` for an arm whose pipeline sets no temperature, since every one of these
+    backends refuses one on the models the arms call."""
+    cassette = CASSETTES / f"{backend}.jsonl"
+    if not cassette.exists():
+        pytest.skip(f"no recorded cassette for {backend}; run scripts/record_backend_cassettes.py")
+    envelope = RunEnvelope(run_dir=tmp_path, cost_basis=basis, cassette=Cassette.replay(cassette))
+    result = recorded_pipeline(temperature=None).run(
+        {"question": QUESTION}, envelope=envelope, model=client, seed=SEED
+    )
+    manifest = json.loads(Path(result.paths.manifest).read_text())
+    records = list(read_trajectory(result.paths.trajectory))
+    return result, manifest, records
+
+
+class TestOpenAIChatCompletions:
+    @pytest.fixture
+    def run(self, tmp_path: Path):
+        return replay_new(tmp_path, "openai", openai_client(), OPENAI_PRICES)
+
+    def test_the_recorded_answer_comes_back_through_the_schema(self, run) -> None:
+        result, manifest, records = run
+
+        assert result.output.answer == "Paris"
+        assert manifest["cassette"]["hits"] == 1
+        assert [r["replayed"] for r in records if r["record_type"] == "model_call"] == [True]
+
+    def test_the_seed_reached_this_backend(self, run) -> None:
+        _, manifest, _ = run
+
+        assert manifest["unseeded_models"] == []
+        assert manifest["seed"] == SEED
+
+    def test_the_reasoning_count_is_on_the_record_and_in_the_totals(self, run) -> None:
+        # Chat Completions returns no chain of thought, and this count is what explains an
+        # output figure larger than the answer.
+        _, manifest, records = run
+        call = next(r for r in records if r["record_type"] == "model_call")
+
+        assert isinstance(call["tokens"]["output_reasoning"], int)
+        assert call["outputs"]["reasoning"] is None
+        assert (
+            manifest["totals"]["tokens"]["output_reasoning"] == call["tokens"]["output_reasoning"]
+        )
+
+    def test_cost_derives_under_a_basis_with_a_cache_write_rate(self, run) -> None:
+        _, manifest, records = run
+        cost = total_cost(records, OPENAI_PRICES)
+
+        assert cost.known
+        assert manifest["totals"]["cost"]["value"] == pytest.approx(cost.value)
+
+
+class TestOpenAIResponses:
+    @pytest.fixture
+    def run(self, tmp_path: Path):
+        return replay_new(tmp_path, "openai-responses", responses_client(), OPENAI_PRICES)
+
+    def test_the_recorded_answer_comes_back_through_the_schema(self, run) -> None:
+        result, manifest, _ = run
+
+        assert result.output.answer == "Paris"
+        assert manifest["cassette"]["hits"] == 1
+
+    def test_the_manifest_names_the_model_the_seed_did_not_reach(self, run) -> None:
+        # The seed keyed the cassette, which is why the replay above is a hit, and pinned
+        # nothing on the backend, which is what this says.
+        _, manifest, records = run
+        call = next(r for r in records if r["record_type"] == "model_call")
+
+        assert manifest["unseeded_models"] == [OPENAI_MODEL]
+        assert call["params"]["seed"] is not None
+
+
+class TestAnthropic:
+    @pytest.fixture
+    def run(self, tmp_path: Path):
+        return replay_new(tmp_path, "anthropic", anthropic_client(), ANTHROPIC_PRICES)
+
+    def test_the_recorded_answer_comes_back_through_the_schema(self, run) -> None:
+        result, manifest, _ = run
+
+        assert result.output.answer == "Paris"
+        assert manifest["cassette"]["hits"] == 1
+
+    def test_the_manifest_names_the_model_the_seed_did_not_reach(self, run) -> None:
+        _, manifest, _ = run
+
+        assert manifest["unseeded_models"] == [ANTHROPIC_MODEL]
+
+    def test_cost_derives_under_a_basis_priced_per_ttl(self, run) -> None:
+        _, manifest, records = run
+        cost = total_cost(records, ANTHROPIC_PRICES)
+
+        assert cost.known
+        assert cost.is_upper_bound is False
+        assert manifest["totals"]["cost"]["value"] == pytest.approx(cost.value)
+
+
+class TestReasoningRoundTrip:
+    """The multi-turn path against the two backends whose reasoning has to go back verbatim.
+
+    A `FakeModelClient` ignores the messages it is sent, so nothing else shows that the loop
+    carried an encrypted item or a signed block back and that the backend accepted the turn.
+    Both were recorded 2026-09-06, and both cassettes hold a later request carrying blocks the
+    earlier response produced.
+    """
+
+    @pytest.fixture(params=["agent-openai-responses", "agent-anthropic"])
+    def run(self, request, tmp_path: Path):
+        backend = request.param
+        cassette = CASSETTES / f"{backend}.jsonl"
+        if not cassette.exists():
+            pytest.skip(f"no recorded {backend} cassette; run the recording script")
+        if backend == "agent-anthropic":
+            client, basis = anthropic_client(), ANTHROPIC_PRICES
+        else:
+            client, basis = responses_client(), OPENAI_PRICES
+        envelope = RunEnvelope(
+            run_dir=tmp_path, cost_basis=basis, cassette=Cassette.replay(cassette)
+        )
+        result = agent_pipeline(temperature=None).run(
+            {"question": AGENT_QUESTION}, envelope=envelope, model=client, seed=SEED
+        )
+        entries = [json.loads(line) for line in cassette.read_text().splitlines()]
+        return backend, result, list(read_trajectory(result.paths.trajectory)), entries
+
+    def test_the_loop_reached_an_answer_through_the_schema(self, run) -> None:
+        _, result, _, _ = run
+
+        assert result.output.retailer == "Kirkwall"
+
+    def test_a_turn_recorded_its_reasoning_as_text_and_as_blocks(self, run) -> None:
+        backend, _, records, _ = run
+        reasoned = [
+            r["outputs"]["reasoning"]
+            for r in records
+            if r["record_type"] == "model_call" and r["outputs"]["reasoning"]
+        ]
+
+        assert reasoned, f"{backend} produced no reasoning in the recorded run"
+        assert any(r["blocks"] for r in reasoned)
+        block = next(b for r in reasoned for b in r["blocks"])
+        if backend == "agent-anthropic":
+            assert block["type"] == "thinking" and block["signature"]
+        else:
+            assert block["type"] == "reasoning" and block["encrypted_content"]
+
+    def test_the_blocks_went_back_on_a_following_request(self, run) -> None:
+        # Read from the recorded request rather than from the response, so this says what the
+        # backend was sent and accepted.
+        _, _, _, entries = run
+        later = [
+            entry
+            for entry in entries
+            if entry["kind"] == "model_call" and len(entry["request"]["messages"]) > 1
+        ]
+
+        assert later
+        sent_back = [
+            block
+            for entry in later
+            for message in entry["request"]["messages"]
+            for block in message.get("reasoning_blocks") or []
+        ]
+        assert sent_back
+
+    def test_the_reasoning_count_is_apart_from_the_output_count(self, run) -> None:
+        _, _, records, _ = run
+        calls = [r for r in records if r["record_type"] == "model_call"]
+
+        assert all(isinstance(c["tokens"]["output_reasoning"], int) for c in calls)
+        assert all(c["tokens"]["output_reasoning"] <= c["tokens"]["output"] for c in calls)
+        assert any(c["tokens"]["output_reasoning"] > 0 for c in calls)

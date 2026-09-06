@@ -10,6 +10,8 @@ and `tests/test_adapter_integration.py` replays them with no key and no network.
     uv run python scripts/record_backend_cassettes.py tools-gemini
     uv run python scripts/record_backend_cassettes.py eval-gemini
     uv run python scripts/record_backend_cassettes.py stream-gemini
+    uv run python scripts/record_backend_cassettes.py {openai,openai-responses,anthropic}
+    uv run python scripts/record_backend_cassettes.py {agent,stream}-{openai,openai-responses,anthropic}
     uv run python scripts/record_backend_cassettes.py tools
     uv run python scripts/record_backend_cassettes.py tools-vllm --base-url http://127.0.0.1:8001/v1
     uv run python scripts/record_backend_cassettes.py eval
@@ -35,6 +37,9 @@ from schemas import Answer, Finding  # noqa: E402
 
 from simple_agents import (  # noqa: E402
     AgentNode,
+    AnthropicClient,
+    OpenAIClient,
+    OpenAIResponsesClient,
     Prompt,
     Section,
     AppendAll,
@@ -104,6 +109,53 @@ GEMINI_PRICES = PriceBasis(
     input_cache_write_per_mtok=0.0,
     output_per_mtok=1.50,
 )
+OPENAI_MODEL = "gpt-5.6-luna"
+ANTHROPIC_MODEL = "claude-sonnet-5"
+# Published rates on 2026-09-06. GPT-5.6 bills a cache write at 1.25x the uncached rate and
+# reports the count; Anthropic bills a write per TTL. `docs/model-clients/openai.md` §3 and
+# `docs/model-clients/anthropic.md` §3.
+OPENAI_PRICES = PriceBasis(
+    currency="USD",
+    input_uncached_per_mtok=0.20,
+    input_cache_read_per_mtok=0.02,
+    input_cache_write_per_mtok=0.25,
+    output_per_mtok=1.20,
+)
+ANTHROPIC_PRICES = PriceBasis(
+    currency="USD",
+    input_uncached_per_mtok=2.00,
+    input_cache_read_per_mtok=0.20,
+    cache_write_per_mtok_by_ttl={"5m": 2.50, "1h": 4.00},
+    output_per_mtok=10.00,
+)
+
+# The three backends `P3-69` added. Each refuses a temperature other than the default on the
+# models these arms call, so their pipelines set none; the seed is dropped by two of them and
+# the manifest says so. Chat Completions on GPT-5.6 refuses function tools unless reasoning
+# is off, measured 2026-09-06, so the `openai` agent arm turns it off.
+NEW_BACKENDS = ("openai", "openai-responses", "anthropic")
+
+
+def _new_backend(backend: str) -> str | None:
+    """Which of the three new backends an arm name ends in, or ``None``."""
+    for name in NEW_BACKENDS:
+        if backend == name or backend.endswith(f"-{name}"):
+            return name
+    return None
+
+
+def _new_client(backend: str, *, tools: bool = False):
+    """The client, basis and secret for one of the new backends' arms."""
+    name = _new_backend(backend)
+    if name == "openai":
+        return (
+            OpenAIClient(model=OPENAI_MODEL, reasoning=not tools),
+            OPENAI_PRICES,
+            ["OPENAI_API_KEY"],
+        )
+    if name == "openai-responses":
+        return OpenAIResponsesClient(model=OPENAI_MODEL), OPENAI_PRICES, ["OPENAI_API_KEY"]
+    return AnthropicClient(model=ANTHROPIC_MODEL), ANTHROPIC_PRICES, ["ANTHROPIC_API_KEY"]
 
 
 def build_prompt(inputs, ctx):
@@ -113,9 +165,9 @@ def build_prompt(inputs, ctx):
     )
 
 
-def pipeline() -> Pipeline:
+def pipeline(temperature: float | None = 0.0) -> Pipeline:
     return Pipeline(
-        [LLMNode(build_prompt, output_schema=Answer, node_id="answer", temperature=0.0)],
+        [LLMNode(build_prompt, output_schema=Answer, node_id="answer", temperature=temperature)],
         budget=Budget(max_steps=None, max_tokens=100_000, max_cost=None, max_wall_clock_ms=120_000),
     )
 
@@ -157,7 +209,7 @@ def hunt(inputs, ctx):
     )
 
 
-def agent_pipeline() -> Pipeline:
+def agent_pipeline(temperature: float | None = 0.0) -> Pipeline:
     return Pipeline(
         [
             AgentNode(
@@ -168,7 +220,7 @@ def agent_pipeline() -> Pipeline:
                     max_steps=6, max_tokens=40_000, max_cost=None, max_wall_clock_ms=120_000
                 ),
                 node_id="hunt",
-                temperature=0.0,
+                temperature=temperature,
             )
         ],
         budget=Budget(max_steps=None, max_tokens=100_000, max_cost=None, max_wall_clock_ms=180_000),
@@ -643,6 +695,8 @@ def record(backend: str, base_url: str | None = None) -> None:
         client = MistralClient(model=MISTRAL_MODEL)
         basis = MISTRAL_PRICES
         secret_env = ["MISTRAL_API_KEY"]
+    elif _new_backend(backend):
+        client, basis, secret_env = _new_client(backend, tools=backend.startswith("agent-"))
     elif backend == "gemini" or backend.endswith("-gemini"):
         client = GeminiClient(model=GEMINI_MODEL, model_revision=GEMINI_REVISION)
         basis = GEMINI_PRICES
@@ -684,6 +738,14 @@ def record(backend: str, base_url: str | None = None) -> None:
     elif backend in ("agent", "agent-gemini"):
         result = agent_pipeline().run(
             {"question": AGENT_QUESTION}, envelope=envelope, model=client, seed=SEED
+        )
+    elif backend.startswith("agent-"):
+        result = agent_pipeline(temperature=None).run(
+            {"question": AGENT_QUESTION}, envelope=envelope, model=client, seed=SEED
+        )
+    elif _new_backend(backend):
+        result = pipeline(temperature=None).run(
+            {"question": QUESTION}, envelope=envelope, model=client, seed=SEED
         )
     elif backend in ("context", "context-vllm"):
         result = context_pipeline().run(
@@ -925,7 +987,7 @@ def stream_prompt(inputs, ctx):
     )
 
 
-def stream_pipeline(extra=None) -> Pipeline:
+def stream_pipeline(extra=None, temperature: float | None = 0.0) -> Pipeline:
     """One streaming node and one that does not stream, so a recording holds both shapes."""
     return Pipeline(
         [
@@ -933,7 +995,7 @@ def stream_pipeline(extra=None) -> Pipeline:
                 stream_prompt,
                 output_schema=Finding,
                 node_id="answer",
-                temperature=0.0,
+                temperature=temperature,
                 stream=True,
                 extra=extra,
             ),
@@ -944,7 +1006,7 @@ def stream_pipeline(extra=None) -> Pipeline:
                 ),
                 output_schema=Finding,
                 node_id="restate",
-                temperature=0.0,
+                temperature=temperature,
                 extra=extra,
             ),
         ],
@@ -964,6 +1026,9 @@ def record_stream(backend: str, base_url: str | None = None) -> None:
     elif backend == "stream-gemini":
         client = GeminiClient(model=GEMINI_MODEL, model_revision=GEMINI_REVISION)
         basis, secret_env, extra = GEMINI_PRICES, ["GEMINI_API_KEY"], None
+    elif _new_backend(backend):
+        client, basis, secret_env = _new_client(backend)
+        extra = None
     else:
         client = VLLMClient(
             model=VLLM_MODEL,
@@ -982,7 +1047,8 @@ def record_stream(backend: str, base_url: str | None = None) -> None:
     )
 
     pieces: list[str] = []
-    result = stream_pipeline(extra).run(
+    temperature = None if _new_backend(backend) else 0.0
+    result = stream_pipeline(extra, temperature=temperature).run(
         {"question": STREAM_QUESTION},
         envelope=envelope,
         model=client,
@@ -1060,6 +1126,15 @@ if __name__ == "__main__":
             "stream-vllm",
             "stream-gemini",
             "mixed",
+            "openai",
+            "agent-openai",
+            "stream-openai",
+            "openai-responses",
+            "agent-openai-responses",
+            "stream-openai-responses",
+            "anthropic",
+            "agent-anthropic",
+            "stream-anthropic",
         ],
     )
     parser.add_argument("--base-url", default=None, help="where the vLLM server is listening")
