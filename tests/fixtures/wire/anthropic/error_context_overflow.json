@@ -1,0 +1,24 @@
+{
+  "status": 400,
+  "request": {
+    "model": "claude-haiku-4-5",
+    "max_tokens": 10,
+    "messages": [
+      {
+        "role": "user",
+        "content": "hello ... (230,000 tokens)"
+      }
+    ]
+  },
+  "response": {
+    "type": "error",
+    "error": {
+      "type": "invalid_request_error",
+      "message": "prompt is too long: 230024 tokens > 200000 maximum"
+    },
+    "request_id": "req_011CemzjYQW8kErpQSCapfzo"
+  },
+  "headers": {
+    "request-id": "req_011CemzjYQW8kErpQSCapfzo"
+  }
+}

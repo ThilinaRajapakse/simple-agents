@@ -1,0 +1,25 @@
+{
+  "status": 400,
+  "request": {
+    "model": "claude-sonnet-5",
+    "max_tokens": 100,
+    "temperature": 0.0,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Capital of France? One word."
+      }
+    ]
+  },
+  "response": {
+    "type": "error",
+    "error": {
+      "type": "invalid_request_error",
+      "message": "`temperature` is deprecated for this model."
+    },
+    "request_id": "req_011CemziYTwurWCdxSbta8Cm"
+  },
+  "headers": {
+    "request-id": "req_011CemziYTwurWCdxSbta8Cm"
+  }
+}

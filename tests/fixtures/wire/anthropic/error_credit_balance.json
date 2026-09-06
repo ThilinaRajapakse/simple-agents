@@ -1,0 +1,22 @@
+{
+  "status": 400,
+  "documented": "From the provider's error page and the wording reported by its users, 2026-09-06. Not captured: a funded account cannot produce it.",
+  "request": {
+    "model": "claude-sonnet-5",
+    "max_tokens": 10,
+    "messages": [
+      {
+        "role": "user",
+        "content": "x"
+      }
+    ]
+  },
+  "response": {
+    "type": "error",
+    "error": {
+      "type": "invalid_request_error",
+      "message": "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."
+    },
+    "request_id": null
+  }
+}

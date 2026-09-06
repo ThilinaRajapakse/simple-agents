@@ -1,0 +1,21 @@
+{
+  "status": 401,
+  "request": {
+    "model": "claude-sonnet-5",
+    "max_tokens": 10,
+    "messages": [
+      {
+        "role": "user",
+        "content": "x"
+      }
+    ]
+  },
+  "response": {
+    "type": "error",
+    "error": {
+      "type": "authentication_error",
+      "message": "API key is invalid."
+    },
+    "request_id": null
+  }
+}

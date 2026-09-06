@@ -1,0 +1,24 @@
+{
+  "status": 404,
+  "request": {
+    "model": "claude-nope",
+    "max_tokens": 10,
+    "messages": [
+      {
+        "role": "user",
+        "content": "x"
+      }
+    ]
+  },
+  "response": {
+    "type": "error",
+    "error": {
+      "type": "not_found_error",
+      "message": "model: claude-nope"
+    },
+    "request_id": "req_011CemzjWxw1qdj62XnFKtBu"
+  },
+  "headers": {
+    "request-id": "req_011CemzjWxw1qdj62XnFKtBu"
+  }
+}

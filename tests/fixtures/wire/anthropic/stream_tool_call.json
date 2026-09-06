@@ -1,0 +1,52 @@
+{
+  "status": 200,
+  "request": {
+    "model": "claude-sonnet-5",
+    "max_tokens": 1500,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    },
+    "tools": [
+      {
+        "name": "lookup",
+        "description": "Look up a retailer by town.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "town": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "town"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    ],
+    "messages": [
+      {
+        "role": "user",
+        "content": "Which retailer is in Kirkwall? Use the tool."
+      }
+    ],
+    "stream": true
+  },
+  "sse": "event: message_start\ndata: {\"type\": \"message_start\", \"message\": {\"model\": \"claude-sonnet-5\", \"id\": \"msg_011CemzjLWPZf2xc7PUGLvJw\", \"type\": \"message\", \"role\": \"assistant\", \"content\": [], \"stop_reason\": null, \"stop_sequence\": null, \"stop_details\": null, \"usage\": {\"input_tokens\": 461, \"cache_creation_input_tokens\": 0, \"cache_read_input_tokens\": 0, \"cache_creation\": {\"ephemeral_5m_input_tokens\": 0, \"ephemeral_1h_input_tokens\": 0}, \"output_tokens\": 17, \"service_tier\": \"standard\", \"inference_geo\": \"global\"}}}\n\nevent: content_block_start\ndata: {\"type\": \"content_block_start\", \"index\": 0, \"content_block\": {\"type\": \"tool_use\", \"id\": \"toolu_011icE6mHc72gLeEeHTMXaD4\", \"name\": \"lookup\", \"input\": {}, \"caller\": {\"type\": \"direct\"}}}\n\nevent: ping\ndata: {\"type\": \"ping\"}\n\nevent: content_block_delta\ndata: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"input_json_delta\", \"partial_json\": \"\"}}\n\nevent: content_block_delta\ndata: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"input_json_delta\", \"partial_json\": \"{\\\"town\\\"\"}}\n\nevent: content_block_delta\ndata: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"input_json_delta\", \"partial_json\": \": \\\"Kirkw\"}}\n\nevent: content_block_delta\ndata: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"input_json_delta\", \"partial_json\": \"all\\\"}\"}}\n\nevent: content_block_stop\ndata: {\"type\": \"content_block_stop\", \"index\": 0}\n\nevent: message_delta\ndata: {\"type\": \"message_delta\", \"delta\": {\"stop_reason\": \"tool_use\", \"stop_sequence\": null, \"stop_details\": null}, \"usage\": {\"input_tokens\": 461, \"cache_creation_input_tokens\": 0, \"cache_read_input_tokens\": 0, \"output_tokens\": 52, \"output_tokens_details\": {\"thinking_tokens\": 0}}}\n\nevent: message_stop\ndata: {\"type\": \"message_stop\"}\n\n",
+  "headers": {
+    "anthropic-ratelimit-input-tokens-limit": "10000000",
+    "anthropic-ratelimit-input-tokens-remaining": "10000000",
+    "anthropic-ratelimit-input-tokens-reset": "2026-09-06T10:04:09Z",
+    "anthropic-ratelimit-output-tokens-limit": "2000000",
+    "anthropic-ratelimit-output-tokens-remaining": "2000000",
+    "anthropic-ratelimit-output-tokens-reset": "2026-09-06T10:04:09Z",
+    "anthropic-ratelimit-requests-limit": "10000",
+    "anthropic-ratelimit-requests-remaining": "9999",
+    "anthropic-ratelimit-requests-reset": "2026-09-06T10:04:09Z",
+    "anthropic-ratelimit-tokens-limit": "12000000",
+    "anthropic-ratelimit-tokens-remaining": "12000000",
+    "anthropic-ratelimit-tokens-reset": "2026-09-06T10:04:09Z"
+  }
+}

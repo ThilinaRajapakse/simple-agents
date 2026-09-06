@@ -1,0 +1,93 @@
+{
+  "status": 200,
+  "request": {
+    "model": "claude-sonnet-5",
+    "max_tokens": 2000,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    },
+    "tools": [
+      {
+        "name": "lookup",
+        "description": "Look up a retailer by town.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "town": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "town"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    ],
+    "messages": [
+      {
+        "role": "user",
+        "content": "Which retailer is in Kirkwall? Use the tool."
+      }
+    ]
+  },
+  "response": {
+    "model": "claude-sonnet-5",
+    "id": "msg_011Cemzh9hSwpbFwp8pWoP8U",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "I'll look up Kirkwall using the lookup tool.\n\n",
+        "signature": "Ep0CCpABCBEYAipALIZPcxIQUEeAyBQqo36efeXjwfMQbfciORHT85ZdBQRLi6tt85ZMLW1oFi79A5KOdAQVs3iP1XX9ver2F3ZQ+DIPY2xhdWRlLXNvbm5ldC01OABCCHRoaW5raW5nWiQxM2RmYzZhYy02Njg1LTQ2ODctOTNhNy1jMmFkMGFlMDFjM2SoAYL19NQGEgzp/Y6Y0s8hsQ7XOTwaDC0onO1sFShxHfqM6SIw8EvufPwuq81ePzVREcnrU+tonLwaXhQPJqoBg50PVGl8kqeVUKihxiajN6jSDuOnKjogf6wZpR0TeeRQ79AsV7B/E5Z0N2FSR4H6SVmQuKf4Os8XMhTD5oVefxV6KRlxZwmQm3XBr1pKlNCqGAE="
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01T5GAUETBtvZp14bSgMrvhV",
+        "name": "lookup",
+        "input": {
+          "town": "Kirkwall"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 461,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 73,
+      "output_tokens_details": {
+        "thinking_tokens": 20
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "headers": {
+    "anthropic-ratelimit-input-tokens-limit": "10000000",
+    "anthropic-ratelimit-input-tokens-remaining": "10000000",
+    "anthropic-ratelimit-input-tokens-reset": "2026-09-06T10:03:45Z",
+    "anthropic-ratelimit-output-tokens-limit": "2000000",
+    "anthropic-ratelimit-output-tokens-remaining": "2000000",
+    "anthropic-ratelimit-output-tokens-reset": "2026-09-06T10:03:46Z",
+    "anthropic-ratelimit-requests-limit": "10000",
+    "anthropic-ratelimit-requests-remaining": "9999",
+    "anthropic-ratelimit-requests-reset": "2026-09-06T10:03:39Z",
+    "anthropic-ratelimit-tokens-limit": "12000000",
+    "anthropic-ratelimit-tokens-remaining": "12000000",
+    "anthropic-ratelimit-tokens-reset": "2026-09-06T10:03:45Z",
+    "request-id": "req_011Cemzh8mPfYV5Q2tQGaEez"
+  }
+}

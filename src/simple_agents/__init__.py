@@ -60,7 +60,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .adapters import GeminiClient, MistralClient, VLLMClient
+from .adapters import (
+    AnthropicClient,
+    GeminiClient,
+    MistralClient,
+    OpenAIClient,
+    OpenAIResponsesClient,
+    VLLMClient,
+)
 from .adapters._http import Retry, retry_after_seconds
 from .budget import Budget, BudgetExceeded
 from .records.cassette import Cassette, CassetteMiss
@@ -417,8 +424,11 @@ __all__ = [
     "FakeRerankClient",
     "fake_response",
     # Adapters
+    "AnthropicClient",
     "GeminiClient",
     "MistralClient",
+    "OpenAIClient",
+    "OpenAIResponsesClient",
     "VLLMClient",
     "Retry",
     "retry_after_seconds",
