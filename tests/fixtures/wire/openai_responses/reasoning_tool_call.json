@@ -1,0 +1,171 @@
+{
+  "status": 200,
+  "request": {
+    "model": "gpt-5-mini",
+    "input": [
+      {
+        "role": "user",
+        "content": "Which retailer is in Kirkwall? Use the tool."
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "name": "lookup",
+        "description": "Look up a retailer by town.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "town": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "town"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    ],
+    "reasoning": {
+      "effort": "low",
+      "summary": "auto"
+    },
+    "include": [
+      "reasoning.encrypted_content"
+    ],
+    "store": false,
+    "max_output_tokens": 800
+  },
+  "response": {
+    "id": "resp_0aa3c2b63a40dd25016a9d39335c1887d2b9a3930f5f3eff38",
+    "object": "response",
+    "created_at": 1788688691,
+    "status": "completed",
+    "background": false,
+    "billing": {
+      "payer": "developer"
+    },
+    "completed_at": 1788688693,
+    "error": null,
+    "frequency_penalty": 0.0,
+    "incomplete_details": null,
+    "instructions": null,
+    "max_output_tokens": 800,
+    "max_tool_calls": null,
+    "model": "gpt-5-mini-2025-08-07",
+    "moderation": null,
+    "output": [
+      {
+        "id": "rs_0aa3c2b63a40dd25016a9d3933d39887d2b68d5b4483099041",
+        "type": "reasoning",
+        "content": [],
+        "encrypted_content": "gAAAAABqnTk1t26NT5TYu8w-8Ym809IIsFrdRZFhF2-Kht6qCnR1Fx1UIlyh-EQwpfQkE-V9BeS3qZLLqZ6CEEweMKfscilkPknO3u9HcaOLkFl0rEQWphyKfvyCFyEs5UBoMERrhiTvm0jGX8kmRfOkUI-3CSq3qCDmZkoxUeFtKtmBwb4MPXzJyov9cK4RZTLZqyKQQ5rDk6ai9QHx2FhnmV9zE_mjJ882AUuf5eeOp-qB_-pIPlIZnqgWVtyCzSsxQFkfJwYe54WLaPE6ExcBU-ranFMC5Z0Kv8TBwlej1ViQJgWvxTXE7Oqhhw_8KU1RwtX1P4-ZxqJOIy2-8_L6XI3y8OvXoeAaBPuUpjwjuJp5C8eJH4XnpQn-4LG_4WuhocA3rZapgn4Mlp6NB1-emgc-sPy82OjLFEpJU4zTD8Ob49ckb01Zu-kR-n4SZqs2wguYSJmDWftHjQcCcEHb4a-STkNU0cHteLsjqA0j9QGLSNitXKptJ_oM6Bj2rNLjgA7heG2WMd8FQMq6OH50ZjeaFAUg7CSIM2k4wMcLlTAVULsUr7pC_SFosd6p8gAm1zdIl9JP5E7yZtMem4GQy7AAOcuO4vUAkJHpgoXY_bvxaoJ9mLHXCAqBFsgpJKWn48253Lobw2HZbfpuPs__mScPOaCoCP5j8qyEVHcupf9dVU7h1UAH07bM-xMZvp7IigixRakQAY0TiccnOYuEBI8PoV3xZSuZtRk0Cv_1VzLcYkuNIDM7RBwcc1BPUihG20BOixHaDeCFcgiRL5vnkQg40oJBznmzWDaZVMuWFO5pJ3T1F0d07-8hfJ2xYs9F0_AvYf58bVf4eD26kr3kcA1IiMsLepuI7sxjH8N2Ih8P6XuVGU9HlyLOKd9I_CS_ImEAwIiYvNliaTfj9jXMnsZ2QiHnuQZcc-iS3nCD4-wT_5ZVN8I_zFI8-BYkVz_NJLRq1C6RJ_ESHN30F5bIkyjQ7qUuaRsk0rdcH2hMpzjkZTNvFPydzt1q31gLj4r9AZV377ashWqv9HaEf5VCEgxSFU6IJMamht0ie2bjpluTK0JXjbOcwQDeY90sADqmzebZ6vGvOONHcjChs5hpMYCB2NFE-rekvH-1sdWLBdtdgQEzbwGd9nE6MKjtjZp6IVwaYNLKaldqT6yKzJopnjQFGb9Tz68B5YWbAGAZvFFHwUX1OACAJ1d-xAmeeAXcCm5hOR3BZCiO2HNaCmJmsKqLN2mDy2FfRb9v1AJjaTTwpt3GdNXs29_4Ey1jdCC7cNQLo3-C1CEB8Uh0OjWj-HsCjV2Ld4Uev5ojz_6SzSo-gUMKe-Aq3whq3VLzz9m1KD0JWmEyyjAjWg8ghvRMkRsLn-CRzZs2PeCYfNYZDneGoLUlCP_Tc3ZFubnP2-LGkVlnw1ibkpFG9zoMXn71dPx8zJdsNjEFR3-4k0BiOX20rY3czTs4WFpH-PYQZwYm4ugoZyqyawzhqTOtk5TL6oY3IBPea7mLG-6cxgCZ3AEgqcENqB1L9aGWVWI__J2LH2c_UfiSyaKPlDw10_6659yNb_aYcWcQrSid23R21orbfDFZdPrlhu0mMTIUkXcRcSfMF3r7BZUlVC0APG8HAJ-ZskR6WMxp9t22Ymo5XIAPGBzpKYNYXrgz89y20r4htOQHuDvb0lkF3rK-_XnrUq0739GOYbLY-E-C0LvmN2E7iin7AAN05k4YAmgDEeVJLZuycuGH",
+        "summary": [
+          {
+            "type": "summary_text",
+            "text": "**Planning tool call**\n\nI need to call functions.lookup with the town set to \"Kirkwall.\" I wonder if I should use the multi_tool_use.parallel wrapper since it allows for tools to operate in parallel. Even though I'll only use one tool this time, it should work fine with the multi_tool_use. I\u2019ll go ahead and set it up with functions.lookup and its parameters. Then, I'll present the result in the commentary channel."
+          }
+        ]
+      },
+      {
+        "id": "fc_0aa3c2b63a40dd25016a9d39355c6087d2a1149835cbe892b0",
+        "type": "function_call",
+        "status": "completed",
+        "arguments": "{\"town\":\"Kirkwall\"}",
+        "call_id": "call_tRY2kQug9qAHS96o2dw3Ccp5",
+        "name": "lookup"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "presence_penalty": 0.0,
+    "previous_response_id": null,
+    "prompt_cache_key": null,
+    "prompt_cache_retention": "in_memory",
+    "reasoning": {
+      "context": "current_turn",
+      "effort": "low",
+      "mode": "standard",
+      "summary": "detailed"
+    },
+    "safety_identifier": null,
+    "service_tier": "default",
+    "store": false,
+    "temperature": 1.0,
+    "text": {
+      "format": {
+        "type": "text"
+      },
+      "verbosity": "medium"
+    },
+    "tool_choice": "auto",
+    "tool_usage": {
+      "image_gen": {
+        "input_tokens": 0,
+        "input_tokens_details": {
+          "image_tokens": 0,
+          "text_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "image_tokens": 0,
+          "text_tokens": 0
+        },
+        "total_tokens": 0
+      },
+      "web_search": {
+        "num_requests": 0
+      }
+    },
+    "tools": [
+      {
+        "type": "function",
+        "description": "Look up a retailer by town.",
+        "name": "lookup",
+        "output_schema": null,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "town": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "town"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    ],
+    "top_logprobs": 0,
+    "top_p": 1.0,
+    "truncation": "disabled",
+    "usage": {
+      "input_tokens": 54,
+      "input_tokens_details": {
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "output_tokens": 122,
+      "output_tokens_details": {
+        "reasoning_tokens": 64
+      },
+      "total_tokens": 176
+    },
+    "user": null,
+    "metadata": {}
+  },
+  "headers": {
+    "openai-processing-ms": "2057",
+    "openai-version": "2020-10-01",
+    "x-ratelimit-limit-requests": "10000",
+    "x-ratelimit-limit-tokens": "10000000",
+    "x-ratelimit-remaining-requests": "9999",
+    "x-ratelimit-remaining-tokens": "10000000",
+    "x-ratelimit-reset-requests": "6ms",
+    "x-ratelimit-reset-tokens": "0s",
+    "x-request-id": "req_a285617cb49b4367b176fc8c18cc710d"
+  }
+}

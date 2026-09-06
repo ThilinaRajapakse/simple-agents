@@ -1,0 +1,17 @@
+{
+  "status": 400,
+  "request": {
+    "model": "gpt-5-mini",
+    "input": "hi",
+    "temperature": 0.2,
+    "max_output_tokens": 50
+  },
+  "response": {
+    "error": {
+      "message": "Unsupported parameter: 'temperature' is not supported with this model.",
+      "type": "invalid_request_error",
+      "param": "temperature",
+      "code": null
+    }
+  }
+}

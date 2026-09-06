@@ -1,0 +1,116 @@
+{
+  "status": 200,
+  "request": {
+    "model": "gpt-5.6-luna",
+    "input": [
+      {
+        "role": "developer",
+        "content": "Reference text for five point six. Entry 0: the shelf holds 0 books and 0 lamps. Entry 1: the shelf holds 3 books and 1 lamps. Entry 2: the shelf holds 6 books and 2 lamps. Entry 3: the shelf holds 9 books and 3 lamps. Entry 4: the shelf holds 12 books and 4 lamps. Entry 5: the shelf holds 15 books and 5 lamps. Entry 6: the shelf holds 18 books and 6 lamps. Entry 7: the shelf holds 21 books and 7 lamps. Entry 8: the shelf holds 24 books and 8 lamps. Entry 9: the shelf holds 27 books and 9 lamps. Entry 10: the shelf holds 30 books and 10 lamps. Entry 11: the shelf holds 33 books and 11 lamps. Entry 12: the shelf holds 36 books and 12 lamps. Entry 13: the shelf holds 39 books and 13 lamps. Entry 14: the shelf holds 42 books and 14 lamps. Entry 15: the shelf holds 45 books and 15 lamps. Entry 16: the shelf holds 48 books and 16 lamps. Entry 17: the shelf holds 51 books and 17 lamps. Entry 18: the shelf holds 54 books and 18 lamps. Entry 19: the shelf holds 57 books and 19 lamps. Entry 20: the shelf holds 60 books and 20 lamps. Entry 21: the shelf holds 63 books and 21 lamps. Entry 22: the shelf holds 66 books and 22 lamps. Entry 23: the shelf holds 69 books and 23 lamps. Entry 24: the shelf holds 72 books and 24 lamps. Entry 25: the shelf holds 75 books and 25 lamps. Entry 26: the shelf holds 78 books and 26 lamps. Entry 27: the shelf holds 81 books and 27 lamps. Entry 28: the shelf holds 84 books and 28 lamps. Entry 29: the shelf holds 87 books and 29 lamps. Entry 30: the shelf holds 90 books and 30 lamps. Entry 31: the shelf holds 93 books and 31 lamps. Entry 32: the shelf holds 96 books and 32 lamps. Entry 33: the shelf holds 99 books and 33 lamps. Entry 34: the shelf holds 102 books and 34 lamps. Entry 35: the shelf holds 105 books and 35 lamps. Entry 36: the shelf holds 108 books and 36 lamps. Entry 37: the shelf holds 111 books and 37 lamps. Entry 38: the shelf holds 114 books and 38 lamps. Entry 39: the shelf holds 117 books and 39 lamps. Entry 40: the shelf holds 120 books and 40 lamps. Entry 41: the shelf holds 123 books and 41 lamps. Entry 42: the shelf holds 126 books and 42 lamps. Entry 43: the shelf holds 129 books and 43 lamps. Entry 44: the shelf holds 132 books and 44 lamps. Entry 45: the shelf holds 135 books and 45 lamps. Entry 46: the shelf holds 138 books and 46 lamps. Entry 47: the shelf holds 141 books and 47 lamps. Entry 48: the shelf holds 144 books and 48 lamps. Entry 49: the shelf holds 147 books and 49 lamps. Entry 50: the shelf holds 150 books and 50 lamps. Entry 51: the shelf holds 153 books and 51 lamps. Entry 52: the shelf holds 156 books and 52 lamps. Entry 53: the shelf holds 159 books and 53 lamps. Entry 54: the shelf holds 162 books and 54 lamps. Entry 55: the shelf holds 165 books and 55 lamps. Entry 56: the shelf holds 168 books and 56 lamps. Entry 57: the shelf holds 171 books and 57 lamps. Entry 58: the shelf holds 174 books and 58 lamps. Entry 59: the shelf holds 177 books and 59 lamps. Entry 60: the shelf holds 180 books and 60 lamps. Entry 61: the shelf holds 183 books and 61 lamps. Entry 62: the shelf holds 186 books and 62 lamps. Entry 63: the shelf holds 189 books and 63 lamps. Entry 64: the shelf holds 192 books and 64 lamps. Entry 65: the shelf holds 195 books and 65 lamps. Entry 66: the shelf holds 198 books and 66 lamps. Entry 67: the shelf holds 201 books and 67 lamps. Entry 68: the shelf holds 204 books and 68 lamps. Entry 69: the shelf holds 207 books and 69 lamps. Entry 70: the shelf holds 210 books and 70 lamps. Entry 71: the shelf holds 213 books and 71 lamps. Entry 72: the shelf holds 216 books and 72 lamps. Entry 73: the shelf holds 219 books and 73 lamps. Entry 74: the shelf holds 222 books and 74 lamps. Entry 75: the shelf holds 225 books and 75 lamps. Entry 76: the shelf holds 228 books and 76 lamps. Entry 77: the shelf holds 231 books and 77 lamps. Entry 78: the shelf holds 234 books and 78 lamps. Entry 79: the shelf holds 237 books and 79 lamps. Entry 80: the shelf holds 240 books and 80 lamps. Entry 81: the shelf holds 243 books and 81 lamps. Entry 82: the shelf holds 246 books and 82 lamps. Entry 83: the shelf holds 249 books and 83 lamps. Entry 84: the shelf holds 252 books and 84 lamps. Entry 85: the shelf holds 255 books and 85 lamps. Entry 86: the shelf holds 258 books and 86 lamps. Entry 87: the shelf holds 261 books and 87 lamps. Entry 88: the shelf holds 264 books and 88 lamps. Entry 89: the shelf holds 267 books and 89 lamps. Entry 90: the shelf holds 270 books and 90 lamps. Entry 91: the shelf holds 273 books and 91 lamps. Entry 92: the shelf holds 276 books and 92 lamps. Entry 93: the shelf holds 279 books and 93 lamps. Entry 94: the shelf holds 282 books and 94 lamps. Entry 95: the shelf holds 285 books and 95 lamps. Entry 96: the shelf holds 288 books and 96 lamps. Entry 97: the shelf holds 291 books and 97 lamps. Entry 98: the shelf holds 294 books and 98 lamps. Entry 99: the shelf holds 297 books and 99 lamps. Entry 100: the shelf holds 300 books and 100 lamps. Entry 101: the shelf holds 303 books and 101 lamps. Entry 102: the shelf holds 306 books and 102 lamps. Entry 103: the shelf holds 309 books and 103 lamps. Entry 104: the shelf holds 312 books and 104 lamps. Entry 105: the shelf holds 315 books and 105 lamps. Entry 106: the shelf holds 318 books and 106 lamps. Entry 107: the shelf holds 321 books and 107 lamps. Entry 108: the shelf holds 324 books and 108 lamps. Entry 109: the shelf holds 327 books and 109 lamps. Entry 110: the shelf holds 330 books and 110 lamps. Entry 111: the shelf holds 333 books and 111 lamps. Entry 112: the shelf holds 336 books and 112 lamps. Entry 113: the shelf holds 339 books and 113 lamps. Entry 114: the shelf holds 342 books and 114 lamps. Entry 115: the shelf holds 345 books and 115 lamps. Entry 116: the shelf holds 348 books and 116 lamps. Entry 117: the shelf holds 351 books and 117 lamps. Entry 118: the shelf holds 354 books and 118 lamps. Entry 119: the shelf holds 357 books and 119 lamps. Entry 120: the shelf holds 360 books and 120 lamps. Entry 121: the shelf holds 363 books and 121 lamps. Entry 122: the shelf holds 366 books and 122 lamps. Entry 123: the shelf holds 369 books and 123 lamps. Entry 124: the shelf holds 372 books and 124 lamps. Entry 125: the shelf holds 375 books and 125 lamps. Entry 126: the shelf holds 378 books and 126 lamps. Entry 127: the shelf holds 381 books and 127 lamps. Entry 128: the shelf holds 384 books and 128 lamps. Entry 129: the shelf holds 387 books and 129 lamps. Entry 130: the shelf holds 390 books and 130 lamps. Entry 131: the shelf holds 393 books and 131 lamps. Entry 132: the shelf holds 396 books and 132 lamps. Entry 133: the shelf holds 399 books and 133 lamps. Entry 134: the shelf holds 402 books and 134 lamps. Entry 135: the shelf holds 405 books and 135 lamps. Entry 136: the shelf holds 408 books and 136 lamps. Entry 137: the shelf holds 411 books and 137 lamps. Entry 138: the shelf holds 414 books and 138 lamps. Entry 139: the shelf holds 417 books and 139 lamps. Entry 140: the shelf holds 420 books and 140 lamps. Entry 141: the shelf holds 423 books and 141 lamps. Entry 142: the shelf holds 426 books and 142 lamps. Entry 143: the shelf holds 429 books and 143 lamps. Entry 144: the shelf holds 432 books and 144 lamps. Entry 145: the shelf holds 435 books and 145 lamps. Entry 146: the shelf holds 438 books and 146 lamps. Entry 147: the shelf holds 441 books and 147 lamps. Entry 148: the shelf holds 444 books and 148 lamps. Entry 149: the shelf holds 447 books and 149 lamps. Entry 150: the shelf holds 450 books and 150 lamps. Entry 151: the shelf holds 453 books and 151 lamps. Entry 152: the shelf holds 456 books and 152 lamps. Entry 153: the shelf holds 459 books and 153 lamps. Entry 154: the shelf holds 462 books and 154 lamps. Entry 155: the shelf holds 465 books and 155 lamps. Entry 156: the shelf holds 468 books and 156 lamps. Entry 157: the shelf holds 471 books and 157 lamps. Entry 158: the shelf holds 474 books and 158 lamps. Entry 159: the shelf holds 477 books and 159 lamps. Entry 160: the shelf holds 480 books and 160 lamps. Entry 161: the shelf holds 483 books and 161 lamps. Entry 162: the shelf holds 486 books and 162 lamps. Entry 163: the shelf holds 489 books and 163 lamps. Entry 164: the shelf holds 492 books and 164 lamps. Entry 165: the shelf holds 495 books and 165 lamps. Entry 166: the shelf holds 498 books and 166 lamps. Entry 167: the shelf holds 501 books and 167 lamps. Entry 168: the shelf holds 504 books and 168 lamps. Entry 169: the shelf holds 507 books and 169 lamps. Entry 170: the shelf holds 510 books and 170 lamps. Entry 171: the shelf holds 513 books and 171 lamps. Entry 172: the shelf holds 516 books and 172 lamps. Entry 173: the shelf holds 519 books and 173 lamps. Entry 174: the shelf holds 522 books and 174 lamps. Entry 175: the shelf holds 525 books and 175 lamps. Entry 176: the shelf holds 528 books and 176 lamps. Entry 177: the shelf holds 531 books and 177 lamps. Entry 178: the shelf holds 534 books and 178 lamps. Entry 179: the shelf holds 537 books and 179 lamps. Entry 180: the shelf holds 540 books and 180 lamps. Entry 181: the shelf holds 543 books and 181 lamps. Entry 182: the shelf holds 546 books and 182 lamps. Entry 183: the shelf holds 549 books and 183 lamps. Entry 184: the shelf holds 552 books and 184 lamps. Entry 185: the shelf holds 555 books and 185 lamps. Entry 186: the shelf holds 558 books and 186 lamps. Entry 187: the shelf holds 561 books and 187 lamps. Entry 188: the shelf holds 564 books and 188 lamps. Entry 189: the shelf holds 567 books and 189 lamps. Entry 190: the shelf holds 570 books and 190 lamps. Entry 191: the shelf holds 573 books and 191 lamps. Entry 192: the shelf holds 576 books and 192 lamps. Entry 193: the shelf holds 579 books and 193 lamps. Entry 194: the shelf holds 582 books and 194 lamps. Entry 195: the shelf holds 585 books and 195 lamps. Entry 196: the shelf holds 588 books and 196 lamps. Entry 197: the shelf holds 591 books and 197 lamps. Entry 198: the shelf holds 594 books and 198 lamps. Entry 199: the shelf holds 597 books and 199 lamps."
+      },
+      {
+        "role": "user",
+        "content": "How many lamps in entry 8? One number."
+      }
+    ],
+    "max_output_tokens": 200,
+    "reasoning": {
+      "effort": "none"
+    },
+    "prompt_cache_key": "probe56r",
+    "store": false
+  },
+  "response": {
+    "id": "resp_06c0e4f0db2b6656016a9d39aae11887d2ac37fcb2a2a21425",
+    "object": "response",
+    "created_at": 1788688810,
+    "status": "completed",
+    "background": false,
+    "billing": {
+      "payer": "developer"
+    },
+    "completed_at": 1788688811,
+    "error": null,
+    "frequency_penalty": 0.0,
+    "incomplete_details": null,
+    "instructions": null,
+    "max_output_tokens": 200,
+    "max_tool_calls": null,
+    "model": "gpt-5.6-luna",
+    "moderation": null,
+    "output": [
+      {
+        "id": "msg_06c0e4f0db2b6656016a9d39ab37ec87d2be6aa0811a7bdd78",
+        "type": "message",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "annotations": [],
+            "logprobs": [],
+            "text": "8"
+          }
+        ],
+        "phase": "final_answer",
+        "role": "assistant"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "presence_penalty": 0.0,
+    "previous_response_id": null,
+    "prompt_cache_key": "probe56r",
+    "prompt_cache_retention": "24h",
+    "reasoning": {
+      "context": "all_turns",
+      "effort": "none",
+      "mode": "standard",
+      "summary": null
+    },
+    "safety_identifier": null,
+    "service_tier": "default",
+    "store": false,
+    "temperature": 1.0,
+    "text": {
+      "format": {
+        "type": "text"
+      },
+      "verbosity": "medium"
+    },
+    "tool_choice": "auto",
+    "tool_usage": {
+      "image_gen": {
+        "input_tokens": 0,
+        "input_tokens_details": {
+          "image_tokens": 0,
+          "text_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "image_tokens": 0,
+          "text_tokens": 0
+        },
+        "total_tokens": 0
+      },
+      "web_search": {
+        "num_requests": 0
+      }
+    },
+    "tools": [],
+    "top_logprobs": 0,
+    "top_p": 0.98,
+    "truncation": "disabled",
+    "usage": {
+      "input_tokens": 3028,
+      "input_tokens_details": {
+        "cache_write_tokens": 3025,
+        "cached_tokens": 0
+      },
+      "output_tokens": 5,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 3033
+    },
+    "user": null,
+    "metadata": {}
+  }
+}
