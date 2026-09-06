@@ -40,6 +40,7 @@ RETRYABLE_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
 OVERFLOW_PHRASES = (
     "maximum context length",
     "input token count exceeds the maximum number of tokens allowed",
+    "prompt is too long",  # Anthropic, measured 2026-09-06
 )
 OVERFLOW_STATUSES = frozenset({400, 413, 422})
 
@@ -67,7 +68,31 @@ CREDENTIAL_PHRASES = ("api key not valid",)
 QUOTA_PHRASES = (
     "monthly spending cap",  # Mistral
     "prepayment credits are depleted",  # Gemini
+    # Documented rather than measured, 2026-09-06, from each provider's error page. None could
+    # be triggered from a funded account.
+    "current quota, please check",  # OpenAI, `insufficient_quota`
+    "api usage limits",  # Anthropic: the tier's cap (a 429), a self-set limit (a 400)
+    "credit balance is too low",  # Anthropic, a prepaid balance spent, a 400
 )
+
+# Error codes that say the same thing, for a backend that names one beside its message. OpenAI
+# puts it in `error.code` and Anthropic in `error.details.error_code`; both are documented
+# rather than measured, 2026-09-06. Matched exactly, since a code is one token.
+QUOTA_CODES = frozenset(
+    {
+        "insufficient_quota",  # OpenAI
+        "credit_balance_exhausted",  # OpenAI
+        "organization_spend_limit_exceeded",  # OpenAI
+        "project_spend_limit_exceeded",  # OpenAI
+        "organization_usage_limit_exceeded",  # OpenAI
+        "enforced_spend_limit_reached",  # Anthropic
+    }
+)
+
+# Anthropic answers a spent self-set limit and a spent prepaid balance with 400 rather than
+# 429, so a spent allowance is looked for on both statuses. A 400 that matches no phrase and
+# no code is still a bad request.
+SPENT_STATUSES = frozenset({400, 429})
 
 
 @dataclass(frozen=True, slots=True)
@@ -473,8 +498,10 @@ def _sse_events(lines: Iterable[str]) -> Iterator[dict[str, Any]]:
 def _stop_if_spent(
     response: httpx.Response, where: str, waited: float, declared: Sequence[str] = ()
 ) -> None:
-    """Stop the run where a 429 says its allowance does not reset inside a retry window."""
-    if response.status_code == 429 and _is_spent_quota(_message_from(response), declared):
+    """Stop the run where a refusal says its allowance does not reset inside a retry window."""
+    if response.status_code in SPENT_STATUSES and _is_spent_quota(
+        _message_from(response), declared, _code_from(response)
+    ):
         raise _spent_quota(response, where, waited)
 
 
@@ -501,11 +528,14 @@ def _spent_quota(response: httpx.Response, where: str, waited: float) -> Suspend
     return stop
 
 
-def _is_spent_quota(detail: str, declared: Sequence[str] = ()) -> bool:
-    """Whether a 429's message says its allowance resets on a scale retries cannot reach.
+def _is_spent_quota(detail: str, declared: Sequence[str] = (), code: str | None = None) -> bool:
+    """Whether a refusal says its allowance resets on a scale retries cannot reach.
 
     ``declared`` is what the caller's ``Retry`` names, which adds to the shipped phrases.
+    ``code`` is the error code the body carried, where the backend names one.
     """
+    if code is not None and code in QUOTA_CODES:
+        return True
     lowered = detail.lower()
     return any(phrase.lower() in lowered for phrase in (*QUOTA_PHRASES, *declared))
 
@@ -570,6 +600,27 @@ def _message_from(response: httpx.Response) -> str:
             if body.get(key):
                 return str(body[key])
     return str(body)[:300]
+
+
+def _code_from(response: httpx.Response) -> str | None:
+    """The error code an error body names, or ``None`` where it names none.
+
+    OpenAI carries it as ``error.code`` and Anthropic as ``error.details.error_code``.
+    """
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    error = body.get("error") if isinstance(body, dict) else None
+    if not isinstance(error, dict):
+        return None
+    code = error.get("code")
+    if isinstance(code, str) and code:
+        return code
+    details = error.get("details")
+    if isinstance(details, dict) and isinstance(details.get("error_code"), str):
+        return details["error_code"]
+    return None
 
 
 def _gauge(body: str, name: str) -> float | None:
