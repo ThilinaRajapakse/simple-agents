@@ -43,6 +43,8 @@ OVERFLOW_PHRASES = (
     "maximum context length",
     "input token count exceeds the maximum number of tokens allowed",
     "prompt is too long",  # Anthropic, measured 2026-09-06
+    "prompt exceeds max length",  # GLM, measured 2026-09-07
+    "exceeded model token limit",  # Kimi, measured 2026-09-07
 )
 OVERFLOW_STATUSES = frozenset({400, 413, 422})
 
@@ -75,11 +77,16 @@ QUOTA_PHRASES = (
     "current quota, please check",  # OpenAI, `insufficient_quota`
     "api usage limits",  # Anthropic: the tier's cap (a 429), a self-set limit (a 400)
     "credit balance is too low",  # Anthropic, a prepaid balance spent, a 400
+    # Measured 2026-09-07 against a spent DeepSeek balance and a GLM account with none.
+    "insufficient balance",  # DeepSeek (a 402), GLM (a 429, beside code 1113)
+    "balance is insufficient",  # Kimi, the other word order
+    "token quota is insufficient",  # Kimi, a spent allowance that is not the balance
 )
 
 # Error codes that say the same thing, for a backend that names one beside its message. OpenAI
-# puts it in `error.code` and Anthropic in `error.details.error_code`; both are documented
-# rather than measured, 2026-09-06. Matched exactly, since a code is one token.
+# puts it in `error.code`, Anthropic in `error.details.error_code` and Kimi in `error.type`;
+# `_codes_from` reads all three. The OpenAI and Anthropic codes are documented rather than
+# measured, 2026-09-06. Matched exactly, since a code is one token.
 QUOTA_CODES = frozenset(
     {
         "insufficient_quota",  # OpenAI
@@ -88,13 +95,15 @@ QUOTA_CODES = frozenset(
         "project_spend_limit_exceeded",  # OpenAI
         "organization_usage_limit_exceeded",  # OpenAI
         "enforced_spend_limit_reached",  # Anthropic
+        "exceeded_current_quota_error",  # Kimi, in `error.type`, measured 2026-09-07
     }
 )
 
 # Anthropic answers a spent self-set limit and a spent prepaid balance with 400 rather than
-# 429, so a spent allowance is looked for on both statuses. A 400 that matches no phrase and
-# no code is still a bad request.
-SPENT_STATUSES = frozenset({400, 429})
+# 429, and DeepSeek answers a spent balance with 402, so a spent allowance is looked for on
+# all three statuses. A 400 that matches no phrase and no code is still a bad request. 402 is
+# outside RETRYABLE_STATUSES, so a body that matches nothing raises rather than retrying.
+SPENT_STATUSES = frozenset({400, 402, 429})
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,12 +149,20 @@ class Retry:
 
         GeminiClient(model="gemini-3.1-flash-lite",
                      retry=Retry(spent_quota_phrases=("account balance is too low",)))
+
+    ``spent_quota_codes`` does the same for a code named beside the message, matched whole.
+    An endpoint whose codes are bare numbers is named here, since a number in the shipped set
+    would collide with another endpoint's::
+
+        OpenAIClient(model="glm-4.7-flash", base_url="https://api.z.ai/api/paas/v4",
+                     retry=Retry(spent_quota_codes=("1113",)))
     """
 
     max_attempts: int = 6
     initial_backoff_s: float = 1.0
     max_backoff_s: float = 60.0
     spent_quota_phrases: tuple[str, ...] = ()
+    spent_quota_codes: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.max_attempts < 1:
@@ -159,6 +176,13 @@ class Retry:
                 f"reads as a phrase per character, so every 429 carrying any of those letters "
                 f"would stop the run.\n"
                 f"Pass a sequence: spent_quota_phrases=({self.spent_quota_phrases!r},)."
+            )
+        if isinstance(self.spent_quota_codes, str):
+            raise ValueError(
+                f"Retry(spent_quota_codes={self.spent_quota_codes!r}) is one string, which "
+                f"reads as a code per character, so a refusal naming any of those letters "
+                f"would stop the run.\n"
+                f"Pass a sequence: spent_quota_codes=({self.spent_quota_codes!r},)."
             )
 
 
@@ -257,12 +281,7 @@ class HTTPBackend:
                 ) as response:
                     if response.status_code >= 300:
                         response.read()
-                        _stop_if_spent(
-                            response,
-                            f"{self.base_url}{path}",
-                            waited,
-                            self.retry.spent_quota_phrases,
-                        )
+                        self._stop_if_spent(response, path, waited)
                         if (
                             response.status_code in RETRYABLE_STATUSES
                             and attempt < self.retry.max_attempts
@@ -348,9 +367,7 @@ class HTTPBackend:
                 return replace(self._decode(response), held_back_ms=int(waited * 1000))
 
             last_status, last_body = response.status_code, response.text[:600]
-            _stop_if_spent(
-                response, f"{self.base_url}{path}", waited, self.retry.spent_quota_phrases
-            )
+            self._stop_if_spent(response, path, waited)
             if response.status_code in RETRYABLE_STATUSES and attempt < self.retry.max_attempts:
                 waited += self._wait(attempt, response.headers.get("retry-after"))
                 continue
@@ -358,6 +375,16 @@ class HTTPBackend:
 
         raise CallerFacingError(  # unreachable while max_attempts >= 1, kept for the type
             f"{self.base_url}{path} returned {last_status} on every attempt: {last_body}"
+        )
+
+    def _stop_if_spent(self, response: httpx.Response, path: str, waited: float) -> None:
+        """Stop the run where this refusal says the allowance does not reset in a retry."""
+        _stop_if_spent(
+            response,
+            f"{self.base_url}{path}",
+            waited,
+            self.retry.spent_quota_phrases,
+            self.retry.spent_quota_codes,
         )
 
     def _decode(self, response: httpx.Response) -> HttpResult:
@@ -498,11 +525,15 @@ def _sse_events(lines: Iterable[str]) -> Iterator[dict[str, Any]]:
 
 
 def _stop_if_spent(
-    response: httpx.Response, where: str, waited: float, declared: Sequence[str] = ()
+    response: httpx.Response,
+    where: str,
+    waited: float,
+    declared: Sequence[str] = (),
+    declared_codes: Sequence[str] = (),
 ) -> None:
     """Stop the run where a refusal says its allowance does not reset inside a retry window."""
     if response.status_code in SPENT_STATUSES and _is_spent_quota(
-        _message_from(response), declared, _code_from(response)
+        _message_from(response), declared, _codes_from(response), declared_codes
     ):
         raise _spent_quota(response, where, waited)
 
@@ -530,13 +561,19 @@ def _spent_quota(response: httpx.Response, where: str, waited: float) -> Suspend
     return stop
 
 
-def _is_spent_quota(detail: str, declared: Sequence[str] = (), code: str | None = None) -> bool:
+def _is_spent_quota(
+    detail: str,
+    declared: Sequence[str] = (),
+    codes: Sequence[str] = (),
+    declared_codes: Sequence[str] = (),
+) -> bool:
     """Whether a refusal says its allowance resets on a scale retries cannot reach.
 
-    ``declared`` is what the caller's ``Retry`` names, which adds to the shipped phrases.
-    ``code`` is the error code the body carried, where the backend names one.
+    ``declared`` is what the caller's ``Retry`` names, which adds to the shipped phrases, and
+    ``declared_codes`` the same for codes. ``codes`` is what the body carried, where the
+    backend names any.
     """
-    if code is not None and code in QUOTA_CODES:
+    if any(code in QUOTA_CODES or code in declared_codes for code in codes):
         return True
     lowered = detail.lower()
     return any(phrase.lower() in lowered for phrase in (*QUOTA_PHRASES, *declared))
@@ -604,25 +641,30 @@ def _message_from(response: httpx.Response) -> str:
     return str(body)[:300]
 
 
-def _code_from(response: httpx.Response) -> str | None:
-    """The error code an error body names, or ``None`` where it names none.
+def _codes_from(response: httpx.Response) -> tuple[str, ...]:
+    """Every error code an error body names, in the places the backends put one.
 
-    OpenAI carries it as ``error.code`` and Anthropic as ``error.details.error_code``.
+    OpenAI carries it as ``error.code``, Anthropic as ``error.details.error_code``, and Kimi
+    as ``error.type``. All three are read rather than the first one found, since a backend
+    that fills two puts the discriminating one in either: Kimi's spent allowance is a
+    ``type`` beside no ``code``, and DeepSeek's is a ``code`` that says only that the request
+    was rejected. Measured 2026-09-07.
     """
     try:
         body = response.json()
     except ValueError:
-        return None
+        return ()
     error = body.get("error") if isinstance(body, dict) else None
     if not isinstance(error, dict):
-        return None
-    code = error.get("code")
-    if isinstance(code, str) and code:
-        return code
+        return ()
+    found = []
+    for value in (error.get("code"), error.get("type")):
+        if isinstance(value, str) and value:
+            found.append(value)
     details = error.get("details")
     if isinstance(details, dict) and isinstance(details.get("error_code"), str):
-        return details["error_code"]
-    return None
+        found.append(details["error_code"])
+    return tuple(found)
 
 
 def _gauge(body: str, name: str) -> float | None:
