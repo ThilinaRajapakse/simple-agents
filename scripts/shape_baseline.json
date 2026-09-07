@@ -15,10 +15,7 @@
       "function branches": 14
     },
     "src/simple_agents/adapters/_http.py::class::HTTPBackend": {
-      "class lines": 221
-    },
-    "src/simple_agents/adapters/_http.py::function::HTTPBackend._attempt_stream": {
-      "function lines": 53
+      "class lines": 223
     },
     "src/simple_agents/adapters/_openai_wire.py::function::StreamAssembler.feed": {
       "function branches": 15
@@ -470,7 +467,6 @@
     "src/simple_agents/adapters/_gemini_wire.py::function::StreamAssembler.feed": "One fold over a stream's events; each branch is one event shape the wire sends.",
     "src/simple_agents/adapters/_gemini_wire.py::function::contents_from": "One translation of messages into the wire's shape; each branch is one message kind.",
     "src/simple_agents/adapters/_http.py::class::HTTPBackend": "One transport: retries, errors and timing in one place shared by the adapters.",
-    "src/simple_agents/adapters/_http.py::function::HTTPBackend._attempt_stream": "One retry ladder over a streamed request; each branch is one status or one point the stream had reached, and a request that delivered an event is not retried.",
     "src/simple_agents/adapters/_openai_wire.py::function::StreamAssembler.feed": "One fold over a stream's events; each branch is one event shape the wire sends.",
     "src/simple_agents/builtins/consult.py::function::consult": "One shipped tool; its source digest is pinned in recorded cassettes, and the Mistral arms cannot be re-recorded, so the body stays as recorded.",
     "src/simple_agents/builtins/consult.py::function::on_reply": "One route factory; each branch is one reply disposition, and the digest constraint above applies.",

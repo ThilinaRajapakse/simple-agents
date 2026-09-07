@@ -47,6 +47,17 @@ API_KEY_ENV = "OPENAI_API_KEY"
 # which levels it has, and a model that does not reason ignores it.
 NO_REASONING = {"reasoning_effort": "none"}
 
+# The name OpenAI bounds output with. Its reasoning models refuse `max_tokens` even alongside
+# this one, measured 2026-09-07, so the two names cannot both be sent and an endpoint that
+# ignores this one names the other through `max_output_tokens_param`.
+CEILING_PARAM = "max_completion_tokens"
+
+# What `structured_output` may be set to. `json_schema` binds the decoder to the schema;
+# `json_object` asks only for valid JSON, so the fields are whatever the model produced; and
+# `none` is an endpoint that constrains nothing, where a node asking for a schema is refused
+# rather than answered with prose. Measured per endpoint 2026-09-07, `openai.md` §6.
+STRUCTURED_OUTPUT_MODES = ("json_schema", "json_object", "none")
+
 
 @dataclass(slots=True)
 class OpenAIClient:
@@ -59,18 +70,27 @@ class OpenAIClient:
         client = OpenAIClient(model="gpt-5.6-luna")
         result = pipeline.run({"question": "..."}, model=client)
 
-    A response names the dated snapshot that served it whichever identifier was sent, and
-    ``response_model`` records it (FT-14). ``api_key`` defaults to the ``OPENAI_API_KEY``
-    environment variable and is held as a ``SecretStr``. ``base_url`` makes the same adapter
-    serve any endpoint that speaks this dialect, with that provider's key::
+    A response names the dated snapshot that served it, and ``response_model`` records it
+    (FT-14). ``api_key`` defaults to ``OPENAI_API_KEY`` and is held as a ``SecretStr``.
+    ``base_url`` points the adapter at any endpoint speaking this dialect::
 
-        OpenAIClient(model="deepseek-chat", base_url="https://api.deepseek.com/v1",
-                     api_key=os.environ["DEEPSEEK_API_KEY"])
+        OpenAIClient(model="deepseek-v4-flash", base_url="https://api.deepseek.com/v1",
+                     api_key=os.environ["DEEPSEEK_API_KEY"],
+                     max_output_tokens_param="max_tokens", structured_output="none",
+                     publishes_allowance=False)
 
-    What such an endpoint leaves out of its usage block or headers is recorded as unmeasured.
-    Reasoning is never returned by this API: a reasoning model reports the count, recorded as
-    ``tokens.output_reasoning``, and ``OpenAIResponsesClient`` is the adapter that records the
-    chain of thought. ``reasoning=False`` sends ``reasoning_effort: "none"``.
+    **Four settings say what an endpoint does with the parameters it accepts**, each
+    defaulting to what ``api.openai.com`` takes, with a row per measured endpoint in
+    ``docs/model-clients/openai.md`` §6. ``max_output_tokens_param`` is the name the ceiling
+    is sent under, ``reasoning_off`` what ``reasoning=False`` sends, ``publishes_allowance``
+    whether a response reports a rate-limit allowance, and ``structured_output`` how an
+    ``output_schema`` is sent: ``"json_schema"`` binds the decoder, ``"json_object"`` asks
+    for valid JSON and leaves the fields to the model, and ``"none"`` refuses a node that
+    asks for a schema.
+
+    At ``api.openai.com`` a reasoning model reports the count alone, recorded as
+    ``tokens.output_reasoning``, and ``OpenAIResponsesClient`` records the chain of thought.
+    Other endpoints serving this dialect return the text over it.
     ``docs/model-clients/openai.md`` has the rates, the cache-write class GPT-5.6 bills, and
     what this backend leaves unavailable.
     """
@@ -83,10 +103,20 @@ class OpenAIClient:
     retry: Retry = Retry()
     stream_without_usage: bool = False
     reasoning: bool = True
+    max_output_tokens_param: str = CEILING_PARAM
+    reasoning_off: Mapping[str, Any] = field(default_factory=lambda: dict(NO_REASONING))
+    structured_output: str = "json_schema"
+    publishes_allowance: bool = True
     http_client: httpx.Client | None = None
     _backend: HTTPBackend = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
+        if self.structured_output not in STRUCTURED_OUTPUT_MODES:
+            raise ConfigurationError(
+                f"OpenAIClient(structured_output={self.structured_output!r}) is not a mode "
+                f"this adapter has. Pass one of {', '.join(STRUCTURED_OUTPUT_MODES)}.\n"
+                f"`docs/model-clients/openai.md` §6 says which one each endpoint takes."
+            )
         self.api_key = read_key(self.api_key, adapter=type(self).__name__)
         self._backend = HTTPBackend(
             base_url=self.base_url,
@@ -96,6 +126,7 @@ class OpenAIClient:
             },
             timeout_s=self.timeout_s,
             retry=self.retry,
+            publishes_allowance=self.publishes_allowance,
             client=self.http_client,
         )
 
@@ -125,19 +156,39 @@ class OpenAIClient:
         if request.temperature is not None:
             payload["temperature"] = request.temperature
         if request.max_output_tokens is not None:
-            # `max_tokens` is refused by every reasoning model and deprecated on the rest;
-            # this name is accepted on all of them. Measured 2026-09-06.
-            payload["max_completion_tokens"] = request.max_output_tokens
+            payload[self.max_output_tokens_param] = request.max_output_tokens
         if request.tools:
             payload["tools"] = tools_to_wire(request.tools)
             payload["tool_choice"] = "auto"
-        response_format = response_format_for(request.output_schema)
+        response_format = self._response_format(request.output_schema)
         if response_format is not None:
             payload["response_format"] = response_format
         if not self.reasoning:
-            payload.update(NO_REASONING)
+            payload.update(self.reasoning_off)
         payload.update(request.extra)
         return payload
+
+    def _response_format(self, output_schema: Mapping[str, Any] | None) -> dict[str, Any] | None:
+        """The ``response_format`` for a schema, in whichever mode this endpoint constrains.
+
+        An endpoint that constrains nothing refuses the request here rather than answering it
+        with prose that fails to parse several steps later.
+        """
+        if not output_schema:
+            return None
+        if self.structured_output == "none":
+            raise ConfigurationError(
+                f"{self.base_url} does not constrain output to a schema, and this node asked "
+                f"for one (model {self.model!r}).\n"
+                f"Send the schema as a request for valid JSON with "
+                f"OpenAIClient(structured_output='json_object'), which asks the model for "
+                f"JSON and leaves the fields to it, and validate what comes back. Use a "
+                f"model that constrains decoding to keep the guarantee; "
+                f"`docs/model-clients/openai.md` §6 says which endpoints do."
+            )
+        if self.structured_output == "json_object":
+            return {"type": "json_object"}
+        return response_format_for(output_schema)
 
     def complete(self, request: ModelRequest) -> ModelResponse:
         """Make one chat completion call and return what the backend reported."""
