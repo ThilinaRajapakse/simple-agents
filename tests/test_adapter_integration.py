@@ -25,6 +25,10 @@ from record_backend_cassettes import (  # noqa: E402
     AGENT_QUESTION,
     ANTHROPIC_MODEL,
     ANTHROPIC_PRICES,
+    COMPATIBLE_SETTINGS,
+    DEEPSEEK_PRICES,
+    GLM_PRICES,
+    KIMI_PRICES,
     OPENAI_MODEL,
     OPENAI_PRICES,
     CONTEXT_DOCUMENTS,
@@ -41,6 +45,7 @@ from record_backend_cassettes import (  # noqa: E402
     context_pipeline,
     eval_suite,
     mixed_pipeline,
+    compatible_pipeline as recorded_compatible_pipeline,
     pipeline as recorded_pipeline,
     search,
     stream_pipeline,
@@ -1251,3 +1256,105 @@ class TestReasoningRoundTrip:
         assert all(isinstance(c["tokens"]["output_reasoning"], int) for c in calls)
         assert all(c["tokens"]["output_reasoning"] <= c["tokens"]["output"] for c in calls)
         assert any(c["tokens"]["output_reasoning"] > 0 for c in calls)
+
+
+# ---------------------------------------------------------------------------------------------
+# The three compatible endpoints `P3-80` added, recorded 2026-09-07.
+
+COMPATIBLE_ARMS = {
+    "deepseek": ("deepseek-v4-flash", DEEPSEEK_PRICES, COMPATIBLE_SETTINGS["deepseek"]),
+    "glm": ("glm-4.7-flash", GLM_PRICES, COMPATIBLE_SETTINGS["glm"]),
+    "kimi": ("kimi-k3", KIMI_PRICES, COMPATIBLE_SETTINGS["kimi"]),
+}
+
+
+def compatible_client(backend: str):
+    model, _, settings = COMPATIBLE_ARMS[backend]
+    return OpenAIClient(model=model, api_key="not-used-in-replay", **settings)
+
+
+def replay_compatible(tmp_path: Path, backend: str):
+    """Replay one compatible endpoint's arm through the pipeline that recorded it."""
+    cassette = CASSETTES / f"{backend}.jsonl"
+    if not cassette.exists():
+        pytest.skip(f"no recorded cassette for {backend}; run scripts/record_backend_cassettes.py")
+    basis = COMPATIBLE_ARMS[backend][1]
+    envelope = RunEnvelope(run_dir=tmp_path, cost_basis=basis, cassette=Cassette.replay(cassette))
+    result = recorded_compatible_pipeline().run(
+        {"question": QUESTION}, envelope=envelope, model=compatible_client(backend), seed=SEED
+    )
+    manifest = json.loads(Path(result.paths.manifest).read_text())
+    records = list(read_trajectory(result.paths.trajectory))
+    return result, manifest, records
+
+
+class TestTheCompatibleEndpoints:
+    """One adapter, three endpoints, each recorded against the real thing."""
+
+    @pytest.fixture(params=["deepseek", "glm", "kimi"])
+    def run(self, request, tmp_path: Path):
+        return request.param, *replay_compatible(tmp_path, request.param)
+
+    def test_the_recorded_answer_comes_back_through_the_schema(self, run) -> None:
+        _, result, manifest, records = run
+
+        assert result.output.answer == "Paris"
+        assert manifest["cassette"]["hits"] == 1
+        assert [r["replayed"] for r in records if r["record_type"] == "model_call"] == [True]
+
+    def test_the_seed_reached_every_one_of_them(self, run) -> None:
+        # All three take `seed`, unlike Responses and Anthropic.
+        _, _, manifest, _ = run
+
+        assert manifest["unseeded_models"] == []
+        assert manifest["seed"] == SEED
+
+    def test_the_ceiling_was_sent_under_the_name_each_endpoint_honours(self, run) -> None:
+        backend, _, _, records = run
+        call = next(r for r in records if r["record_type"] == "model_call")
+        expected = COMPATIBLE_ARMS[backend][2].get(
+            "max_output_tokens_param", "max_completion_tokens"
+        )
+
+        assert call["params"]["max_output_tokens"] == 2000
+        assert expected in ("max_tokens", "max_completion_tokens")
+
+    def test_the_chain_of_thought_comes_back_as_text(self, run) -> None:
+        # `api.openai.com` returns the count alone over this API and the text only over
+        # Responses. All three of these endpoints put the text in `reasoning_content`, which
+        # `_openai_wire` already read for vLLM, so it lands with no work.
+        _, _, manifest, records = run
+        call = next(r for r in records if r["record_type"] == "model_call")
+
+        assert isinstance(call["tokens"]["output_reasoning"], int)
+        assert call["outputs"]["reasoning"]["text"]
+        assert (
+            manifest["totals"]["tokens"]["output_reasoning"] == call["tokens"]["output_reasoning"]
+        )
+
+    def test_cost_derives_where_the_endpoint_counted_the_cache(self, run) -> None:
+        backend, _, manifest, records = run
+        cost = total_cost(records, COMPATIBLE_ARMS[backend][1])
+
+        assert manifest["totals"]["cost"]["value"] == pytest.approx(cost.value)
+        assert cost.known is (backend != "kimi")
+
+    def test_a_kimi_call_that_hit_no_cache_has_no_price(self, run) -> None:
+        # Kimi sends `prompt_tokens_details` only where something was served from cache, so a
+        # call that hit none reports the cached share as unmeasured rather than as zero, and
+        # an unmeasured count is not zero (`docs/run-envelope.md` §4.2). DeepSeek and GLM
+        # send the block either way.
+        backend, _, manifest, records = run
+        call = next(r for r in records if r["record_type"] == "model_call")
+        counted = isinstance(call["tokens"]["input_cache_read"], int)
+
+        assert counted is (backend != "kimi")
+        if not counted:
+            assert manifest["totals"]["cost"]["value"] is None
+            assert manifest["totals"]["cost"]["measured"] is None
+
+    def test_no_endpoint_published_an_allowance(self, run) -> None:
+        _, _, _, records = run
+        call = next(r for r in records if r["record_type"] == "model_call")
+
+        assert call["rate_limit"] is None

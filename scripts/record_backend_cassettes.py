@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -129,11 +130,69 @@ ANTHROPIC_PRICES = PriceBasis(
     output_per_mtok=10.00,
 )
 
+DEEPSEEK_MODEL = "deepseek-v4-flash"
+GLM_MODEL = "glm-4.7-flash"
+KIMI_MODEL = "kimi-k3"
+# Published rates on 2026-09-07. DeepSeek bills a peak rate on weekday mornings and half that
+# off-peak, and these are the off-peak figures; GLM's Flash models are free, which a basis
+# still has to state; Kimi bills a cache hit at a tenth of a miss. None of the three bills a
+# cache-write class. `docs/model-clients/openai.md` §6 is what each endpoint reports.
+DEEPSEEK_PRICES = PriceBasis(
+    currency="USD",
+    input_uncached_per_mtok=0.22,
+    input_cache_read_per_mtok=0.007,
+    input_cache_write_per_mtok=0.0,
+    output_per_mtok=0.66,
+)
+GLM_PRICES = PriceBasis(
+    currency="USD",
+    input_uncached_per_mtok=0.0,
+    input_cache_read_per_mtok=0.0,
+    input_cache_write_per_mtok=0.0,
+    output_per_mtok=0.0,
+)
+KIMI_PRICES = PriceBasis(
+    currency="USD",
+    input_uncached_per_mtok=3.00,
+    input_cache_read_per_mtok=0.30,
+    input_cache_write_per_mtok=0.0,
+    output_per_mtok=15.00,
+)
+
+# What each compatible endpoint does with the parameters it accepts, measured 2026-09-07 and
+# tabled in `docs/model-clients/openai.md` §6. DeepSeek and GLM generate past
+# `max_completion_tokens` and constrain no schema; GLM stops thinking for its own switch.
+COMPATIBLE_SETTINGS = {
+    "deepseek": {
+        "base_url": "https://api.deepseek.com/v1",
+        "max_output_tokens_param": "max_tokens",
+        "structured_output": "json_object",
+        "publishes_allowance": False,
+    },
+    "glm": {
+        "base_url": "https://api.z.ai/api/paas/v4",
+        "max_output_tokens_param": "max_tokens",
+        "reasoning_off": {"thinking": {"type": "disabled"}},
+        "structured_output": "json_object",
+        "publishes_allowance": False,
+    },
+    "kimi": {
+        "base_url": "https://api.moonshot.ai/v1",
+        "structured_output": "json_schema",
+        "publishes_allowance": False,
+    },
+}
+COMPATIBLE = {
+    "deepseek": (DEEPSEEK_MODEL, DEEPSEEK_PRICES, "DEEPSEEK_API_KEY"),
+    "glm": (GLM_MODEL, GLM_PRICES, "ZAI_API_KEY"),
+    "kimi": (KIMI_MODEL, KIMI_PRICES, "KIMI_API_KEY"),
+}
+
 # The three backends `P3-69` added. Each refuses a temperature other than the default on the
 # models these arms call, so their pipelines set none; the seed is dropped by two of them and
 # the manifest says so. Chat Completions on GPT-5.6 refuses function tools unless reasoning
 # is off, measured 2026-09-06, so the `openai` agent arm turns it off.
-NEW_BACKENDS = ("openai", "openai-responses", "anthropic")
+NEW_BACKENDS = ("openai", "openai-responses", "anthropic", "deepseek", "glm", "kimi")
 
 
 def _new_backend(backend: str) -> str | None:
@@ -155,6 +214,17 @@ def _new_client(backend: str, *, tools: bool = False):
         )
     if name == "openai-responses":
         return OpenAIResponsesClient(model=OPENAI_MODEL), OPENAI_PRICES, ["OPENAI_API_KEY"]
+    if name in COMPATIBLE:
+        model, prices, key_env = COMPATIBLE[name]
+        return (
+            OpenAIClient(
+                model=model,
+                api_key=os.environ[key_env],
+                **COMPATIBLE_SETTINGS[name],  # type: ignore[arg-type]
+            ),
+            prices,
+            [key_env],
+        )
     return AnthropicClient(model=ANTHROPIC_MODEL), ANTHROPIC_PRICES, ["ANTHROPIC_API_KEY"]
 
 
@@ -162,6 +232,34 @@ def build_prompt(inputs, ctx):
     return Prompt.user(
         "{question}\n\nReport the answer, or `unknown` if it is not known.",
         question=inputs["question"],
+    )
+
+
+def build_json_prompt(inputs, ctx):
+    """The prompt the `json_object` endpoints need, which names the format it asks for.
+
+    DeepSeek refuses `response_format` of `json_object` unless the prompt asks for JSON, so
+    an arm recording that mode says so. `docs/model-clients/openai.md` §6 carries the rule.
+    """
+    return Prompt.user(
+        "{question}\n\nReply as a json object. Report the answer, or `unknown` if it is not known.",
+        question=inputs["question"],
+    )
+
+
+def compatible_pipeline() -> Pipeline:
+    """The single-node pipeline the compatible-endpoint arms record."""
+    return Pipeline(
+        [
+            LLMNode(
+                build_json_prompt,
+                output_schema=Answer,
+                node_id="answer",
+                temperature=None,
+                max_output_tokens=2000,
+            )
+        ],
+        budget=Budget(max_steps=None, max_tokens=100_000, max_cost=None, max_wall_clock_ms=120_000),
     )
 
 
@@ -743,6 +841,10 @@ def record(backend: str, base_url: str | None = None) -> None:
         result = agent_pipeline(temperature=None).run(
             {"question": AGENT_QUESTION}, envelope=envelope, model=client, seed=SEED
         )
+    elif backend in COMPATIBLE:
+        result = compatible_pipeline().run(
+            {"question": QUESTION}, envelope=envelope, model=client, seed=SEED
+        )
     elif _new_backend(backend):
         result = pipeline(temperature=None).run(
             {"question": QUESTION}, envelope=envelope, model=client, seed=SEED
@@ -987,20 +1089,53 @@ def stream_prompt(inputs, ctx):
     )
 
 
-def stream_pipeline(extra=None, temperature: float | None = 0.0) -> Pipeline:
+def compatible_stream_prompt(inputs, ctx):
+    """`stream_prompt` for the endpoints whose schema is a request rather than a constraint.
+
+    Under `structured_output="json_object"` the endpoint returns valid JSON and chooses the
+    fields itself, so the prompt is what names them. GLM answered a one-field object to the
+    prompt above and the node refused it, which is that mode working as documented.
+    """
+    return Prompt.user(
+        "{question}\n\nUse only this catalogue:\n{catalogue}"
+        "\n\nReply as a json object with the keys `retailer` and `returns_policy`. Report "
+        "`unknown` for anything not in the catalogue.",
+        question=inputs["question"],
+        catalogue=Section.joined(
+            "catalogue",
+            [Section("entry", "- {k}: {v}", k=k, v=v) for k, v in CATALOGUE.items()],
+        ),
+    )
+
+
+def compatible_restate_prompt(inputs, ctx):
+    """The second node's prompt, naming the format and the keys for the same reason."""
+    return Prompt.user(
+        "Restate this in one sentence: {inputs}. Reply as a json object with the keys "
+        "`retailer` and `returns_policy`, and report `unknown` for anything absent.",
+        inputs=inputs,
+    )
+
+
+def stream_pipeline(
+    extra=None, temperature: float | None = 0.0, json_named: bool = False
+) -> Pipeline:
     """One streaming node and one that does not stream, so a recording holds both shapes."""
     return Pipeline(
         [
             LLMNode(
-                stream_prompt,
+                compatible_stream_prompt if json_named else stream_prompt,
                 output_schema=Finding,
                 node_id="answer",
                 temperature=temperature,
                 stream=True,
                 extra=extra,
+                max_output_tokens=2000 if json_named else None,
             ),
             LLMNode(
-                lambda inputs, ctx: Prompt.user(
+                compatible_restate_prompt
+                if json_named
+                else lambda inputs, ctx: Prompt.user(
                     "Restate this in one sentence: {inputs}. Report `unknown` for anything absent.",
                     inputs=inputs,
                 ),
@@ -1008,6 +1143,7 @@ def stream_pipeline(extra=None, temperature: float | None = 0.0) -> Pipeline:
                 node_id="restate",
                 temperature=temperature,
                 extra=extra,
+                max_output_tokens=2000 if json_named else None,
             ),
         ],
         budget=Budget(max_steps=None, max_tokens=100_000, max_cost=None, max_wall_clock_ms=180_000),
@@ -1048,7 +1184,8 @@ def record_stream(backend: str, base_url: str | None = None) -> None:
 
     pieces: list[str] = []
     temperature = None if _new_backend(backend) else 0.0
-    result = stream_pipeline(extra, temperature=temperature).run(
+    named = _new_backend(backend) in COMPATIBLE
+    result = stream_pipeline(extra, temperature=temperature, json_named=named).run(
         {"question": STREAM_QUESTION},
         envelope=envelope,
         model=client,
@@ -1135,6 +1272,15 @@ if __name__ == "__main__":
             "anthropic",
             "agent-anthropic",
             "stream-anthropic",
+            "deepseek",
+            "agent-deepseek",
+            "stream-deepseek",
+            "glm",
+            "agent-glm",
+            "stream-glm",
+            "kimi",
+            "agent-kimi",
+            "stream-kimi",
         ],
     )
     parser.add_argument("--base-url", default=None, help="where the vLLM server is listening")
