@@ -1,0 +1,44 @@
+{
+ "status": 400,
+ "request": {
+  "model": "deepseek-v4-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "What is the capital of France?"
+   }
+  ],
+  "response_format": {
+   "type": "json_schema",
+   "json_schema": {
+    "name": "answer",
+    "strict": true,
+    "schema": {
+     "type": "object",
+     "properties": {
+      "answer": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "answer"
+     ],
+     "additionalProperties": false
+    }
+   }
+  },
+  "max_tokens": 128,
+  "temperature": 0.0
+ },
+ "response": {
+  "error": {
+   "message": "This response_format type is unavailable now",
+   "type": "invalid_request_error",
+   "param": null,
+   "code": "invalid_request_error"
+  }
+ },
+ "headers": {
+  "content-type": "application/octet-stream"
+ }
+}

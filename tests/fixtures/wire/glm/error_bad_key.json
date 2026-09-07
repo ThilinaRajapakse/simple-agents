@@ -1,0 +1,22 @@
+{
+ "status": 401,
+ "request": {
+  "model": "glm-4.7-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "code": "401",
+   "message": "token expired or incorrect"
+  }
+ },
+ "headers": {
+  "content-type": "application/json"
+ }
+}

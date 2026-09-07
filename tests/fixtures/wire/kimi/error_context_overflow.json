@@ -1,0 +1,15 @@
+{
+ "status": 400,
+ "request": {
+  "model": "kimi-k2.6"
+ },
+ "response": {
+  "error": {
+   "message": "Invalid request: Your request exceeded model token limit: 262144 (requested: 291275)",
+   "type": "invalid_request_error"
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=utf-8"
+ }
+}

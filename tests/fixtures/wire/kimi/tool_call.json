@@ -1,0 +1,73 @@
+{
+ "status": 200,
+ "request": {
+  "model": "kimi-k2.6",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Look up shelf entry 5 using the tool."
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "lookup_shelf",
+     "description": "Look up a shelf entry.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "entry": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "entry"
+      ]
+     }
+    }
+   }
+  ],
+  "max_tokens": 128,
+  "temperature": 1.0
+ },
+ "response": {
+  "id": "chatcmpl-6a9df873e0fbf7e9aa2920ad",
+  "object": "chat.completion",
+  "created": 1788737651,
+  "model": "kimi-k2.6",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "reasoning_content": "The user wants me to look up shelf entry 5 using the lookup_shelf tool. I have the tool available and I need to call it with entry number 5.",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "lookup_shelf_0",
+       "type": "function",
+       "function": {
+        "name": "lookup_shelf",
+        "arguments": "{\"entry\": 5}"
+       }
+      }
+     ]
+    },
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 57,
+   "completion_tokens": 54,
+   "total_tokens": 111,
+   "completion_tokens_details": {
+    "reasoning_tokens": 36
+   }
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=utf-8"
+ }
+}

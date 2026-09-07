@@ -1,0 +1,77 @@
+{
+ "status": 200,
+ "request": {
+  "model": "glm-4.7-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Look up shelf entry 5 using the tool."
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "lookup_shelf",
+     "description": "Look up a shelf entry.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "entry": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "entry"
+      ]
+     }
+    }
+   }
+  ],
+  "max_tokens": 600,
+  "temperature": 0.6
+ },
+ "response": {
+  "choices": [
+   {
+    "finish_reason": "tool_calls",
+    "index": 0,
+    "message": {
+     "content": "I'll look up shelf entry 5 for you.",
+     "reasoning_content": "The user wants me to look up shelf entry 5 using the tool. I have access to a lookup_shelf function that takes an \"entry\" parameter which should be an integer. The user has specified they want entry 5, so I should call the function with entry=5.",
+     "role": "assistant",
+     "tool_calls": [
+      {
+       "function": {
+        "arguments": "{\"entry\":5}",
+        "name": "lookup_shelf"
+       },
+       "id": "call_-7286399270201065274",
+       "index": 0,
+       "type": "function"
+      }
+     ]
+    }
+   }
+  ],
+  "created": 1788737867,
+  "id": "20260907073746878a556318314490",
+  "model": "glm-4.7-flash",
+  "object": "chat.completion",
+  "request_id": "20260907073746878a556318314490",
+  "usage": {
+   "completion_tokens": 82,
+   "completion_tokens_details": {
+    "reasoning_tokens": 58
+   },
+   "prompt_tokens": 163,
+   "prompt_tokens_details": {
+    "cached_tokens": 42
+   },
+   "total_tokens": 245
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=UTF-8"
+ }
+}

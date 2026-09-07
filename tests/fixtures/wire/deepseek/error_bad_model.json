@@ -1,0 +1,24 @@
+{
+ "status": 400,
+ "request": {
+  "model": "no-such-model-xyz",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "message": "The supported API model names are deepseek-v4-pro, deepseek-v4-flash, and deepseek-v4-flash-vision-exp, but you passed no-such-model-xyz.",
+   "type": "invalid_request_error",
+   "param": null,
+   "code": "invalid_request_error"
+  }
+ },
+ "headers": {
+  "content-type": "application/octet-stream"
+ }
+}

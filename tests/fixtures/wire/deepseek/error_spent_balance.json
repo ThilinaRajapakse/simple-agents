@@ -1,0 +1,21 @@
+{
+ "status": 402,
+ "request": {
+  "model": "deepseek-v4-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "hi"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "message": "Insufficient Balance",
+   "type": "unknown_error",
+   "param": null,
+   "code": "invalid_request_error"
+  }
+ }
+}

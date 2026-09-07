@@ -1,0 +1,20 @@
+{
+ "status": 429,
+ "request": {
+  "model": "kimi-k3",
+  "messages": [
+   {
+    "role": "user",
+    "content": "hi"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "type": "exceeded_current_quota_error",
+   "message": "Account balance is insufficient or the account has been disabled"
+  }
+ },
+ "source": "documented"
+}

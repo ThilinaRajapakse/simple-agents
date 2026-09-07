@@ -1,0 +1,80 @@
+{
+ "status": 200,
+ "request": {
+  "model": "deepseek-v4-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Look up shelf entry 5 using the tool."
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "lookup_shelf",
+     "description": "Look up a shelf entry.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "entry": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "entry"
+      ]
+     }
+    }
+   }
+  ],
+  "max_tokens": 128,
+  "temperature": 0.0
+ },
+ "response": {
+  "id": "4f7acac7-930e-4706-bc56-056745e7d36a",
+  "object": "chat.completion",
+  "created": 1788737506,
+  "model": "deepseek-v4-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "reasoning_content": "The user wants me to look up shelf entry 5. Let me call the tool.",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_JOikii4OdB1cPx65sT9s0074",
+       "type": "function",
+       "function": {
+        "name": "lookup_shelf",
+        "arguments": "{\"entry\": 5}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 362,
+   "completion_tokens": 64,
+   "total_tokens": 426,
+   "prompt_tokens_details": {
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 18
+   },
+   "prompt_cache_hit_tokens": 0,
+   "prompt_cache_miss_tokens": 362
+  },
+  "system_fingerprint": "00000000000000000000000000000000"
+ },
+ "headers": {
+  "content-type": "application/json"
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "status": 404,
+ "request": {
+  "model": "no-such-model-xyz",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "message": "Not found the model no-such-model-xyz or Permission denied",
+   "type": "resource_not_found_error"
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=utf-8"
+ }
+}

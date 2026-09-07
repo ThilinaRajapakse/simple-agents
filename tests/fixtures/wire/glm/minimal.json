@@ -1,0 +1,46 @@
+{
+ "status": 200,
+ "request": {
+  "model": "glm-4.7-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 400,
+  "temperature": 0.6
+ },
+ "response": {
+  "choices": [
+   {
+    "finish_reason": "stop",
+    "index": 0,
+    "message": {
+     "content": "ok",
+     "reasoning_content": "1.  **Analyze the Request:** The user wants me to reply with exactly the word \"ok\".\n\n2.  **Identify the Constraint:** The constraint is \"exactly\". This means no punctuation, no extra spaces, no other words, and no emojis.\n\n3.  **Formulate the Output:** The word is \"ok\".\n\n4.  **Verify:** Does \"ok\" meet the criteria? Yes. It is the exact word requested.\n\n5.  **Final Output Generation:** ok.",
+     "role": "assistant"
+    }
+   }
+  ],
+  "created": 1788737859,
+  "id": "20260907073737ddeb27f67a0542fc",
+  "model": "glm-4.7-flash",
+  "object": "chat.completion",
+  "request_id": "20260907073737ddeb27f67a0542fc",
+  "usage": {
+   "completion_tokens": 106,
+   "completion_tokens_details": {
+    "reasoning_tokens": 103
+   },
+   "prompt_tokens": 10,
+   "prompt_tokens_details": {
+    "cached_tokens": 8
+   },
+   "total_tokens": 116
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=UTF-8"
+ }
+}

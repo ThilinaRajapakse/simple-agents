@@ -1,0 +1,65 @@
+{
+ "status": 200,
+ "request": {
+  "model": "glm-4.7-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "What is the capital of France?"
+   }
+  ],
+  "response_format": {
+   "type": "json_schema",
+   "json_schema": {
+    "name": "answer",
+    "strict": true,
+    "schema": {
+     "type": "object",
+     "properties": {
+      "answer": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "answer"
+     ],
+     "additionalProperties": false
+    }
+   }
+  },
+  "max_tokens": 600,
+  "temperature": 0.6
+ },
+ "response": {
+  "choices": [
+   {
+    "finish_reason": "stop",
+    "index": 0,
+    "message": {
+     "content": "The capital of France is **Paris**.",
+     "reasoning_content": "1.  **Identify the user's core question:** The user is asking for the capital of France.\n\n2.  **Retrieve knowledge:**\n    *   Fact: France is a country in Western Europe.\n    *   Fact: Its capital city is Paris.\n\n3.  **Formulate the answer:**\n    *   Direct answer: \"Paris\".\n    *   Optional context (adds value): Mention that it is located in the north-central part of the country or is known for landmarks like the Eiffel Tower. (Keep it simple and direct first).\n\n4.  **Draft the response:** \"The capital of France is Paris.\"\n\n5.  **Final Review:** Does this answer the prompt accurately? Yes. Is it concise? Yes.",
+     "role": "assistant"
+    }
+   }
+  ],
+  "created": 1788737869,
+  "id": "202609070737470282e3dd11264779",
+  "model": "glm-4.7-flash",
+  "object": "chat.completion",
+  "request_id": "202609070737470282e3dd11264779",
+  "usage": {
+   "completion_tokens": 164,
+   "completion_tokens_details": {
+    "reasoning_tokens": 153
+   },
+   "prompt_tokens": 12,
+   "prompt_tokens_details": {
+    "cached_tokens": 2
+   },
+   "total_tokens": 176
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=UTF-8"
+ }
+}

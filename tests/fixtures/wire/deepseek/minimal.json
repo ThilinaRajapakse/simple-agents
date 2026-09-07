@@ -1,0 +1,49 @@
+{
+ "status": 200,
+ "request": {
+  "model": "deepseek-v4-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_completion_tokens": 16,
+  "temperature": 0.0
+ },
+ "response": {
+  "id": "e8060e8d-7b18-42fe-a544-ced2292cc2d2",
+  "object": "chat.completion",
+  "created": 1788737498,
+  "model": "deepseek-v4-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "ok",
+     "reasoning_content": "We need to reply exactly \"ok\". The instruction says \"Reply with exactly: ok\". So output just ok."
+    },
+    "logprobs": null,
+    "finish_reason": "stop"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 88,
+   "completion_tokens": 25,
+   "total_tokens": 113,
+   "prompt_tokens_details": {
+    "cached_tokens": 0
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 23
+   },
+   "prompt_cache_hit_tokens": 0,
+   "prompt_cache_miss_tokens": 88
+  },
+  "system_fingerprint": "00000000000000000000000000000000"
+ },
+ "headers": {
+  "content-type": "application/json"
+ }
+}

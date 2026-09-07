@@ -1,0 +1,48 @@
+{
+ "status": 200,
+ "request": {
+  "model": "glm-4.7-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 400,
+  "temperature": 0.6,
+  "thinking": {
+   "type": "disabled"
+  }
+ },
+ "response": {
+  "choices": [
+   {
+    "finish_reason": "stop",
+    "index": 0,
+    "message": {
+     "content": "ok",
+     "role": "assistant"
+    }
+   }
+  ],
+  "created": 1788737871,
+  "id": "20260907073751b74cf27fcd4a4675",
+  "model": "glm-4.7-flash",
+  "object": "chat.completion",
+  "request_id": "20260907073751b74cf27fcd4a4675",
+  "usage": {
+   "completion_tokens": 2,
+   "completion_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "prompt_tokens": 10,
+   "prompt_tokens_details": {
+    "cached_tokens": 8
+   },
+   "total_tokens": 12
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=UTF-8"
+ }
+}

@@ -1,0 +1,47 @@
+{
+ "status": 200,
+ "request": {
+  "model": "kimi-k2.6",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_completion_tokens": 16,
+  "temperature": 1.0
+ },
+ "response": {
+  "id": "chatcmpl-6a9df80986c63483f9c27d6d",
+  "object": "chat.completion",
+  "created": 1788737545,
+  "model": "kimi-k2.6",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "reasoning_content": "The user wants me to reply with exactly \"ok\". No punctuation, no"
+    },
+    "finish_reason": "length"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 12,
+   "completion_tokens": 16,
+   "total_tokens": 28,
+   "cached_tokens": 12,
+   "completion_tokens_details": {
+    "reasoning_tokens": 15
+   },
+   "prompt_tokens_details": {
+    "cached_tokens": 12
+   }
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=utf-8",
+  "msh-context-cache-token-saved": "12"
+ }
+}

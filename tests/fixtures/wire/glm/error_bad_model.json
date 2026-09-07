@@ -1,0 +1,20 @@
+{
+ "status": 400,
+ "request": {
+  "model": "no-such-model-xyz",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "code": "1214",
+   "message": "modelCode: does not exist"
+  }
+ },
+ "headers": {}
+}

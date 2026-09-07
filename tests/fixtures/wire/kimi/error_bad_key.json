@@ -1,0 +1,22 @@
+{
+ "status": 401,
+ "request": {
+  "model": "kimi-k2.6",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "message": "Invalid Authentication",
+   "type": "invalid_authentication_error"
+  }
+ },
+ "headers": {
+  "content-type": "application/json; charset=utf-8"
+ }
+}

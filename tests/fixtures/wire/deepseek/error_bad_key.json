@@ -1,0 +1,24 @@
+{
+ "status": 401,
+ "request": {
+  "model": "deepseek-v4-flash",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Reply with exactly: ok"
+   }
+  ],
+  "max_tokens": 8
+ },
+ "response": {
+  "error": {
+   "message": "Authentication Fails, Your api key: ****robe is invalid",
+   "type": "authentication_error",
+   "param": null,
+   "code": "invalid_request_error"
+  }
+ },
+ "headers": {
+  "content-type": "application/json"
+ }
+}
