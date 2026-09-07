@@ -25,6 +25,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Anthropic answers one with.
 - `Prompt.marked(cache_control=...)` reaches Anthropic's content block, with `ttl` inside the
   mark for the one-hour cache.
+- Four settings on `OpenAIClient` saying what an endpoint does with the parameters it
+  accepts: `max_output_tokens_param`, `structured_output`, `reasoning_off` and
+  `publishes_allowance`. DeepSeek, GLM and Kimi are measured in `docs/model-clients/openai.md`
+  §6.
+- `structured_output="none"` refuses a node's `output_schema` against an endpoint that
+  constrains no schema, rather than returning prose that fails to parse later.
+- `Retry(spent_quota_codes=...)` names the error codes an endpoint answers a spent allowance
+  with, for an endpoint whose codes are bare numbers.
+- A spent allowance is read off HTTP 402 and off `error.type`, which is where DeepSeek and
+  Kimi say it.
 
 ### Changed
 

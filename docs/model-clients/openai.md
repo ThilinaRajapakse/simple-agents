@@ -27,7 +27,7 @@ env = RunEnvelope(
 
 The rates are the project's own figures. §3 covers where they come from.
 
-**`OpenAIClient` speaks Chat Completions**, the dialect most hosted providers and local servers serve. It takes the seed every run has, and `base_url` points it at any endpoint that speaks the same dialect (§6). It never returns a chain of thought: a reasoning model reports how many output tokens it spent thinking, recorded as `tokens.output_reasoning`, and `outputs.reasoning` is `null` on every call.
+**`OpenAIClient` speaks Chat Completions**, the dialect most hosted providers and local servers serve. It takes the seed every run has, and `base_url` points it at any endpoint that speaks the same dialect (§6). At `api.openai.com` it returns no chain of thought: a reasoning model reports how many output tokens it spent thinking, recorded as `tokens.output_reasoning`, and `outputs.reasoning` is `null` on every call. Other endpoints serving this dialect do return the text (§6).
 
 **`OpenAIResponsesClient` speaks Responses**, the provider's own API. It returns the reasoning as a summary and as an encrypted item the next turn sends back, so an `AgentNode` continues from the model's own reasoning. It has no seed parameter: the adapter drops the run's seed and the manifest says so (§5).
 
@@ -35,11 +35,11 @@ The rates are the project's own figures. §3 covers where they come from.
 |---|---|---|
 | API | `/v1/chat/completions` | `/v1/responses` |
 | `seed` | sent | refused by the API, dropped and declared |
-| Reasoning recorded | the token count | the count, the summary text, and the encrypted item |
+| Reasoning recorded | the token count, and the text where the endpoint sends one (§6) | the count, the summary text, and the encrypted item |
 | Serves other providers through `base_url` | yes, §6 | the provider's own endpoint |
 | Function tools on GPT-5.6 | refused unless `reasoning=False` (§4) | with reasoning on |
 
-Both were measured against `api.openai.com` on 2026-09-06. `api_key` defaults to the `OPENAI_API_KEY` environment variable on both and is held as a `SecretStr`.
+Both were measured against `api.openai.com` on 2026-09-06, and `OpenAIClient` against three further endpoints on 2026-09-07 (§6). `api_key` defaults to the `OPENAI_API_KEY` environment variable on both and is held as a `SecretStr`.
 
 ## 2. Pinning a model
 
@@ -59,7 +59,7 @@ Both were measured against `api.openai.com` on 2026-09-06. `api_key` defaults to
 
 ## 4. Reasoning
 
-**Chat Completions returns no chain of thought.** The provider's reasoning guide says the API has no access to reasoning summaries or detailed reasoning output. What it reports is `completion_tokens_details.reasoning_tokens`, which the adapter records as `tokens.output_reasoning`, inside `tokens.output`. A call whose output count is far larger than its answer is explained by that number and by nothing else in the record.
+**Chat Completions at `api.openai.com` returns no chain of thought.** The provider's reasoning guide says the API has no access to reasoning summaries or detailed reasoning output. This is the provider's choice rather than the dialect's limit, and §6's three endpoints all return the text over the same API. What it reports is `completion_tokens_details.reasoning_tokens`, which the adapter records as `tokens.output_reasoning`, inside `tokens.output`. A call whose output count is far larger than its answer is explained by that number and by nothing else in the record.
 
 **Responses returns it.** `OpenAIResponsesClient` asks for the summary with `reasoning: {"summary": "auto"}` and sets `store: false`, which keeps nothing on the provider's side and is what makes the encrypted item come back. The summary is recorded on `outputs.reasoning.text` and the item, with its `id` and `encrypted_content`, on `outputs.reasoning.blocks`. An `AgentNode` sends the item back ahead of the tool call it led to, which the provider's guide asks for; a turn sent without it is accepted, so a conversation recorded against another backend still runs.
 
@@ -70,9 +70,9 @@ LLMNode(build_prompt, output_schema=Answer, extra={"reasoning": {"effort": "low"
 LLMNode(build_prompt, output_schema=Answer, extra={"reasoning_effort": "low"})            # Chat Completions
 ```
 
-The levels a model offers vary (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`), and a model refuses a level it lacks in its own words. `reasoning=False` on either client sends the `none` level. A model that does not reason refuses the `reasoning` parameter on Responses; `extra={"reasoning": None}` leaves it off.
+The levels a model offers vary (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`), and a model refuses a level it lacks in its own words. `reasoning=False` on either client sends the `none` level, or on `OpenAIClient` whatever `reasoning_off` was set to (§6). A model that does not reason refuses the `reasoning` parameter on Responses; `extra={"reasoning": None}` leaves it off.
 
-**A reasoning model refuses `max_tokens` and any `temperature` but the default.** The adapters send a node's ceiling as `max_completion_tokens`, which every model accepts. A node's `temperature` is sent as set, and the refusal comes back with the provider's message naming the parameter.
+**A reasoning model refuses `max_tokens` and any `temperature` but the default.** The adapters send a node's ceiling as `max_completion_tokens`, which every OpenAI model accepts and which two of §6's endpoints accept and generate past. A node's `temperature` is sent as set, and the refusal comes back with the provider's message naming the parameter.
 
 **Chat Completions refuses function tools on GPT-5.6 while reasoning is on.** Measured 2026-09-06: "Function tools with reasoning_effort are not supported for gpt-5.6-luna in /v1/chat/completions. To use function tools, use /v1/responses or set reasoning_effort to 'none'." An `AgentNode` on that model runs through `OpenAIResponsesClient`, or through `OpenAIClient(reasoning=False)`.
 
@@ -82,14 +82,56 @@ Every run has a seed, and every sampled call is sent one (`docs/run-envelope.md`
 
 ## 6. Other endpoints that speak Chat Completions
 
-`base_url` points `OpenAIClient` at any endpoint serving the same dialect, with that provider's key:
+`base_url` points `OpenAIClient` at any endpoint serving the same dialect, with that provider's key. **An endpoint that speaks the dialect can still differ in what it does with the parameters it accepts**, and four settings say what it does. Each defaults to what `api.openai.com` takes.
 
 ```python
-OpenAIClient(model="deepseek-chat", base_url="https://api.deepseek.com/v1",
-             api_key=os.environ["DEEPSEEK_API_KEY"])
+OpenAIClient(model="deepseek-v4-flash", base_url="https://api.deepseek.com/v1",
+             api_key=os.environ["DEEPSEEK_API_KEY"],
+             max_output_tokens_param="max_tokens", structured_output="none",
+             publishes_allowance=False)
 ```
 
-What such an endpoint reports is its own. A usage block that carries one prompt figure and no `prompt_tokens_details` leaves `input_cache_read` and `input_cache_write` as `unknown`, a response without `x-ratelimit-*` headers leaves `rate_limit` as `None`, and an error body in another shape reaches the caller as text. The adapter was measured against `api.openai.com` alone; declare the provider's own key in `Redaction(secret_env=[...])`, since the default names only `OPENAI_API_KEY`.
+GLM is the row the defaults cover least, and this is the whole of it:
+
+```python
+OpenAIClient(model="glm-4.7-flash", base_url="https://api.z.ai/api/paas/v4",
+             api_key=os.environ["ZAI_API_KEY"],
+             max_output_tokens_param="max_tokens", structured_output="none",
+             reasoning_off={"thinking": {"type": "disabled"}}, publishes_allowance=False)
+```
+
+**Three endpoints were measured on 2026-09-07**, and this is what each takes:
+
+| | OpenAI | DeepSeek | GLM (Z.ai) | Kimi (Moonshot) |
+|---|---|---|---|---|
+| `base_url` | default | `https://api.deepseek.com/v1` | `https://api.z.ai/api/paas/v4` | `https://api.moonshot.ai/v1` |
+| `max_output_tokens_param` | `max_completion_tokens` | `max_tokens` | `max_tokens` | `max_completion_tokens` |
+| `structured_output` | `json_schema` | `none` | `none` | `json_schema` |
+| `reasoning_off` | `{"reasoning_effort": "none"}` | `{"reasoning_effort": "none"}` | `{"thinking": {"type": "disabled"}}` | `{"reasoning_effort": "none"}` |
+| `publishes_allowance` | `True` | `False` | `False` | `False` |
+| Model measured | `gpt-5.6-luna` | `deepseek-v4-flash` | `glm-4.7-flash` | `kimi-k3` |
+
+**A parameter an endpoint accepts and ignores is why these are declared rather than detected.** DeepSeek and GLM accept `max_completion_tokens`, answer 200, and generate past it: a call asking for 20 returned 658 and 1,074 output tokens with `finish_reason` of `stop`. A `Budget` is checked between steps rather than inside a call, so a ceiling that does not bind leaves the call unbounded. Both endpoints honour `max_tokens`, and OpenAI's reasoning models refuse `max_tokens` even beside `max_completion_tokens`, so the name is set per endpoint rather than both being sent.
+
+**`structured_output` says what a node's `output_schema` becomes on the wire.** `json_schema` binds the decoder to the schema. `json_object` asks for valid JSON and leaves the fields to the model, so what comes back is validated rather than guaranteed. `none` is an endpoint that constrains nothing: a node asking for a schema raises `ConfigurationError` naming the endpoint and the model, since DeepSeek refuses the parameter with a 400 and GLM answers 200 with prose that no schema would accept.
+
+**What separates the two is whether the schema binds decoding.** Given an enum of `Berlin`, `Madrid` and `Rome` and asked for the capital of France, `kimi-k3` answered `Rome`, which is a decoder that cannot reach `Paris`. DeepSeek and GLM answered in prose that they could not comply, which is a model reading a schema. GLM's own guide documents `json_object` alone. Kimi's says `kimi-k3` and `kimi-k2.7-code` follow a schema reliably and `kimi-k2.6` does not, so on that endpoint the model is part of the setting.
+
+**Under `json_object` the prompt is what names the format.** DeepSeek refuses the mode unless the prompt asks for JSON, and GLM chooses its own fields, so a prompt naming the keys is what gets them. A node whose schema is a request rather than a constraint still validates what came back, and refuses a response that does not fit.
+
+**A spent allowance is said differently by each.** DeepSeek answers HTTP 402 with `Insufficient Balance`, GLM 429 with code `1113`, and Kimi 429 with `error.type` of `exceeded_current_quota_error`. All three stop the run rather than climbing the retry ladder (`docs/model-clients.md` §4). Each of these providers also sends genuinely retryable 429s, which are retried. All three wordings ship, so none of these endpoints needs configuring. `Retry(spent_quota_phrases=...)` and `Retry(spent_quota_codes=...)` name a wording or a code the library has not met; a code is matched whole, which is what an endpoint numbering its codes needs, and a bare number stays out of the shipped set because it would collide with another endpoint's.
+
+**All three return the chain of thought over this API**, in `reasoning_content`, which `api.openai.com` returns only over Responses. It is recorded on `outputs.reasoning.text` with the count in `tokens.output_reasoning`. The request drops it: this dialect has no field to send a chain of thought back under, and DeepSeek's guide asks for it to be left out of the next turn.
+
+**Kimi reports the cached share of a prompt only where something was served from cache.** A call that hit none carries no `prompt_tokens_details`, so `input_cache_read` is `unknown` rather than `0` and the call has no price (`docs/run-envelope.md` §4.2). The run total is `null` with `measured` naming what the priced calls came to. DeepSeek and GLM send the block either way. On a streamed response Kimi omits it as well.
+
+**Kimi ties the temperature it accepts to the reasoning switch.** Measured 2026-09-07: `kimi-k3` refuses every value but `1` by default and every value but `0.6` once `reasoning_effort` is set, and names the allowed value in the refusal. A node setting both sends whichever pair that model takes.
+
+**None of the three publishes a rate-limit allowance**, so `rate_limit` is `None` and `PacedClient` has nothing to pace against. Kimi sends `Retry-After` on a 429. GLM's free Flash models serve one request at a time and refuse the rest immediately with code `1302`; 15 sequential calls succeeded at a mean 1.68s.
+
+**What an endpoint leaves out is recorded as unmeasured.** A usage block with one prompt figure and no `prompt_tokens_details` leaves `input_cache_read` and `input_cache_write` as `unknown`, and an error body in another shape reaches the caller as text. None of the three bills a cache-write class, so `input_cache_write` is `0` wherever the endpoint sent the block it is counted from, and `unknown` on the Kimi calls that carry no block.
+
+Declare the provider's own key in `Redaction(secret_env=[...])`, since the default names only `OPENAI_API_KEY`. An endpoint measured nowhere above takes the defaults, and what it does with a parameter it accepts is unknown until it is measured.
 
 ## 7. Prompt caching
 
@@ -103,6 +145,6 @@ Both APIs publish the remaining allowance on every response, streamed or not: `x
 
 **Not reported:** a model revision beyond the dated identifier, a cache TTL, and serving concurrency. The revision is whatever the constructor was given, the TTL and the concurrency are `None`.
 
-**A spent allowance stops the run rather than climbing the retry ladder** (`docs/model-clients.md` §4). The provider's error page names a code beside the message, and the library matches on either: `insufficient_quota`, whose message says the current quota was exceeded, and `credit_balance_exhausted`, `organization_spend_limit_exceeded`, `project_spend_limit_exceeded` and `organization_usage_limit_exceeded`. None of these could be produced from a funded account, so they are taken from the documentation; a wording the library has not met is named with `Retry(spent_quota_phrases=...)`.
+**A spent allowance stops the run rather than climbing the retry ladder** (`docs/model-clients.md` §4). The provider's error page names a code beside the message, and the library matches on either: `insufficient_quota`, whose message says the current quota was exceeded, and `credit_balance_exhausted`, `organization_spend_limit_exceeded`, `project_spend_limit_exceeded` and `organization_usage_limit_exceeded`. None of these could be produced from a funded account, so they are taken from the documentation; a wording the library has not met is named with `Retry(spent_quota_phrases=...)`, and a code with `Retry(spent_quota_codes=...)`.
 
 **Every error shape was captured**: 401 for a bad key, 404 `model_not_found` for an unknown model, and a 400 whose message names the maximum context length for an over-long request, which the adapter raises as `ContextOverflow`.

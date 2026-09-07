@@ -599,6 +599,10 @@ Model cost is derived from token counts against the basis. A tool's spend is not
 
 `cost` is model spend and nothing else. `tool_spend` is what the tools cost, over the calls that bought something. `charged_cost` is the two together, which is what `max_cost` bounds.
 
+### 4.4 What the figure is derived from
+
+A cost is token counts multiplied by the rates the project declared. It is an arithmetic result rather than a charge read back from the provider, and the two differ wherever the declared rate differs from the rate applied. Every backend the library supports reports tokens rather than money, so a run cannot check its own arithmetic.
+
 **A tool reports what it was charged by taking a `SpendMeter`** (`docs/tools.md` §1.5). Where it does not, its `declared_cost.per_call` is used and `source` says `declared`. A price is what a tool charges; a call served from a cassette, one that failed, and one a cache answered all reach it and buy nothing.
 
 **A run uses one currency.** Two would have to be added to make a total, so a tool whose `DeclaredCost` names a currency other than the cost basis' is refused before the run starts, and a `SpendMeter` reporting a second one is refused at the call that reports it. A tool whose vendor bills in something else converts inside the tool.
