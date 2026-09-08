@@ -1,7 +1,7 @@
 {
   "eval_format_version": "0.32",
   "eval_id": "eval_d3378c4a545f",
-  "created_at": "2026-09-08T00:46:42.077Z",
+  "created_at": "2026-09-08T01:34:13.112Z",
   "config": {
     "split": "held_out",
     "k": 3,
@@ -517,7 +517,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 19,
-      "wall_clock_ms": 12,
+      "wall_clock_ms": 11,
       "absent_outputs": 3,
       "unfinished_executions": 0,
       "unfinished_items": 0,
@@ -597,7 +597,7 @@
       "resource_writes": {},
       "delegations": 0,
       "replayed_calls": 9,
-      "wall_clock_ms": 5,
+      "wall_clock_ms": 7,
       "absent_outputs": 5,
       "unfinished_executions": 0,
       "unfinished_items": 0,
