@@ -767,7 +767,7 @@ class TestNoResponseLeavesEveryDenominator:
         written = json.loads(results.write(tmp_path / "results.json").read_text())
 
         assert written["metrics"]["accuracy"]["left_out"] == {"no_response": 1}
-        assert written["eval_format_version"] == "0.31"
+        assert written["eval_format_version"] == "0.32"
 
 
 class TestAFanOutItemThatNeverReachedTheBackend:

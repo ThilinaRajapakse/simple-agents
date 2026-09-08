@@ -50,7 +50,7 @@ from .judgements import (
 )
 from .labels import Label, read_every_label, read_labels, write_labels
 from .metrics import METRIC_DEFINITIONS, RATE, Metric, Over, ProjectMetric
-from .pairs import Pair, paired_figure, pairs_from_arms, unjudged_pairs
+from .pairs import Pair, paired_figure, paired_results, pairs_from_arms, unjudged_pairs
 from .ratios import ProjectRatio
 from .outcomes import Outcome, RolloutOutcome
 from .scoring import Scoring, Verdict
@@ -134,6 +134,7 @@ __all__ = [
     "Pair",
     "ProjectRatio",
     "paired_figure",
+    "paired_results",
     "pairs_from_arms",
     "unjudged_pairs",
     "Over",

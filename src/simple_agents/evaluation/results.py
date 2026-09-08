@@ -5,7 +5,7 @@ conformance checks, and by a later comparison between two versions. It therefore
 configuration the number came from as well as the number, so a reader can tell what was
 measured without the code that measured it.
 
-Current version: ``0.31``, in the ``eval_format_version`` field. A file written at or
+Current version: ``0.32``, in the ``eval_format_version`` field. A file written at or
 above ``EVAL_FORMAT_FLOOR`` is read, and a figure that cannot be derived from an older one
 says so rather than reporting nothing.
 """
@@ -36,7 +36,7 @@ from .per_node import NodeMetrics, unfinished_lines
 
 __all__ = ["EVAL_FORMAT_FLOOR", "EVAL_FORMAT_VERSION", "EvalResults", "Group"]
 
-EVAL_FORMAT_VERSION = "0.31"
+EVAL_FORMAT_VERSION = "0.32"
 
 EVAL_FORMAT_FLOOR = "0.28"
 """The oldest results file this library reads.
@@ -59,6 +59,7 @@ _ARRIVED_IN = {
     "slice": (0, 29),
     "stores": (0, 30),
     "pipeline": (0, 31),
+    "pairs": (0, 32),
 }
 
 
@@ -159,6 +160,18 @@ class EvalResults:
         results.baseline_unscored        # ('avoided_share',)
     """
 
+    pairs: tuple[dict[str, Any], ...] = ()
+    """The judged pairs, where this file is a session of them rather than rollouts.
+
+    Filled by ``paired_results`` and empty on an evaluation that ran a pipeline. Each entry
+    carries the two things shown, ``a`` and ``b``, what each was an instance of, ``a_arm`` and
+    ``b_arm``, the ``verdict`` recorded, who decided it and when. ``config["kind"]`` is
+    ``"pairs"`` on such a file and ``config["verdicts"]`` says what each verdict means::
+
+        results.config["contest"]                 # ['baseline', 'variant']
+        [p["verdict"] for p in results.pairs]     # ['a', 'both_good', 'b', ...]
+    """
+
     path: Path | None = None
     format_version: str = EVAL_FORMAT_VERSION
     """The version of the file this was read from, and the current version for a fresh result.
@@ -176,9 +189,10 @@ class EvalResults:
         The named figures are ``node_ratios``, a ``ProjectRatio`` reported per node, and
         ``slice``, what the evaluated pipeline is a slice of, both of which arrived in
         ``0.29``; ``stores``, what each store the pipeline reaches did during the rollouts,
-        which arrived in ``0.30``; and ``pipeline``, which registered pipeline was measured,
-        which arrived in ``0.31``. A file written before one holds it not at all, which is a
-        different answer from a project having declared none::
+        which arrived in ``0.30``; ``pipeline``, which registered pipeline was measured,
+        which arrived in ``0.31``; and ``pairs``, the judged pairs a session filed with
+        ``paired_results``, which arrived in ``0.32``. A file written before one holds it not
+        at all, which is a different answer from a project having declared none::
 
             if not results.carries("node_ratios"):
                 print(f"read from {results.format_version}, which records no per-node ratio")
@@ -376,6 +390,7 @@ class EvalResults:
             "rollouts": [r.to_record() for r in self.rollouts],
             "baseline": [r.to_record() for r in self.baseline],
             "baseline_unscored": list(self.baseline_unscored),
+            "pairs": [dict(p) for p in self.pairs],
         }
 
     def report(self, *, group_by: str | None = None) -> str:
@@ -402,6 +417,15 @@ class EvalResults:
 
     def _header_lines(self) -> list[str]:
         """The header: what ran, and the incomplete warning where the split did not."""
+        if self.config.get("kind") == "pairs":
+            contest = " v ".join(str(arm) for arm in self.config.get("contest") or [])
+            judges = ", ".join(str(who) for who in self.config.get("decided_by") or []) or "?"
+            return [
+                f"{self.n} judged pair(s) over {self.config.get('units', '?')} unit(s), "
+                f"{contest or 'no contest named'}, decided by {judges}"
+                f"{' blind' if self.config.get('blind') else ''}",
+                "",
+            ]
         lines = [
             f"{self.n} example(s) x {self.k} rollout(s) on split "
             f"{self.config.get('split', '?')!r}, seed {self.config.get('seed', '?')}",
@@ -532,7 +556,9 @@ class EvalResults:
         outcomes: dict[str, int] = {}
         for rollout in self.rollouts:
             outcomes[rollout.outcome.value] = outcomes.get(rollout.outcome.value, 0) + 1
-        lines += ["", "  " + ", ".join(f"{k} {v}" for k, v in sorted(outcomes.items()))]
+        # A session of judged pairs has no rollouts and so no outcomes line.
+        if outcomes:
+            lines += ["", "  " + ", ".join(f"{k} {v}" for k, v in sorted(outcomes.items()))]
 
         # One line per calculation present, because a metric whose examples all scored the same
         # is a proportion and carries Wilson's interval rather than the resampled one. Naming
@@ -652,6 +678,7 @@ class EvalResults:
                 RolloutOutcome.from_record(record) for record in raw.get("baseline") or []
             ),
             baseline_unscored=tuple(str(name) for name in raw.get("baseline_unscored") or []),
+            pairs=tuple(dict(p) for p in raw.get("pairs") or []),
             path=target,
         )
 

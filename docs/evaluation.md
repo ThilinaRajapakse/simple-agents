@@ -2236,7 +2236,7 @@ stops an evaluation recording rollouts it would then delete.
 
 ## 8. The results file
 
-JSON, `eval_format_version` `0.31`. Each figure carries `population`, the sentence naming which rollouts it covers, and `over`, the same fact as the value that decided it, so a reader comparing two files does not parse a sentence. It carries what the number was and what produced it, so a
+JSON, `eval_format_version` `0.32`. Each figure carries `population`, the sentence naming which rollouts it covers, and `over`, the same fact as the value that decided it, so a reader comparing two files does not parse a sentence. It carries what the number was and what produced it, so a
 reader can tell what was measured without the code that measured it.
 
 **`EvalResults.read` reads a file written at `0.28` or later.** The format is additive by
@@ -2257,9 +2257,11 @@ results.carries("node_ratios")          # False: written before per-node ratios 
 ```
 
 The names are `node_ratios`, a `ProjectRatio` reported per node (§11.5), and `slice`, what the
-evaluated pipeline is a slice of (§5.6), both of which arrived in `0.29`; and `stores`, what
+evaluated pipeline is a slice of (§5.6), both of which arrived in `0.29`; `stores`, what
 each store the pipeline reaches did during the rollouts (§6.9), which arrived in `0.30`;
-and `pipeline`, the registered name of the pipeline that was measured, which arrived in `0.31`.
+`pipeline`, the registered name of the pipeline that was measured, which arrived in `0.31`;
+and `pairs`, the judged pairs a session filed with `paired_results` (§11.9), which arrived
+in `0.32`.
 
 | Field | Holds |
 |---|---|
@@ -2281,6 +2283,7 @@ than the split holds (§6.4).
 | `rollouts` | every rollout: its example, its index, its seed, its outcome, its answer, its `run_id`, its trajectory path, its project-metric scores, its `verdict` against the answer key, `left_out` where it is outside every rate's denominator (§2.2), and per node whether it was reached, whether it matched, and its per-node scores |
 | `baseline` | one entry per example for what an agent that did nothing would have answered, in the same shape as a rollout, or empty where the suite declared no `baseline=` (§4.2) |
 | `baseline_unscored` | the project figures whose own function no baseline answer reached, because `over` decided them without it. A figure over rollouts that asserted a value is one of these for a baseline that asserts nothing, and its floor describes the declaration rather than the answers (§4.2) |
+| `pairs` | on a session of judged pairs (§11.9), one entry per pair: `a` and `b`, the two things shown; `a_arm` and `b_arm`, what each was an instance of; `example_id`; the `verdict` recorded, `decided_by`, `decided_at` and `reason`. Empty on an evaluation that ran a pipeline. Such a file has `config.kind` `"pairs"`, `config.contest` naming the arms, `config.blind`, `config.decided_by`, and `config.verdicts` saying what each verdict means |
 
 ```python
 results = EvalResults.read("evals/results/held-out-v3.json")
@@ -2990,15 +2993,25 @@ Some tasks have no answer key. Which of two shortlists is better, which of two s
 well, whether a reordering helped: nothing can be written in `expected`. What a person can say
 is which of the two they would rather have.
 
-A pair is two things and what each of them is. The judge sees `this` and `that`; a counting rule
-reads `this_is` and `that_is`, so the order somebody was shown can be randomised without the
-figure changing meaning:
+A pair is two things and what each of them is an instance of. The judge sees `a` and `b`; a
+counting rule reads `a_arm` and `b_arm`, so the order somebody was shown can be randomised
+without the figure changing meaning:
 
 ```python
 from simple_agents.evaluation import Pair, paired_figure, pairs_from_arms, read_labels
 
-pairs = pairs_from_arms(before, after, before_is="baseline", after_is="variant", seed=41)
+pairs = pairs_from_arms(before, after, before_arm="baseline", after_arm="variant", seed=41)
 ```
+
+A pairing the project builds itself names each side's arm the same way:
+
+```python
+Pair(id="p001", a="Severance", b="Fargo", a_arm="gemini", b_arm="glm")
+```
+
+Two things from one arm may be put side by side, `a_arm == b_arm`, to rank within it. Such a
+pair falls outside a figure whose counting rule reads the arms, since neither side is the other
+arm, and the measure page counts it apart from the pairs decided between two arms.
 
 **How the pairs are formed is where the instrument's quality comes from, and the library fixes
 nothing about it.** Pairing across a wide quality gap produces mostly pairs where neither side is
@@ -3016,10 +3029,10 @@ both counting rules are given the pair and the verdict:
 
 ```python
 def chose(pair, verdict):
-    if verdict == "prefer_this":
-        return pair.this_is
-    if verdict == "prefer_that":
-        return pair.that_is
+    if verdict == "prefer_a":
+        return pair.a_arm
+    if verdict == "prefer_b":
+        return pair.b_arm
     return verdict
 
 win_rate = paired_figure(
@@ -3052,6 +3065,42 @@ from one example travel together.
 way every other judgement is recorded (§12), so a figure over pairs is computed with no network
 and reproduces on replay. `unjudged_pairs(pairs, verdicts)` is what that pass is handed, and a
 figure computed while some are outstanding counts them in `left_out` under `unjudged`.
+
+**A session is filed as a results file.** `paired_results` takes the pairs, the verdicts and the
+figures and returns an `EvalResults` with the pairs under `pairs` (§8), so the session is on the
+same record every other measurement is: the gates read it, `simple-agents view` draws it head to
+head (`docs/view.md` §11), and the pairs themselves are in the file rather than in a labelling
+tool's own notes.
+
+```python
+from simple_agents.evaluation import paired_results
+
+results = paired_results(
+    pairs, read_labels("evals/labels.jsonl"),
+    figures=[win_rate, nothing_wanted],
+    eval_id="pairwise-variant-v-baseline", blind=True,
+    verdicts_mean={"prefer_a": "a", "prefer_b": "b", "both_good": "both", "both_bad": "neither"},
+)
+results.write("evals/results/pairwise-variant-v-baseline.json")
+```
+
+`blind` says whether the judge saw what each side was an instance of; a session judged with the
+arms visible measures the judge's expectation as well as the arms, and the page says which it
+was. `verdicts_mean` says what each of the project's verdicts means to the page, one of `a`,
+`b`, `both` and `neither`, so the decided pairs can be drawn between the two arms; a verdict
+outside the mapping is drawn under its own name. The figures read the counting rules and are
+unaffected by the mapping. `created_at` is the latest `decided_at` on file, so the session lands
+in the history where the judging happened. A plain mapping of pair id to verdict carries no
+decider, so `decided_by=` is required with one.
+
+Such a file has `config.kind` `"pairs"`, `rollouts` and `nodes` empty, and `report()` opens with
+the contest:
+
+```
+40 judged pair(s) over 40 unit(s), baseline v variant, decided by human blind
+
+  win_rate         50.0%  [23.1%, 77.8%] (7 of 14)  n=40 over pairs a verdict was recorded for
+```
 
 ---
 

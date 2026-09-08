@@ -35,14 +35,40 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   with, for an endpoint whose codes are bare numbers.
 - A spent allowance is read off HTTP 402 and off `error.type`, which is where DeepSeek and
   Kimi say it.
+- `paired_results`: a session of judged pairs filed as a results file, with the pairs, their
+  verdicts and who decided them under a new `pairs` section, and `config.verdicts` saying
+  what each verdict means. `docs/evaluation.md` §11.9.
+- The measure page draws every session of judged pairs head to head: the decided pairs split
+  by arm, the ties counted beside them, every figure on the shared axis, and the pairs as a
+  table. `docs/view.md` §11.
+- `Pair.arms`, the two arm names as a tuple.
 
 ### Changed
 
+- **Breaking:** `Pair`'s sides are `a` and `b`, and what each is an instance of is `a_arm`
+  and `b_arm`; `pairs_from_arms` takes `before_arm=` and `after_arm=`. They were `this`,
+  `that`, `this_is`, `that_is`, `before_is` and `after_is`. A project's counting rules read
+  `pair.a_arm` and `pair.b_arm`.
+- A `Pair` may put two things from one arm side by side. It was refused; such a pair falls
+  outside a figure whose counting rule reads the arms, and the page counts it apart.
+- Results file `0.32`: `pairs`. A file written before it carries none, and `carries("pairs")`
+  says so.
+- The measure page's history has no cut. It kept twelve files by date, and a sweep on one
+  night pushed a whole measurement off the page.
+- The figures table's n column reads the two totals behind a ratio, "7 of 17", where the
+  figure has them.
+- The trend names one point in every few past eight evaluations; the rest carry their names
+  on hover.
 - Trajectory format `0.31`. `tokens` gains `output_reasoning`.
 - Manifest format `0.44`. `unseeded_models`, and `totals.tokens.output_reasoning`.
 - An assistant turn the loop builds carries `reasoning_blocks` beside `reasoning`, so an
   adapter whose backend needs its reasoning back verbatim has it. `messages_to_wire` drops
   both for the OpenAI dialect.
+
+### Fixed
+
+- On a results file with no rollouts, the measure page's strip read "Steps it reached 0 of
+  26 · every built step ran at least once". It now says the file ran no pipeline.
 
 ## [0.2.0] - 2026-09-05
 

@@ -24,10 +24,10 @@ from simple_agents.evaluation.results import EvalResults
 
 def chose(pair: Pair, verdict):
     """Which side a verdict picked, by name. The library never knows this; a project does."""
-    if verdict == "prefer_this":
-        return pair.this_is
-    if verdict == "prefer_that":
-        return pair.that_is
+    if verdict == "prefer_a":
+        return pair.a_arm
+    if verdict == "prefer_b":
+        return pair.b_arm
     return verdict
 
 
@@ -37,14 +37,14 @@ def band_pairs() -> tuple[list[Pair], dict[str, str]]:
     for index in range(40):
         pair = Pair(
             id=f"p{index:03d}",
-            this=f"high{index}",
-            that=f"low{index}",
-            this_is="high_band",
-            that_is="low_band",
+            a=f"high{index}",
+            b=f"low{index}",
+            a_arm="high_band",
+            b_arm="low_band",
         )
         pairs.append(pair)
         verdicts[pair.id] = (
-            "prefer_this" if index < 7 else "prefer_that" if index < 14 else "neither_wanted"
+            "prefer_a" if index < 7 else "prefer_b" if index < 14 else "neither_wanted"
         )
     return pairs, verdicts
 
@@ -130,21 +130,38 @@ class TestTheFortyComparisons:
 class TestWhatAPairCarries:
     def test_the_side_names_survive_a_randomised_order(self) -> None:
         """A verdict names a position; a counting rule reads what that position held."""
-        flipped = Pair(id="p", this="b", that="a", this_is="baseline", that_is="variant")
-        assert chose(flipped, "prefer_this") == "baseline"
-        assert chose(flipped, "prefer_that") == "variant"
+        flipped = Pair(id="p", a="b", b="a", a_arm="baseline", b_arm="variant")
+        assert chose(flipped, "prefer_a") == "baseline"
+        assert chose(flipped, "prefer_b") == "variant"
 
-    def test_two_sides_that_are_the_same_thing_are_refused(self) -> None:
-        with pytest.raises(ConfigurationError, match="both sides are"):
-            Pair(id="p", this="a", that="b", this_is="arm", that_is="arm")
+    def test_two_things_from_one_arm_fall_outside_a_figure_between_arms(self) -> None:
+        """A within-arm pair ranks inside the arm and says nothing between arms."""
+        within = Pair(id="w", a="x", b="y", a_arm="high_band", b_arm="high_band")
+        pairs, verdicts = band_pairs()
+        verdicts["w"] = "prefer_a"
+
+        figure = paired_figure(
+            [*pairs, within],
+            verdicts,
+            name="win_rate",
+            definition="d",
+            numerator=lambda p, v: chose(p, v) == "high_band" and p.a_arm != p.b_arm,
+            denominator=lambda p, v: (
+                p.a_arm != p.b_arm and chose(p, v) in ("high_band", "low_band")
+            ),
+            resamples=200,
+        )
+
+        assert (figure.numerator, figure.denominator) == (7, 14)
+        assert within.arms == ("high_band", "high_band")
 
     def test_an_empty_id_is_refused(self) -> None:
         with pytest.raises(ConfigurationError, match="empty id"):
-            Pair(id="  ", this="a", that="b")
+            Pair(id="  ", a="a", b="b")
 
     def test_the_resampling_unit_is_the_example_where_there_is_one(self) -> None:
-        assert Pair(id="p", this="a", that="b", example_id="q29").unit == "q29"
-        assert Pair(id="p", this="a", that="b").unit == "p"
+        assert Pair(id="p", a="a", b="b", example_id="q29").unit == "q29"
+        assert Pair(id="p", a="a", b="b").unit == "p"
 
 
 class TestBuildingPairsFromTwoArms:
@@ -155,7 +172,7 @@ class TestBuildingPairsFromTwoArms:
         pairs = pairs_from_arms(before, after)
 
         assert [p.id for p in pairs] == ["q1#0", "q1#1", "q2#0"]
-        assert [(p.this, p.that) for p in pairs][0] == ("old1", "new1")
+        assert [(p.a, p.b) for p in pairs][0] == ("old1", "new1")
         assert pairs[0].example_id == "q1"
 
     def test_a_rollout_only_one_side_has_is_left_out(self) -> None:
@@ -174,17 +191,17 @@ class TestBuildingPairsFromTwoArms:
         before = arm("a", answers)
         after = arm("b", dict.fromkeys(answers, "new"))
 
-        pairs = pairs_from_arms(before, after, before_is="baseline", after_is="variant", seed=41)
+        pairs = pairs_from_arms(before, after, before_arm="baseline", after_arm="variant", seed=41)
 
-        flipped = [p for p in pairs if p.this_is == "variant"]
+        flipped = [p for p in pairs if p.a_arm == "variant"]
         assert 0 < len(flipped) < len(pairs)
         # Whichever way round, the side name always matches what that side holds.
-        assert all((p.this == "new") == (p.this_is == "variant") for p in pairs)
+        assert all((p.a == "new") == (p.a_arm == "variant") for p in pairs)
 
     def test_without_a_seed_the_order_is_fixed(self) -> None:
         answers = {("q%d" % i, 0): "old" for i in range(20)}
         pairs = pairs_from_arms(arm("a", answers), arm("b", dict.fromkeys(answers, "new")))
-        assert all(p.this_is == "before" for p in pairs)
+        assert all(p.a_arm == "before" for p in pairs)
 
 
 class TestWhatIsStillOutstanding:
@@ -222,7 +239,7 @@ class TestWhatAPairedFigureRefuses:
             paired_figure([], {}, name="x", definition="d", numerator=lambda p, v: 1)
 
     def test_two_pairs_sharing_an_id(self) -> None:
-        twice = [Pair(id="p", this="a", that="b"), Pair(id="p", this="c", that="d")]
+        twice = [Pair(id="p", a="a", b="b"), Pair(id="p", a="c", b="d")]
         with pytest.raises(ConfigurationError, match="two pairs with id"):
             paired_figure(twice, {}, name="x", definition="d", numerator=lambda p, v: 1)
 
@@ -272,15 +289,15 @@ class TestSelfConsistencyWithNoLabel:
         pairs = [
             Pair(
                 id=f"q1-{i}",
-                this=a,
-                that=b,
-                this_is="rollout_a",
-                that_is="rollout_b",
+                a=a,
+                b=b,
+                a_arm="rollout_a",
+                b_arm="rollout_b",
                 example_id="q1",
             )
             for i, (a, b) in enumerate(combinations(answers, 2))
         ]
-        verdicts = {p.id: ("same" if p.this == p.that else "different") for p in pairs}
+        verdicts = {p.id: ("same" if p.a == p.b else "different") for p in pairs}
 
         figure = paired_figure(
             pairs,
@@ -310,8 +327,7 @@ class TestTheDocumentedPath:
 
         path = tmp_path / "labels.jsonl"
         pairs = [
-            Pair(id=f"p{i}", this="new", that="old", this_is="variant", that_is="baseline")
-            for i in range(4)
+            Pair(id=f"p{i}", a="new", b="old", a_arm="variant", b_arm="baseline") for i in range(4)
         ]
         write_labels(path, [Label(id=p.id, verdict=verdict, decided_by="human") for p in pairs])
         return pairs, path
@@ -319,7 +335,7 @@ class TestTheDocumentedPath:
     def test_it_takes_what_read_labels_returns(self, tmp_path) -> None:
         from simple_agents.evaluation import read_labels
 
-        pairs, path = self._labelled(tmp_path, "prefer_this")
+        pairs, path = self._labelled(tmp_path, "prefer_a")
 
         figure = paired_figure(
             pairs,
@@ -334,8 +350,8 @@ class TestTheDocumentedPath:
         assert (figure.numerator, figure.denominator) == (4, 4)
 
     def test_a_plain_mapping_of_raw_verdicts_still_works(self, tmp_path) -> None:
-        pairs, _ = self._labelled(tmp_path, "prefer_this")
-        raw = {p.id: "prefer_that" for p in pairs}
+        pairs, _ = self._labelled(tmp_path, "prefer_a")
+        raw = {p.id: "prefer_b" for p in pairs}
 
         figure = paired_figure(
             pairs,
@@ -348,3 +364,185 @@ class TestTheDocumentedPath:
         )
 
         assert figure.numerator == 0
+
+
+class TestASessionOnTheRecord:
+    """`paired_results`: the pairs, their verdicts and the figures as one results file."""
+
+    def _session(self, tmp_path, **kw):
+        from simple_agents.evaluation import Label, paired_results, read_labels, write_labels
+
+        pairs, raw = band_pairs()
+        path = tmp_path / "labels.jsonl"
+        write_labels(
+            path,
+            [
+                Label(
+                    id=p.id,
+                    verdict=raw[p.id],
+                    decided_by="human",
+                    decided_at=f"2026-09-0{1 + (i % 7)}T10:00:00+00:00",
+                )
+                for i, p in enumerate(pairs)
+            ],
+        )
+        labels = read_labels(path)
+        figure = paired_figure(
+            pairs,
+            labels,
+            name="win_rate",
+            definition="d",
+            numerator=lambda p, v: chose(p, v) == "high_band",
+            denominator=lambda p, v: chose(p, v) in ("high_band", "low_band"),
+            resamples=200,
+        )
+        return (
+            pairs,
+            labels,
+            paired_results(
+                pairs,
+                labels,
+                figures=[figure],
+                eval_id="bands",
+                blind=True,
+                verdicts_mean={"prefer_a": "a", "prefer_b": "b", "neither_wanted": "neither"},
+                **kw,
+            ),
+        )
+
+    def test_it_writes_and_reads_back_as_a_results_file(self, tmp_path) -> None:
+        pairs, labels, results = self._session(tmp_path)
+        out = results.write(tmp_path / "bands.json")
+
+        back = EvalResults.read(out)
+
+        assert back.config["kind"] == "pairs"
+        assert back.config["contest"] == ["high_band", "low_band"]
+        assert back.config["blind"] is True
+        assert back.config["decided_by"] == ["human"]
+        assert back.config["verdicts"] == {
+            "prefer_a": "a",
+            "prefer_b": "b",
+            "neither_wanted": "neither",
+        }
+        assert (back.config["n"], back.config["units"], back.config["unjudged"]) == (40, 40, 0)
+        assert len(back.pairs) == 40
+        assert back.pairs[0] == {
+            "id": "p000",
+            "a": "high0",
+            "b": "low0",
+            "a_arm": "high_band",
+            "b_arm": "low_band",
+            "example_id": None,
+            "verdict": "prefer_a",
+            "decided_by": "human",
+            "decided_at": "2026-09-01T10:00:00+00:00",
+            "reason": "",
+        }
+        assert back.metrics["win_rate"].numerator == 7
+        assert back.rollouts == () and back.nodes == {}
+        assert back.carries("pairs")
+
+    def test_it_is_dated_by_the_last_judgement(self, tmp_path) -> None:
+        _, _, results = self._session(tmp_path)
+        assert results.created_at == "2026-09-07T10:00:00+00:00"
+        _, _, told = self._session(tmp_path, created_at="2026-09-08T00:00:00+00:00")
+        assert told.created_at == "2026-09-08T00:00:00+00:00"
+
+    def test_an_unjudged_pair_is_on_the_record_with_no_verdict(self, tmp_path) -> None:
+        from simple_agents.evaluation import paired_results
+
+        pairs, verdicts = band_pairs()
+        some = dict(list(verdicts.items())[:30])
+        figure = paired_figure(
+            pairs,
+            some,
+            name="w",
+            definition="d",
+            numerator=lambda p, v: 1,
+            denominator=lambda p, v: 1,
+            resamples=200,
+        )
+
+        results = paired_results(
+            pairs, some, figures=[figure], eval_id="s", blind=False, decided_by="human"
+        )
+
+        assert results.config["unjudged"] == 10 and results.config["n"] == 30
+        assert results.pairs[-1]["verdict"] is None and results.pairs[-1]["decided_by"] is None
+
+    def test_a_plain_mapping_needs_a_decider(self) -> None:
+        from simple_agents.evaluation import paired_results
+
+        pairs, verdicts = band_pairs()
+        figure = paired_figure(
+            pairs,
+            verdicts,
+            name="w",
+            definition="d",
+            numerator=lambda p, v: 1,
+            denominator=lambda p, v: 1,
+            resamples=200,
+        )
+        with pytest.raises(ConfigurationError, match="no decided_by"):
+            paired_results(pairs, verdicts, figures=[figure], eval_id="s", blind=False)
+
+    def test_a_meaning_outside_the_four_is_refused(self) -> None:
+        from simple_agents.evaluation import paired_results
+
+        pairs, verdicts = band_pairs()
+        with pytest.raises(ConfigurationError, match="a, b, both, neither"):
+            paired_results(
+                pairs,
+                verdicts,
+                figures=[],
+                eval_id="s",
+                blind=False,
+                decided_by="human",
+                verdicts_mean={"prefer_a": "left"},
+            )
+
+    def test_two_figures_of_one_name_are_refused(self) -> None:
+        from simple_agents.evaluation import paired_results
+
+        pairs, verdicts = band_pairs()
+        figure = paired_figure(
+            pairs,
+            verdicts,
+            name="w",
+            definition="d",
+            numerator=lambda p, v: 1,
+            denominator=lambda p, v: 1,
+            resamples=200,
+        )
+        with pytest.raises(ConfigurationError, match="two figures named"):
+            paired_results(
+                pairs,
+                verdicts,
+                figures=[figure, figure],
+                eval_id="s",
+                blind=False,
+                decided_by="human",
+            )
+
+    def test_the_report_reads_as_a_session(self, tmp_path) -> None:
+        _, _, results = self._session(tmp_path)
+        text = results.report()
+        assert text.splitlines()[0] == (
+            "40 judged pair(s) over 40 unit(s), high_band v low_band, decided by human blind"
+        )
+        assert "win_rate" in text
+
+    def test_a_file_written_before_the_section_says_it_carries_none(self, tmp_path) -> None:
+        import json
+
+        _, _, results = self._session(tmp_path)
+        raw = results.to_json()
+        raw["eval_format_version"] = "0.31"
+        del raw["pairs"]
+        path = tmp_path / "old.json"
+        path.write_text(json.dumps(raw))
+
+        back = EvalResults.read(path)
+
+        assert back.carries("pairs") is False and back.pairs == ()
