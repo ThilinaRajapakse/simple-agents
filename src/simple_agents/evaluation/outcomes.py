@@ -458,11 +458,14 @@ def _unreached_items_in(records: Sequence[Mapping[str, Any]]) -> int:
     answer, such as a response that did not validate, is not one of these; it is the agent
     producing no answer from a reply it was given.
     """
+    # A step's outputs are whatever it returned, and a fan-out's items are under a mapping;
+    # a step that returned a string or a list has no items to read.
     failed = {
         (record.get("record_id"), item.get("index"))
         for record in records
         if record.get("record_type") == "node_execution"
-        for item in ((record.get("outputs") or {}).get("items") or [])
+        and isinstance(record.get("outputs"), Mapping)
+        for item in (record["outputs"].get("items") or [])
         if isinstance(item, Mapping) and item.get("error") is not None
     }
     if not failed:

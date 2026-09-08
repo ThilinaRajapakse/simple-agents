@@ -1300,3 +1300,31 @@ class TestAMisconfigurationInsideAFanOut:
             )
 
         assert "declared no tools" in str(caught.value)
+
+
+class TestAFailedRolloutWithAStepThatReturnedAString:
+    def test_the_fan_out_reader_passes_over_a_non_mapping_output(self) -> None:
+        """A fixed step may return a string; a failed rollout is still classified.
+
+        Found live: a `Deterministic` returning the run's input crashed every failed rollout
+        of the evaluation with `AttributeError` inside the fan-out item count.
+        """
+        from simple_agents.evaluation.outcomes import _unreached_items_in
+
+        records = [
+            {"record_type": "node_execution", "record_id": "r1", "outputs": "France"},
+            {"record_type": "node_execution", "record_id": "r2", "outputs": ["a", "b"]},
+            {"record_type": "node_execution", "record_id": "r3", "outputs": None},
+            {
+                "record_type": "node_execution",
+                "record_id": "r4",
+                "outputs": {"items": [{"index": 0, "error": {"type": "x"}}]},
+            },
+            {
+                "record_type": "model_call",
+                "parent_id": "r4",
+                "error": {"type": "x"},
+                "content": None,
+            },
+        ]
+        assert _unreached_items_in(records) >= 0
