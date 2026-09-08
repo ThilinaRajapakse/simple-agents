@@ -328,6 +328,19 @@ header h1{font-size:var(--s3);font-weight:700}
 .seg:first-child{border-radius:6px 3px 3px 6px} .seg:last-child{border-radius:3px 6px 6px 3px}
 .seg[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
 .seg:hover{filter:brightness(1.12)}
+.seg.still{cursor:default} .seg.still:hover{filter:none}
+/* head to head: one block per session of judged pairs */
+.h2h{border-top:1px solid var(--line);padding:12px 0 4px} .h2h:first-of-type{border-top:0;padding-top:4px}
+.h2h .who{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:var(--s-1);color:var(--muted);margin:0 0 6px}
+.h2h .who .contest{font-size:var(--s1);font-weight:600;color:var(--ink)}
+.h2h .divends span{font-weight:600}
+.h2h .ties{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:var(--s-1);color:var(--muted);margin:0 0 10px}
+.h2h .ties b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.h2h .fhead{margin-top:8px}
+.ptable{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) 7em minmax(0,2fr) minmax(0,1fr) minmax(0,1.4fr);gap:4px 12px;font-size:var(--s-1);align-items:baseline}
+.ptable .ph{color:var(--faint);text-transform:uppercase;letter-spacing:.07em;font-size:11px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.ptable .won{color:var(--ink);font-weight:600} .ptable .tie{color:var(--muted)}
+.ptable .pv{font-family:var(--mono);color:var(--ink)}
 .legend{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:var(--s-1);color:var(--muted)}
 .keyrow{display:inline-flex;align-items:center;gap:6px}
 .keyrow i{display:inline-block;width:11px;height:11px;border-radius:3px}
@@ -367,11 +380,11 @@ header h1{font-size:var(--s3);font-weight:700}
 
 /* every figure on one axis */
 .fhead,.dhead{display:grid;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;padding:0 0 4px;gap:12px}
-.fhead{grid-template-columns:minmax(0,1.3fr) minmax(0,3fr) 5em 9em 3em}
+.fhead{grid-template-columns:minmax(0,1.3fr) minmax(0,3fr) 5em 9em 6em}
 .dhead{grid-template-columns:minmax(0,1.7fr) minmax(0,2.6fr) 5em 6em}
 .axlbl{display:flex;justify-content:space-between}
 .ftable,.dtable{display:grid}
-.frow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,3fr) 5em 9em 3em;gap:12px;align-items:center;width:100%;text-align:left;
+.frow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,3fr) 5em 9em 6em;gap:12px;align-items:center;width:100%;text-align:left;
   background:transparent;border:0;border-top:1px solid var(--line);padding:6px 0;cursor:pointer;font:inherit;color:var(--muted)}
 .frow .ax{margin:0}
 .frow .nm{color:var(--ink);overflow-wrap:anywhere}
@@ -3934,7 +3947,7 @@ function rangeText(f) {
 /* The evaluation before the reported one that measured the same figure over the whole
    pipeline: what "since last time" is read against. */
 function previousEvaluation(m) {
-  const rows = (m.history || []).filter(h => !h.slice && !h.reported && h.headline
+  const rows = (m.history || []).filter(h => !h.slice && !h.reported && h.headline && h.kind !== "pairs"
     && h.headline.point !== null && h.headline.point !== undefined
     && m.headline && h.headline.name === m.headline.name
     && String(h.created_at || "") <= String(m.created_at || "~"));
@@ -3946,6 +3959,12 @@ function figureWords(f) {
   if (!f || f.point === null || f.point === undefined) return f && f.reason ? f.reason : "no figure";
   if (f.estimated === false) return `${fmt(f.point)}${f.unit && f.unit !== "rate" ? " " + f.unit : ""}${f.reason ? ` (${f.reason})` : ""}`;
   return rate(f.point, f.unit);
+}
+/* The value cell of a figure row: the figure, or "no figure" where there is none. The reason
+   is read in the row's numbers and on hover rather than wrapped into a five-em column. */
+function figureCell(f) {
+  if (!f || f.point === null || f.point === undefined) return "no figure";
+  return figureWords(f);
 }
 function measureTitle(words, count) {
   return `<div class="mhead"><h3>${esc(words)}</h3>${count !== undefined ? `<span class="count">${esc(count)}</span>` : ""}</div>`;
@@ -3998,14 +4017,21 @@ function headlineStrip(m) {
   }
   const cov = DATA.coverage || {};
   const declaredSteps = DECLARED.reduce((a, p) => a + p.nodes.filter(n => !n.planned).length, 0);
-  tiles.push(`<div class="tile"><span class="lbl">Steps it reached</span>
-    <span class="val">${fmt((cov.measured || []).length)} of ${fmt(cov.built_here || declaredSteps)}</span>
-    <span class="sub">${(cov.never_reached || []).length ? `Never reached: ${cov.never_reached.map(esc).join(", ")}` : "Every built step ran at least once"}${
-      (cov.unmeasured_pipelines || []).length ? `<br>Not measured: ${cov.unmeasured_pipelines.map(esc).join(", ")}` : ""}</span></div>`);
+  const judgedPairs = m.kind === "pairs";
+  if (judgedPairs) {
+    tiles.push(`<div class="tile"><span class="lbl">Steps it reached</span>
+      <span class="val muted">No steps</span>
+      <span class="sub">This file records judged pairs. It ran no pipeline. Head to head, below, draws it.</span></div>`);
+  } else {
+    tiles.push(`<div class="tile"><span class="lbl">Steps it reached</span>
+      <span class="val">${fmt((cov.measured || []).length)} of ${fmt(cov.built_here || declaredSteps)}</span>
+      <span class="sub">${(cov.never_reached || []).length ? `Never reached: ${cov.never_reached.map(esc).join(", ")}` : "Every built step ran at least once"}${
+        (cov.unmeasured_pipelines || []).length ? `<br>Not measured: ${cov.unmeasured_pipelines.map(esc).join(", ")}` : ""}</span></div>`);
+  }
 
   const facts = [
-    m.counts ? `${fmt(m.counts.right)} of ${fmt(m.counts.of)} rollouts right` : "",
-    (m.n || m.k) ? `${fmt(m.n || 0)} examples, ${m.k === 1 ? "one rollout each" : `${fmt(m.k || 0)} rollouts each`}` : "",
+    judgedPairs ? `${fmt(m.n || 0)} judged pairs` : m.counts ? `${fmt(m.counts.right)} of ${fmt(m.counts.of)} rollouts right` : "",
+    !judgedPairs && (m.n || m.k) ? `${fmt(m.n || 0)} examples, ${m.k === 1 ? "one rollout each" : `${fmt(m.k || 0)} rollouts each`}` : "",
     m.split ? `${esc(m.split.replace(/_/g, "-"))} set` : "",
     m.created_at ? esc(String(m.created_at).slice(0, 10)) : "",
     m.model ? esc(m.model) : "",
@@ -4142,6 +4168,15 @@ function gridRegion(m) {
 }
 
 /* ---- 2. where does it lose it: every figure on one axis ---- */
+/* The n column: the two totals behind a ratio, "7 of 17", else the rollouts a figure is over.
+   A share is never read without the counts it came from. */
+function countWords(f) {
+  if (f.numerator !== null && f.numerator !== undefined && f.denominator !== null && f.denominator !== undefined) {
+    return `${fmt(f.numerator)} of ${fmt(f.denominator)}`;
+  }
+  return fmt(f.rollouts || 0);
+}
+
 function figureNumbers(f) {
   const left = Object.entries(f.left_out || {});
   const numbers = [
@@ -4154,6 +4189,7 @@ function figureNumbers(f) {
     left.length ? ["Left out", left.map(([k, v]) => `${fmt(v)} ${k.replace(/_/g, " ")}`).join(", ")
       + (f.including_left_out !== null && f.including_left_out !== undefined ? `; ${rate(f.including_left_out, f.unit)} counting them` : "")] : null,
     f.estimated === false ? ["Kind", "a count over this run, declared: " + (f.reason || "no reason given")] : null,
+    (f.point === null || f.point === undefined) && f.reason ? ["No figure because", f.reason] : null,
     f.definition ? ["Definition", f.definition] : null,
   ].filter(Boolean);
   return `<div class="numgrid">${numbers.map(([k, v]) => `<span>${esc(k)}</span><span>${esc(v)}</span>`).join("")}</div>`;
@@ -4181,9 +4217,9 @@ function figuresRegion(m) {
         data-tip="${esc(f.name)}: ${esc(figureWords(f))}${rangeText(f) ? `, plausibly ${esc(rangeText(f))}` : ""}">
       <span class="nm mono">${esc(f.name)}</span>
       ${drawable(f) ? axisRow(f) : `<div class="ax empty"><span class="asks">${f.estimated === false ? "A count over this run" : ""}</span></div>`}
-      <span class="pt">${esc(figureWords(f))}</span>
+      <span class="pt">${esc(figureCell(f))}</span>
       <span class="rng">${esc(rangeText(f))}</span>
-      <span class="n">${fmt(f.rollouts || 0)}</span></button>
+      <span class="n">${countWords(f)}</span></button>
       ${open ? `<div class="fnumbers">${figureNumbers(f)}</div>` : ""}${sub}`;
   };
   return `<div class="mregion">
@@ -4313,7 +4349,9 @@ function trendRegion(m) {
     Object.values(c.variants || {}).forEach(v => { if (v.eval_id) arms.add(v.eval_id); });
     if (c.baseline && c.baseline.eval_id) arms.add(c.baseline.eval_id);
   });
-  const every = (m.history || []).filter(h => h.headline && h.headline.point !== null && h.headline.point !== undefined && !h.slice);
+  const dated = (m.history || []).filter(h => h.headline && h.headline.point !== null && h.headline.point !== undefined && !h.slice);
+  const every = dated.filter(h => h.kind !== "pairs");
+  const sessionsOut = dated.length - every.length;
   const rows = every.filter(h => !(h.eval_id && arms.has(h.eval_id) && !h.reported));
   const armsOut = every.length - rows.length;
   const name = (rows.find(p => p.reported) || rows[0] || {headline: {name: "the headline figure"}}).headline.name;
@@ -4361,12 +4399,20 @@ function trendRegion(m) {
       <title>${esc(words)}</title></g>`;
     if (p.reported || i === 0) {
       const above = p.headline.high !== null && p.headline.high !== undefined ? y(p.headline.high) : y(p.headline.point);
-      marks += `<text x="${x(i)}" y="${Math.min(above, y(p.headline.point) - (p.reported ? 12 : 9)) - 6}" text-anchor="middle" font-size="12" font-weight="600" fill="${ink}">${esc(rate(p.headline.point, p.headline.unit))}</text>`;
+      /* A point at the top keeps its label inside the drawing rather than above its edge. */
+      const labelY = Math.max(11, Math.min(above, y(p.headline.point) - (p.reported ? 12 : 9)) - 6);
+      marks += `<text x="${x(i)}" y="${labelY}" text-anchor="middle" font-size="12" font-weight="600" fill="${ink}">${esc(rate(p.headline.point, p.headline.unit))}</text>`;
     }
-    const stagger = points.length > 4 && i % 2 === 1 ? 14 : 0;
-    const short = label(p).length > 14 ? label(p).slice(0, 13) + "…" : label(p);
-    marks += `<text x="${x(i)}" y="${H - bottom + 17 + stagger}" text-anchor="middle" font-size="11" fill="${muted}">${esc(sameDay ? short : dates[i])}</text>${
-      sameDay && points.length <= 4 ? `<text x="${x(i)}" y="${H - bottom + 31}" text-anchor="middle" font-size="11" fill="${faint}">${esc(dates[i])}</text>` : ""}`;
+    /* Past eight points the labels collide whatever their heights, so every k-th point is
+       named, the reported one always, and the rest keep their words on hover. */
+    const every = Math.max(1, Math.ceil(points.length / 8));
+    const besideReported = every > 1 && ((points[i - 1] || {}).reported || (points[i + 1] || {}).reported);
+    if (p.reported || (i % every === 0 && !besideReported)) {
+      const stagger = points.length > 4 && Math.floor(i / every) % 2 === 1 ? 14 : 0;
+      const short = label(p).length > 14 ? label(p).slice(0, 13) + "…" : label(p);
+      marks += `<text x="${x(i)}" y="${H - bottom + 17 + stagger}" text-anchor="middle" font-size="11" fill="${muted}">${esc(sameDay ? short : dates[i])}</text>${
+        sameDay && points.length <= 4 ? `<text x="${x(i)}" y="${H - bottom + 31}" text-anchor="middle" font-size="11" fill="${faint}">${esc(dates[i])}</text>` : ""}`;
+    }
   }
   const svg = `<svg class="trend" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} over the evaluations on record">${grid}${paths}${marks}</svg>`;
   const table = points.slice().reverse().map(p => {
@@ -4380,8 +4426,10 @@ function trendRegion(m) {
   return `<div class="mregion">${measureTitle(`${name} over time`, `${fmt(points.length)} evaluations`)}
     ${svg}
     <p class="asks">Oldest on the left. The whisker through a point is its plausible range. The ringed point is the one this project reports. A line joins evaluations of the same figure over the same behaviour.${
-      breaks ? ` A dashed break marks where the behaviour changed.${points.length > 4 ? " The file names alternate heights so they can be read." : ""}` : ""} Rungs are left out, because a rung's figure is over its own examples.${
-      armsOut ? ` The sweep's ${armsOut === 1 ? "arm is" : `${fmt(armsOut)} arms are`} left out too: ${armsOut === 1 ? "it is an experiment" : "they are experiments"}, not the project's history.` : ""}</p>
+      breaks ? ` A dashed break marks where the behaviour changed.` : ""}${
+      points.length > 8 ? ` One point in ${fmt(Math.ceil(points.length / 8))} is named; the rest carry their names on hover.` : points.length > 4 ? " The file names alternate heights so they can be read." : ""} Rungs are left out, because a rung's figure is over its own examples.${
+      armsOut ? ` The sweep's ${armsOut === 1 ? "arm is" : `${fmt(armsOut)} arms are`} left out too: ${armsOut === 1 ? "it is an experiment" : "they are experiments"}, not the project's history.` : ""}${
+      sessionsOut ? ` ${sessionsOut === 1 ? "One session of judged pairs is" : `${fmt(sessionsOut)} sessions of judged pairs are`} drawn under Head to head.` : ""}</p>
     <details class="sub" data-sub="m-history"><summary>Every evaluation on record<span class="count">${fmt(points.length)}</span></summary><div class="subinner">${table}</div></details>
   </div>`;
 }
@@ -4456,8 +4504,88 @@ function measureSection(sections) {
     <div class="mrow outcomes">${outcomesRegion(m)}${gridRegion(m)}</div>
     ${figuresRegion(m)}
     <div class="mrow change">${comparisonRegion(m)}${trendRegion(m)}</div>
+    ${headToHeadRegion(m)}
     ${rungsRegion(m)}
   </div>`);
+}
+
+/* ---- 3. did the last change help: every session of judged pairs, head to head ---- */
+const ARM_TONES = ["--accent", "--note", "--edge", "--attention"];
+function armTone(contest, arm) {
+  const i = Math.max(0, contest.indexOf(arm));
+  return css(ARM_TONES[Math.min(i, ARM_TONES.length - 1)]);
+}
+function headToHeadRegion(m) {
+  const sessions = m.sessions || [];
+  if (!sessions.length) return "";
+  return `<div class="mregion">${measureTitle("Head to head", `${fmt(sessions.length)} session${sessions.length === 1 ? "" : "s"}`)}
+    <p>Two things put side by side and one preferred, where there is no answer key. The bar is the pairs decided between two arms, split by which side; the ties are counted beside it, because a pair where both were wanted and one where neither was are different findings, and so is a pair of two things from one arm. Every figure below the bar is over the pairs, with its plausible range.</p>
+    ${sessions.map(headToHeadBlock).join("")}</div>`;
+}
+function headToHeadBlock(s) {
+  const contest = s.contest || [];
+  const tally = s.tally || {};
+  const decided = tally.decided || 0;
+  const arms = contest.filter(arm => (tally.for_arm || {})[arm]).concat(
+    Object.keys(tally.for_arm || {}).filter(arm => !contest.includes(arm)));
+  const seg = arm => {
+    const n = tally.for_arm[arm], tone = armTone(contest, arm);
+    return `<span class="seg still" style="flex:${n};background:${tone};color:${inkOn(tone)}"
+      data-tip="Decided for ${esc(arm)}: ${fmt(n)} of ${fmt(decided)} decided pairs">${n / decided > 0.12 ? `${esc(arm)} ${fmt(n)}` : fmt(n)}</span>`;
+  };
+  const ends = contest.length >= 2 && decided
+    ? `<div class="divends"><span style="color:${armTone(contest, contest[0])}">${esc(contest[0])} ${fmt(tally.for_arm[contest[0]] || 0)}</span>${
+        contest.slice(1).map(arm => `<span style="color:${armTone(contest, arm)}">${fmt(tally.for_arm[arm] || 0)} ${esc(arm)}</span>`).join("")}</div>`
+    : "";
+  const ties = [
+    `<span><b>${fmt(decided)}</b> decided</span>`,
+    `<span><b>${fmt(tally.both || 0)}</b> both wanted</span>`,
+    `<span><b>${fmt(tally.neither || 0)}</b> neither wanted</span>`,
+    ...Object.entries(tally.within_arm || {}).map(([arm, n]) => `<span data-tip="Two things from ${esc(arm)} side by side; a preference between them says nothing between arms"><b>${fmt(n)}</b> within <span class="mono">${esc(arm)}</span></span>`),
+    ...Object.entries(tally.other || {}).map(([v, n]) => `<span><b>${fmt(n)}</b> <span class="mono">${esc(v)}</span></span>`),
+    tally.unjudged ? `<span><b>${fmt(tally.unjudged)}</b> not judged yet</span>` : "",
+  ].filter(Boolean).join("");
+  const meta = [
+    s.created_at ? esc(String(s.created_at).slice(0, 10)) : "",
+    `${fmt(s.n || 0)} pairs${s.units && s.units !== s.n ? ` over ${fmt(s.units)} units` : ""}`,
+    (s.decided_by || []).length ? `judged by ${s.decided_by.map(esc).join(", ")}` : "",
+    s.blind === true ? "blind" : s.blind === false ? "sides shown" : "",
+    s.reported ? `<span class="badge acc">Reported</span>` : "",
+    `<span class="mono">${esc(s.file)}</span>`,
+  ].filter(Boolean).join(" · ");
+  const row = f => {
+    const key = `h2h:${s.file}:${f.name}`;
+    const open = openFigure === key;
+    const drawable = f.unit === "rate" && f.estimated !== false && f.point !== null && f.point !== undefined;
+    return `<button class="frow${open ? " open" : ""}" data-fig="${esc(key)}" aria-expanded="${open}"
+        data-tip="${esc(f.name)}: ${esc(figureWords(f))}${rangeText(f) ? `, plausibly ${esc(rangeText(f))}` : ""}">
+      <span class="nm mono">${esc(f.name)}</span>
+      ${drawable ? axisRow(f) : `<div class="ax empty"><span class="asks">${f.estimated === false ? "A count over this session" : ""}</span></div>`}
+      <span class="pt">${esc(figureCell(f))}</span>
+      <span class="rng">${esc(rangeText(f))}</span>
+      <span class="n">${countWords(f)}</span></button>
+      ${open ? `<div class="fnumbers">${figureNumbers(f)}</div>` : ""}`;
+  };
+  const side = (thing, arm, won) => `<span class="${won ? "won" : ""}">${esc(thing ?? "")}</span><span class="mono" style="color:${armTone(contest, arm)}">${esc(arm ?? "")}</span>`;
+  const pairRow = p => {
+    const aWon = p.meaning === "a", bWon = p.meaning === "b";
+    const verdict = p.verdict === null || p.verdict === undefined ? `<span class="tie">not judged</span>`
+      : p.meaning === "both" ? `<span class="tie">both wanted</span>` : p.meaning === "neither" ? `<span class="tie">neither</span>`
+      : aWon ? "◀ preferred" : bWon ? "preferred ▶" : `<span class="pv">${esc(p.verdict)}</span>`;
+    const who = [p.decided_by, p.decided_at ? String(p.decided_at).slice(0, 10) : ""].filter(Boolean).join(" · ");
+    return `${side(p.a, p.a_arm, aWon)}<span data-tip="${esc(p.reason || "")}">${verdict}</span>${side(p.b, p.b_arm, bWon)}<span class="asks">${esc(who)}</span>`;
+  };
+  return `<div class="h2h">
+    <div class="who"><span class="contest">${contest.map(esc).join(" v ") || "One session"}</span>${meta}</div>
+    ${ends}
+    ${decided ? `<div class="divbar">${arms.map(seg).join("")}</div>` : `<p class="asks">No pair was decided for either side.</p>`}
+    <div class="ties">${ties}</div>
+    ${(s.figures || []).length ? `<div class="fhead"><span></span><span class="axlbl"><span>0%</span><span>100%</span></span><span>Value</span><span>Plausible range</span><span>n</span></div>
+    <div class="ftable">${s.figures.map(row).join("")}</div>` : ""}
+    <details class="sub" data-sub="h2h-${esc(s.file)}"><summary>The pairs<span class="count">${fmt((s.pairs || []).length)}</span></summary><div class="subinner">
+      <div class="ptable"><span class="ph">A</span><span class="ph">Arm</span><span class="ph">Verdict</span><span class="ph">B</span><span class="ph">Arm</span><span class="ph">Decided</span>
+      ${(s.pairs || []).map(pairRow).join("")}</div></div></details>
+  </div>`;
 }
 
 /* What will be measured, for a project that has not measured anything yet: the same strip,

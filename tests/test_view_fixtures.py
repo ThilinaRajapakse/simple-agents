@@ -290,6 +290,20 @@ class TestTheMeasuredFixtureHoldsEverySurface:
         assert len(rows) >= 4
         assert len({h["behaviour"] for h in rows}) >= 2
 
+    def test_one_session_of_judged_pairs_is_on_record(self, measured):
+        (s,) = measured["sessions"]
+        assert s["contest"] == ["baseline", "no registry"] and s["blind"] is True
+        assert s["n"] == 30 and len(s["pairs"]) == 30
+        assert s["tally"]["decided"] + s["tally"]["both"] + s["tally"]["neither"] == 30
+        assert {f["name"] for f in s["figures"]} == {
+            "no_registry_beats_baseline",
+            "both_right",
+            "neither_right",
+        }
+        # It is a results file like the others, so the history lists it as one of judged pairs.
+        (row,) = [h for h in measured["history"] if h["file"] == "head-to-head.json"]
+        assert row["kind"] == "pairs"
+
     def test_every_grid_row_says_what_it_expects(self, measured):
         assert len(measured["browser"]) == 30
         assert all(r["expects"] for r in measured["browser"])

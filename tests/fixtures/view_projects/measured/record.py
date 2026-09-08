@@ -11,7 +11,8 @@ Run from the fixture's own directory either way, so the paths the records carry 
 relative to it. What it makes, in order: two live runs; two evaluations of the decide prompt
 as first written and one of the current prompt, which is the history the trend draws; the
 reported evaluation; two rungs cut at ``extract`` and ``policy_check``; and one sweep of two
-variants against the baseline, which is what the comparison draws.
+variants against the baseline, which is what the comparison draws; and one session of judged
+pairs between the baseline and one arm, which is what the head-to-head region draws.
 """
 
 from __future__ import annotations
@@ -77,6 +78,13 @@ VARIANTS = {
 SWEEP = {"seed": 43, "comparison": "evals/variants/sweep.json",
          "results": {"finance without the registry": "evals/results/held-out-no-registry.json",
                      "audit cannot send back": "evals/results/held-out-one-audit.json"}}
+# One session of judged pairs, which the measure page draws head to head: the reported
+# evaluation's rollouts against the registry-less arm's, each pair decided by a rule over the
+# outcome each side recorded. No model and no cassette, and the same file from the same arms.
+PAIRS = {"before": EVALUATION["results"],
+         "after": SWEEP["results"]["finance without the registry"],
+         "arms": ("baseline", "no registry"), "seed": 46,
+         "results": "evals/results/head-to-head.json"}
 
 
 def envelope(cassette: Cassette) -> RunEnvelope:
@@ -252,6 +260,7 @@ def make(cassette_for: Callable[..., Cassette], model: GeminiClient,
     if sweep_only:
         _clear_sweep()
         _sweep(model)
+        pairs_session()
         return
     for label, inputs, seed in RUNS:
         result = claims().run(inputs, envelope=envelope(cassette_for(label)), model=model, seed=seed)
@@ -276,8 +285,66 @@ def make(cassette_for: Callable[..., Cassette], model: GeminiClient,
         print(f"{out}: {rung_results.metrics['accuracy'].interval.point:.3f}")
 
     if replaying:
+        # The sweep has no offline form, so the session is built over the committed arm.
+        pairs_session()
         return
     _sweep(model)
+    pairs_session()
+
+
+def pairs_session() -> None:
+    """The session of judged pairs, from the two arms already on disk.
+
+    Every pair is one example's rollout under the baseline against the same rollout under
+    the registry-less variant, in a randomised order. The verdict is a rule over what each
+    side scored: the side that came out right is preferred, both right is ``both_good``, and
+    neither right is ``both_bad``. The rule reads outcomes and never the arm names, so the
+    session is blind in the sense the page reports.
+    """
+    from simple_agents.evaluation import (
+        EvalResults, Label, paired_figure, paired_results, pairs_from_arms,
+    )
+
+    before = EvalResults.read(PAIRS["before"])
+    after = EvalResults.read(PAIRS["after"])
+    before_arm, after_arm = PAIRS["arms"]
+    pairs = pairs_from_arms(before, after, before_arm=before_arm, after_arm=after_arm,
+                            seed=PAIRS["seed"])
+    right = {before_arm: {(r.example_id, r.rollout): r.outcome.succeeded for r in before.rollouts},
+             after_arm: {(r.example_id, r.rollout): r.outcome.succeeded for r in after.rollouts}}
+    decided_at = max(before.created_at, after.created_at)
+    labels = {}
+    for pair in pairs:
+        key = (pair.example_id, pair.metadata["rollout"])
+        a_right, b_right = right[pair.a_arm][key], right[pair.b_arm][key]
+        verdict = ("both_good" if a_right and b_right else "both_bad" if not (a_right or b_right)
+                   else "a" if a_right else "b")
+        labels[pair.id] = Label(id=pair.id, verdict=verdict, decided_at=decided_at,
+                                decided_by="rule: the side that scored right",
+                                reason=f"{pair.a_arm} {'right' if a_right else 'wrong'}, "
+                                       f"{pair.b_arm} {'right' if b_right else 'wrong'}")
+
+    def chose(pair, verdict):
+        return {"a": pair.a_arm, "b": pair.b_arm}.get(verdict, verdict)
+
+    figures = [
+        paired_figure(pairs, labels, name="no_registry_beats_baseline",
+                      definition="the registry-less arm was preferred, of pairs with a preference",
+                      numerator=lambda p, v: chose(p, v) == after_arm,
+                      denominator=lambda p, v: chose(p, v) in PAIRS["arms"]),
+        paired_figure(pairs, labels, name="both_right",
+                      definition="both sides came out right, of all pairs",
+                      numerator=lambda p, v: v == "both_good", denominator=lambda p, v: True),
+        paired_figure(pairs, labels, name="neither_right",
+                      definition="neither side came out right, of all pairs",
+                      numerator=lambda p, v: v == "both_bad", denominator=lambda p, v: True),
+    ]
+    results = paired_results(
+        pairs, labels, figures=figures, eval_id="head-to-head", blind=True,
+        verdicts_mean={"a": "a", "b": "b", "both_good": "both", "both_bad": "neither"},
+    )
+    out = results.write(PAIRS["results"], overwrite=True)
+    print(f"{out}: {results.report().splitlines()[0]}")
 
 
 def _clear_sweep() -> None:

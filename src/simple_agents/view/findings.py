@@ -957,6 +957,8 @@ def _what_was_measured(data: dict[str, Any]) -> list[str]:
             f"{floor['of']}."
         )
     headline = measured.get("headline")
+    if measured.get("kind") == "pairs":
+        return parts + [_session_sentence(measured)]
     if headline and headline["point"] is not None:
         span = ""
         if headline["low"] is not None and headline["high"] is not None:
@@ -970,6 +972,16 @@ def _what_was_measured(data: dict[str, Any]) -> list[str]:
             f"× {measured.get('k')} rollouts."
         )
     return parts
+
+
+def _session_sentence(measured: dict[str, Any]) -> str:
+    """The reported file is a session of judged pairs, said in one sentence."""
+    first = (measured.get("sessions") or [{}])[0]
+    contest = " v ".join(str(arm) for arm in first.get("contest") or [])
+    return (
+        f"The reported evaluation is {measured.get('n') or 0} judged pairs"
+        f"{f', {contest}' if contest else ''}, drawn head to head on the measure page."
+    )
 
 
 def _standing(data: dict[str, Any]) -> str:

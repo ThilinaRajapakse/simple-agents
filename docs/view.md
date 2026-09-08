@@ -799,7 +799,8 @@ the outcome bar, a condition's row, and a group's row in the figures table each 
 rollouts behind that number and dim the rest, and "Show all" clears it.
 
 **All the figures** sit on one axis: name, plausible range with the point marked, value, the
-range as text, and the rollouts it is over. A figure the project declared a count over the run
+range as text, and what it is over: the two totals behind a ratio, "7 of 17", else the
+rollouts. A figure the project declared a count over the run
 is drawn as a number with its reason and no range, because a census is not an estimate of a
 rate (`docs/evaluation.md` §11.8); a figure in a unit other than a rate is a number too. A
 figure opens to its numbers: the point, the range and how it was made, the totals behind a
@@ -819,14 +820,27 @@ groups that moved on their own where the pooled figure did not open under it. Th
 compares any two results files on record with the same rule the library uses (`compare()`),
 and refuses the pair the library refuses.
 
-**The headline figure over time.** The evaluations on record, oldest to newest, each with its
+**The headline figure over time.** Every evaluation on record, oldest to newest, each with its
 plausible range as a whisker and the reported one ringed. A line joins only points that are
 the same figure (the same name and definition) over the same behaviour; a dashed break marks
 where `behaviour_fingerprint` moved, and a point measuring a different figure is a lone grey
 mark. Rungs are left out, because a rung's denominator is its own examples, and so are a
 sweep's arms and its own baseline, which are experiments against the project's behaviour
-rather than that behaviour changing; the sentence under the chart counts them. With one
-evaluation on record the region says so and draws nothing.
+rather than that behaviour changing, and so is a session of judged pairs, which has a region
+of its own; the sentence under the chart counts both. Past eight points one in every few is
+named on the axis and the rest carry their names on hover. With one evaluation on record the
+region says so and draws nothing.
+
+**Head to head.** Every session of judged pairs on record (`docs/evaluation.md` §11.9), newest
+first, one block each: the contest, the date, how many pairs, who judged and whether blind.
+The bar is the pairs decided between two arms, split by arm; the two kinds of tie, both wanted
+and neither wanted, are counts beside it, and so are pairs of two things from one arm, because
+each is a different finding and one bar cannot hold them. Under the bar every figure in the
+file sits on the shared axis with its plausible range and its two totals, and the pairs open as
+a table: each side, its arm, the verdict, who decided it and when. A verdict the file's
+`config.verdicts` does not name is counted under its own name. The region is absent when no
+session is on record. Where the brief's `results` names a session, the headline strip shows its
+first figure and says the file ran no pipeline; the region is where it is drawn.
 
 **Where it loses it, step by step.** Results files that are rungs of one pipeline
 (`config.slice` names the pipeline they were cut from) are drawn as brackets under the steps:

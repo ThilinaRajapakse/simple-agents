@@ -18,8 +18,8 @@
   },
   "conversation": null,
   "trigger": null,
-  "started_at": "2026-09-06T10:51:56.976Z",
-  "ended_at": "2026-09-06T10:52:01.084Z",
+  "started_at": "2026-09-08T00:47:23.853Z",
+  "ended_at": "2026-09-08T00:47:28.308Z",
   "outcome": "completed",
   "stopped_early": null,
   "seed": 1856975660,
@@ -795,16 +795,16 @@
         "type": "unknown",
         "reason": "the backend reports no cache-write count. It bills cache storage per token per hour rather than per token written, and a response says nothing about what a request cached"
       },
-      "output": 304,
+      "output": 291,
       "output_reasoning": null
     },
     "cost": {
-      "value": 0.00043910000000000005,
+      "value": 0.00043390000000000003,
       "currency": "USD",
       "basis": "price",
       "is_upper_bound": false,
       "reason": null,
-      "measured": 0.00043910000000000005,
+      "measured": 0.00043390000000000003,
       "priced_calls": 5,
       "unpriced_calls": 0
     },
@@ -814,7 +814,7 @@
       "calls": 1,
       "source": "declared"
     },
-    "charged_cost": 0.0044391000000000005,
+    "charged_cost": 0.0044339,
     "held_back_ms": 0
   }
 }

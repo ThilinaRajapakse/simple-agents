@@ -1,0 +1,17 @@
+{
+  "format_version": "0.1",
+  "run_id": "run_20260908T005015Z_bab953b5",
+  "questions": [
+    {
+      "run_id": "run_20260908T005015Z_bab953b5",
+      "record_id": "rec_c959138e19e3",
+      "node_id": "settle",
+      "prompt": "Is the 12p line on PO-80115 per unit or for the whole order?",
+      "asked_at": "2026-09-08T00:50:15.625Z",
+      "about": "po-80115-unit",
+      "options": null,
+      "reason": "the nightly run is unattended",
+      "item_index": null
+    }
+  ]
+}

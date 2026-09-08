@@ -1,6 +1,6 @@
 {
   "why": "Units over a threshold in scripts/shape_check.py. The check passes on these and fails on a new one or on one of these growing, so the list only shrinks. A unit kept at size deliberately carries its reason in `reasons`.",
-  "reason": "updated",
+  "reason": "P3-81: the results file gains a pairs section and the measure page a session reader; four recorded units each grew by one field, kept with their reasons.",
   "thresholds": {
     "function lines": 50,
     "function branches": 12,
@@ -180,13 +180,13 @@
       "function branches": 17
     },
     "src/simple_agents/evaluation/results.py::class::EvalResults": {
-      "class lines": 433
+      "class lines": 458
     },
     "src/simple_agents/evaluation/results.py::function::EvalResults._node_lines": {
       "function branches": 13
     },
     "src/simple_agents/evaluation/results.py::function::EvalResults.read": {
-      "function branches": 19
+      "function branches": 21
     },
     "src/simple_agents/evaluation/results.py::function::totals_of": {
       "function branches": 13
@@ -445,13 +445,13 @@
       "function lines": 61
     },
     "src/simple_agents/view/evaluation.py::function::read_evaluation": {
-      "function lines": 51
+      "function lines": 54
     },
     "src/simple_agents/view/findings.py::function::_arms_never_taken": {
       "function branches": 14
     },
     "src/simple_agents/view/findings.py::module": {
-      "module lines": 902
+      "module lines": 913
     },
     "src/simple_agents/view/product.py::function::_one_surface": {
       "function branches": 15

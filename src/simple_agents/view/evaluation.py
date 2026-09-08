@@ -21,9 +21,6 @@ from ..evaluation.outcomes import Outcome
 
 __all__ = ["read_evaluation"]
 
-_MAX_HISTORY = 12
-"""Earlier results files listed beside the reported one."""
-
 
 def _read(path: Path) -> dict[str, Any] | None:
     try:
@@ -180,10 +177,12 @@ def _went_wrong(raw: dict[str, Any], limit: int = 6) -> list[dict[str, Any]]:
     return sorted(found.values(), key=lambda e: -sum(e["outcomes"].values()))[:limit]
 
 
-def _history(
-    directory: Path, reported: Path | None, limit: int | None = _MAX_HISTORY
-) -> list[dict[str, Any]]:
-    """Every other results file, newest first, with its headline figure."""
+def _history(directory: Path, reported: Path | None) -> list[dict[str, Any]]:
+    """Every results file on record, newest first, with its headline figure.
+
+    Every file, with no cut: a sweep of a dozen arms on one night pushed a whole measurement
+    off the page when the list was capped.
+    """
     rows = []
     for path in directory.glob("*.json"):
         raw = _read(path)
@@ -200,6 +199,8 @@ def _history(
                 "k": config.get("k"),
                 "n": config.get("n"),
                 "reported": reported is not None and path.resolve() == reported.resolve(),
+                # A session of judged pairs is drawn head to head rather than on the trend.
+                "kind": _kind(config),
                 "headline": {
                     "name": headline["name"],
                     "point": headline["point"],
@@ -220,7 +221,7 @@ def _history(
             }
         )
     rows.sort(key=lambda r: str(r.get("created_at") or ""), reverse=True)
-    return rows if limit is None else rows[:limit]
+    return rows
 
 
 def _clip(value: Any, limit: int = 160) -> str | None:
@@ -609,6 +610,119 @@ def _rung(row: dict[str, Any], held: dict[str, Any] | None, raw: dict[str, Any])
     }
 
 
+def _kind(config: dict[str, Any]) -> str:
+    """What a results file records: ``rollouts`` of a pipeline, or judged ``pairs``."""
+    return "pairs" if config.get("kind") == "pairs" else "rollouts"
+
+
+_TIE = {"both": "both", "neither": "neither"}
+
+
+def _tally(pairs: list[dict[str, Any]], meanings: dict[str, Any]) -> dict[str, Any]:
+    """The decided pairs per arm, the two kinds of tie, and every verdict outside the mapping.
+
+    A verdict's meaning is the project's, read from ``config.verdicts``: ``a`` credits the arm
+    shown as ``a``, ``b`` the other, ``both`` and ``neither`` are ties. A preference inside a
+    pair whose two sides are one arm is counted under that arm apart from the decided pairs.
+    A verdict the mapping does not name is counted under its own name, so the bar never
+    absorbs a verdict into a side the project did not say it was.
+    """
+    for_arm: Counter[str] = Counter()
+    within: Counter[str] = Counter()
+    ties: Counter[str] = Counter()
+    other: Counter[str] = Counter()
+    unjudged = 0
+    for pair in pairs:
+        verdict = pair.get("verdict")
+        if pair.get("decided_by") is None:
+            unjudged += 1
+            continue
+        meaning = meanings.get(str(verdict))
+        if meaning in ("a", "b") and pair.get("a_arm") == pair.get("b_arm"):
+            # Two things from one arm: a preference between them says nothing between arms.
+            within[str(pair.get("a_arm"))] += 1
+        elif meaning == "a":
+            for_arm[str(pair.get("a_arm"))] += 1
+        elif meaning == "b":
+            for_arm[str(pair.get("b_arm"))] += 1
+        elif meaning in _TIE:
+            ties[meaning] += 1
+        else:
+            other[str(verdict)] += 1
+    return {
+        "for_arm": dict(for_arm),
+        "decided": sum(for_arm.values()),
+        "within_arm": dict(within),
+        "both": ties.get("both", 0),
+        "neither": ties.get("neither", 0),
+        "other": dict(other),
+        "unjudged": unjudged,
+    }
+
+
+def _session(path: Path, raw: dict[str, Any], reported: Path | None) -> dict[str, Any]:
+    """One session of judged pairs, for the head-to-head region."""
+    config = raw.get("config") or {}
+    pairs = [p for p in raw.get("pairs") or [] if isinstance(p, dict)]
+    meanings = {str(k): v for k, v in (config.get("verdicts") or {}).items()}
+    return {
+        "file": path.name,
+        "eval_id": raw.get("eval_id"),
+        "created_at": raw.get("created_at"),
+        "reported": reported is not None and path.resolve() == reported.resolve(),
+        "format": str(raw.get("eval_format_version") or "unversioned"),
+        **_session_header(config, pairs),
+        "verdicts": meanings,
+        "tally": _tally(pairs, meanings),
+        "figures": [_figure(n, r) for n, r in (raw.get("metrics") or {}).items()],
+        "pairs": [_pair_row(p, meanings) for p in pairs],
+        "totals": raw.get("totals") or {},
+    }
+
+
+def _session_header(config: dict[str, Any], pairs: list[dict[str, Any]]) -> dict[str, Any]:
+    """What the session was: the arms, whether blind, who judged, and how many of what."""
+    contest = [str(arm) for arm in config.get("contest") or []]
+    if not contest:
+        contest = sorted({str(p.get(side)) for p in pairs for side in ("a_arm", "b_arm")})
+    return {
+        "contest": contest,
+        "blind": config.get("blind"),
+        "decided_by": [str(who) for who in config.get("decided_by") or []],
+        "n": config.get("n"),
+        "units": config.get("units"),
+    }
+
+
+def _pair_row(p: dict[str, Any], meanings: dict[str, Any]) -> dict[str, Any]:
+    """One pair for the table: both sides clipped, the verdict and what the file says it means."""
+    return {
+        "id": str(p.get("id")),
+        "a": _clip(p.get("a"), 80),
+        "b": _clip(p.get("b"), 80),
+        "a_arm": p.get("a_arm"),
+        "b_arm": p.get("b_arm"),
+        "example_id": p.get("example_id"),
+        "verdict": None if p.get("decided_by") is None else _clip(p.get("verdict"), 40),
+        "meaning": meanings.get(str(p.get("verdict"))),
+        "decided_by": p.get("decided_by"),
+        "decided_at": p.get("decided_at"),
+        "reason": _clip(p.get("reason"), 160) or None,
+    }
+
+
+def _sessions(directory: Path, reported: Path | None) -> list[dict[str, Any]]:
+    """Every session of judged pairs on record, newest first."""
+    found = []
+    for path in directory.glob("*.json"):
+        raw = _read(path)
+        if raw is None or _kind(raw.get("config") or {}) != "pairs":
+            continue
+        found.append(_session(path, raw, reported))
+    found.sort(key=lambda s: str(s.get("created_at") or ""), reverse=True)
+    return found
+
+
 def _how_it_was_run(config: dict[str, Any]) -> dict[str, Any]:
     """What the evaluation was: its split, its size, its backend and its example set."""
     example_set = config.get("example_set") or {}
@@ -627,6 +741,7 @@ def _how_it_was_run(config: dict[str, Any]) -> dict[str, Any]:
         "cassette": cassette.get("mode"),
         "device": basis.get("device"),
         "scored_from": config.get("scored_from"),
+        "kind": _kind(config),
     }
 
 
@@ -662,6 +777,7 @@ def read_evaluation(root: str | Path) -> dict[str, Any] | None:
         measured = read_evaluation(".")
         measured["headline"]["point"]        # the figure, with low/high beside it
         measured["nodes"]["judge"]["reach"]  # the share of rollouts that reached one step
+        measured["sessions"][0]["tally"]     # a session of judged pairs, per arm
 
     The file is the one the brief's ``results`` names, or the most recent under
     ``evals/results/``, which is the rule the gates follow.
@@ -676,6 +792,7 @@ def read_evaluation(root: str | Path) -> dict[str, Any] | None:
         return {
             "path": None,
             "history": _history(directory, None),
+            "sessions": _sessions(directory, None),
             "problems": ["No results file could be read under evals/results/."],
         }
     raw = _read(reported)
@@ -683,6 +800,7 @@ def read_evaluation(root: str | Path) -> dict[str, Any] | None:
         return {
             "path": str(reported.name),
             "history": _history(directory, reported),
+            "sessions": _sessions(directory, reported),
             "problems": [f"{reported.name} could not be read as an evaluation."],
         }
 
@@ -714,5 +832,6 @@ def read_evaluation(root: str | Path) -> dict[str, Any] | None:
         "cost_per": _cost_per(raw),
         "groups": _groups(reported),
         "comparisons": _comparisons(root),
-        "ladders": _ladders(directory, _history(directory, reported, limit=None)),
+        "ladders": _ladders(directory, history),
+        "sessions": _sessions(directory, reported),
     }

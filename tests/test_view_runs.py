@@ -675,8 +675,19 @@ class TestTheMeasurePage:
         assert "finance without the registry, against the baseline" in held
         assert "The tool vendor_registry" in held and "Moved" in held and "Held" in held
         assert "From extract on" in held and "From policy_check on" in held
-        assert "4 evaluations" in held  # six on record, two of them a sweep's arms
+        assert "4 evaluations" in held  # seven on record: two a sweep's arms, one judged pairs
         assert "the decision is approve" in held  # what an example expects, in words
+
+    def test_a_session_of_judged_pairs_is_drawn_head_to_head(self, pages) -> None:
+        """`measured` files one session: the baseline against the registry-less arm."""
+        held = pages["measured"]["pages"]["measure"]["sections"]
+        assert "Head to head" in held and "baseline v no registry" in held
+        assert "decided" in held and "both wanted" in held and "neither wanted" in held
+        assert "no_registry_beats_baseline" in held and "The pairs" in held
+        # The session stays off the trend, which says where it went instead.
+        assert "One session of judged pairs is drawn under Head to head" in held
+        # And the n column reads the two totals behind a ratio.
+        assert " of 30" in held
 
 
 class TestTheMeasurePageDrillDowns:

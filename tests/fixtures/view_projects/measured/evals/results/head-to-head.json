@@ -1,0 +1,902 @@
+{
+  "eval_format_version": "0.32",
+  "eval_id": "head-to-head",
+  "created_at": "2026-09-08T00:49:58.131Z",
+  "config": {
+    "kind": "pairs",
+    "contest": [
+      "baseline",
+      "no registry"
+    ],
+    "blind": true,
+    "decided_by": [
+      "rule: the side that scored right"
+    ],
+    "verdicts": {
+      "a": "a",
+      "b": "b",
+      "both_good": "both",
+      "both_bad": "neither"
+    },
+    "n": 30,
+    "k": 1,
+    "units": 30,
+    "unjudged": 0
+  },
+  "examples": {},
+  "metrics": {
+    "no_registry_beats_baseline": {
+      "name": "no_registry_beats_baseline",
+      "definition": "the registry-less arm was preferred, of pairs with a preference",
+      "population": "pairs a verdict was recorded for",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 30,
+      "examples": 30,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": null,
+      "interval": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934506856227626,
+        "n": 1,
+        "k": 1,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 0,
+        "method": "Wilson score interval on the pooled counts"
+      },
+      "reason": null,
+      "numerator": 0.0,
+      "denominator": 1.0,
+      "estimated": true
+    },
+    "both_right": {
+      "name": "both_right",
+      "definition": "both sides came out right, of all pairs",
+      "population": "pairs a verdict was recorded for",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 30,
+      "examples": 30,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": null,
+      "interval": {
+        "point": 0.7,
+        "low": 0.5333333333333333,
+        "high": 0.8666666666666667,
+        "n": 30,
+        "k": 1,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 0,
+        "method": "percentile bootstrap on a ratio of totals, resampling examples"
+      },
+      "reason": null,
+      "numerator": 21.0,
+      "denominator": 30.0,
+      "estimated": true
+    },
+    "neither_right": {
+      "name": "neither_right",
+      "definition": "neither side came out right, of all pairs",
+      "population": "pairs a verdict was recorded for",
+      "over": null,
+      "unit": "rate",
+      "rollouts": 30,
+      "examples": 30,
+      "left_out": {},
+      "including_left_out": null,
+      "absent": 0,
+      "rollout_noise": null,
+      "interval": {
+        "point": 0.26666666666666666,
+        "low": 0.13333333333333333,
+        "high": 0.43333333333333335,
+        "n": 30,
+        "k": 1,
+        "confidence": 0.95,
+        "resamples": 2000,
+        "seed": 0,
+        "method": "percentile bootstrap on a ratio of totals, resampling examples"
+      },
+      "reason": null,
+      "numerator": 8.0,
+      "denominator": 30.0,
+      "estimated": true
+    }
+  },
+  "criteria": {},
+  "nodes": {},
+  "totals": {},
+  "contamination": null,
+  "rollouts": [],
+  "baseline": [],
+  "baseline_unscored": [],
+  "pairs": [
+    {
+      "id": "c-001#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "The Copper Kettle",
+        "total": 48.3,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the claim text."
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "The Copper Kettle",
+        "total": 48.3,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned in the claim"
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-001",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-002#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Brightline Rail",
+        "total": 112.4,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "The claim text does not mention a purchase order number."
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Brightline Rail",
+        "total": 112.4,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the claim."
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-002",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-003#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "NORTHWIND STATIONERY LTD",
+        "total": 226.8,
+        "category": "equipment",
+        "po_number": "PO-77812"
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "NORTHWIND STATIONERY LTD",
+        "total": 226.8,
+        "category": "equipment",
+        "po_number": "PO-77812"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-003",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-004#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Kestrel Software",
+        "total": 180.0,
+        "category": "software",
+        "po_number": "PO-80115"
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Kestrel Software",
+        "total": 180.0,
+        "category": "software",
+        "po_number": "PO-80115"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-004",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-005#0",
+      "a": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-005",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-006#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "Harbour Hotels",
+        "total": 212.0,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned in claim"
+        }
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-006",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline wrong, no registry wrong"
+    },
+    {
+      "id": "c-007#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "MERIDIAN CABS",
+        "total": 63.0,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the claim text."
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "MERIDIAN CABS",
+        "total": 63.0,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number found in the claim text"
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-007",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-008#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Pret",
+        "total": 9.8,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned in the claim"
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Pret",
+        "total": 9.8,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number was provided in the text."
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-008",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-009#0",
+      "a": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "b": {
+        "decision": "reject",
+        "vendor": "Harbour Hotels",
+        "total": 436.0,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number was provided in the text"
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-009",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry wrong, baseline wrong"
+    },
+    {
+      "id": "c-010#0",
+      "a": {
+        "decision": "reject",
+        "vendor": {
+          "type": "unknown",
+          "reason": "private purchase from a colleague"
+        },
+        "total": 60.0,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned"
+        }
+      },
+      "b": {
+        "decision": "reject",
+        "vendor": {
+          "type": "unknown",
+          "reason": "The claimant bought the item from a colleague and did not name a shop or business vendor."
+        },
+        "total": 60.0,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "The claim did not provide a purchase order number."
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-010",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-011#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "THE COPPER KETTLE",
+        "total": 45.65,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number mentioned in the claim text."
+        }
+      },
+      "b": {
+        "decision": "reject",
+        "vendor": "THE COPPER KETTLE",
+        "total": 45.65,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number provided in the claim"
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-011",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-013#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "Northwind Stationery",
+        "total": 132.5,
+        "category": "other",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number was mentioned in the claim"
+        }
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-013",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline wrong, no registry wrong"
+    },
+    {
+      "id": "c-014#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "Ashgrove Audio",
+        "total": 220.0,
+        "category": "software",
+        "po_number": "PO-80231"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-014",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline wrong, no registry wrong"
+    },
+    {
+      "id": "c-015#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "Aer Lingus",
+        "total": 289.99,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number was provided in the claim text."
+        }
+      },
+      "b": {
+        "decision": "reject",
+        "vendor": "Aer Lingus",
+        "total": 289.99,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number provided"
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-015",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-017#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Ashgrove Audio",
+        "total": 249.0,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the claim text."
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Ashgrove Audio",
+        "total": 249.0,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number was provided in the text."
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-017",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-018#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "Northwind Stationery",
+        "total": 640.0,
+        "category": "equipment",
+        "po_number": "PO-80190"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-018",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline wrong, no registry wrong"
+    },
+    {
+      "id": "c-019#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Amazon",
+        "total": 92.99,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned in the claim"
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Amazon",
+        "total": 92.99,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned in the claim"
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-019",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-020#0",
+      "a": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-020",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-022#0",
+      "a": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-022",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry wrong, baseline wrong"
+    },
+    {
+      "id": "c-023#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Unsplash+",
+        "total": 39.0,
+        "category": "other",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number was provided in the claim text."
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Unsplash+",
+        "total": 39.0,
+        "category": "other",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned in the claim text"
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-023",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-024#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Meridian Cabs",
+        "total": 22.0,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number mentioned in the claim"
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Meridian Cabs",
+        "total": 22.0,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "no purchase order number was provided in the claim text"
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-024",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-025#0",
+      "a": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-025",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-027#0",
+      "a": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": {
+          "type": "unknown",
+          "reason": "The claim is for a mileage reimbursement, which does not involve a specific vendor."
+        },
+        "total": 63.9,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number was mentioned in the claim."
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-027",
+      "verdict": "b",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry wrong, baseline right"
+    },
+    {
+      "id": "c-028#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "NORTHWIND STATIONERY",
+        "total": 101.4,
+        "category": "equipment",
+        "po_number": "PO-77102"
+      },
+      "b": {
+        "decision": "reject",
+        "vendor": "NORTHWIND STATIONERY",
+        "total": 101.4,
+        "category": "equipment",
+        "po_number": "PO-77102"
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-028",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-029#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Grind",
+        "total": 7.6,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the text"
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Grind",
+        "total": 7.6,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the claim."
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-029",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-030#0",
+      "a": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-030",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    },
+    {
+      "id": "c-032#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "Currys",
+        "total": 79.0,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number was provided in the text."
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "Currys",
+        "total": 79.0,
+        "category": "equipment",
+        "po_number": {
+          "type": "unknown",
+          "reason": "The claim text does not mention a purchase order number."
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-032",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry right, baseline right"
+    },
+    {
+      "id": "c-033#0",
+      "a": {
+        "decision": "approve",
+        "vendor": "HARBOUR HOTELS BAR",
+        "total": 68.2,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number found on the receipt."
+        }
+      },
+      "b": {
+        "decision": "approve",
+        "vendor": "HARBOUR HOTELS BAR",
+        "total": 68.2,
+        "category": "meals",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the claim."
+        }
+      },
+      "a_arm": "no registry",
+      "b_arm": "baseline",
+      "example_id": "c-033",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "no registry wrong, baseline wrong"
+    },
+    {
+      "id": "c-034#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "Kestrel Software",
+        "total": 310.0,
+        "category": "software",
+        "po_number": "PO-80244"
+      },
+      "b": {
+        "type": "unknown",
+        "reason": "parked for finance"
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-034",
+      "verdict": "both_bad",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline wrong, no registry wrong"
+    },
+    {
+      "id": "c-036#0",
+      "a": {
+        "decision": "reject",
+        "vendor": "Brightline Rail",
+        "total": 84.0,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "No purchase order number provided in the claim."
+        }
+      },
+      "b": {
+        "decision": "reject",
+        "vendor": "Brightline Rail",
+        "total": 84.0,
+        "category": "travel",
+        "po_number": {
+          "type": "unknown",
+          "reason": "The claim text contains no purchase order number."
+        }
+      },
+      "a_arm": "baseline",
+      "b_arm": "no registry",
+      "example_id": "c-036",
+      "verdict": "both_good",
+      "decided_by": "rule: the side that scored right",
+      "decided_at": "2026-09-08T00:49:58.131Z",
+      "reason": "baseline right, no registry right"
+    }
+  ]
+}

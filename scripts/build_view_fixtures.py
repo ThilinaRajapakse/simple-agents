@@ -123,6 +123,12 @@ def _outcome_counts(results_path: Path) -> Counter:
     return Counter(str(r.get("outcome")) for r in raw.get("rollouts") or [])
 
 
+def _session_verdicts(results_path: Path) -> list[tuple[str, str]]:
+    """What a session of judged pairs decided, pair by pair, for comparing two copies of it."""
+    raw = json.loads(results_path.read_text())
+    return [(str(p.get("id")), str(p.get("verdict"))) for p in raw.get("pairs") or []]
+
+
 def verify_project(project: Path) -> None:
     """Replay the project's spec from its cassettes into a scratch copy.
 
@@ -135,6 +141,8 @@ def verify_project(project: Path) -> None:
 
     committed = project / "evals" / "results" / "held-out.json"
     before = _outcome_counts(committed) if committed.exists() else None
+    session = project / "evals" / "results" / "head-to-head.json"
+    judged = _session_verdicts(session) if session.exists() else None
     with tempfile.TemporaryDirectory(prefix=f"view-fixture-{project.name}-") as scratch:
         copy = Path(scratch) / project.name
         shutil.copytree(project, copy, ignore=shutil.ignore_patterns("__pycache__"))
@@ -154,6 +162,15 @@ def verify_project(project: Path) -> None:
                     f"{dict(after)} and the committed results file records {dict(before)}. "
                     f"The cassettes no longer reproduce the committed record; re-record "
                     f"with --record and commit what it writes."
+                )
+        if judged is not None:
+            again = _session_verdicts(copy / "evals" / "results" / "head-to-head.json")
+            if again != judged:
+                raise SystemExit(
+                    f"{project.name}: the session of judged pairs rebuilt from the replayed "
+                    f"arms decides {sum(a != b for a, b in zip(again, judged))} pair(s) "
+                    f"differently from the committed head-to-head.json. Re-record with "
+                    f"--record and commit what it writes."
                 )
 
 
